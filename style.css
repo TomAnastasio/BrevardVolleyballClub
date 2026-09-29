@@ -1,0 +1,231 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d1b1e;
+  --team-a: #ff6b35;
+  --team-b: #1fb6ff;
+  --text: #f5f7f8;
+  --text-dim: #b8c4c6;
+  --panel-bg: #14282c;
+  --danger: #c0392b;
+  --win: #2ecc71;
+  --focus: #ffd166;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+.app-header {
+  text-align: center;
+  padding: calc(0.5rem + var(--safe-top)) 0.5rem 0.25rem;
+  flex: 0 0 auto;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(1rem, 4vw, 1.4rem);
+}
+
+.subtitle {
+  margin: 0.15rem 0 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.scoreboard {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+}
+
+.team-panel {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem;
+  min-width: 0;
+  border-top: 6px solid transparent;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.team-a { border-top-color: var(--team-a); }
+.team-b { border-top-color: var(--team-b); }
+
+.team-panel.winner {
+  background-color: rgba(46, 204, 113, 0.12);
+  border-top-color: var(--win);
+}
+
+.team-name {
+  margin: 0.25rem 0;
+  font-size: clamp(1.1rem, 5vw, 1.6rem);
+  font-weight: 700;
+  text-align: center;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  cursor: text;
+}
+
+.team-name:focus-visible,
+.btn:focus-visible,
+[role="textbox"]:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.score-display {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.score {
+  font-size: clamp(4rem, 22vw, 9rem);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.controls {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 20rem;
+  padding: 0.5rem 0;
+}
+
+.btn {
+  border: none;
+  border-radius: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn-increase {
+  flex: 3 1 auto;
+  min-height: 6.5rem;
+  font-size: clamp(1.5rem, 6vw, 2.2rem);
+}
+
+.team-a .btn-increase { background: var(--team-a); color: #06210f; }
+.team-b .btn-increase { background: var(--team-b); color: #06210f; }
+
+.btn-decrease {
+  flex: 1 1 auto;
+  min-height: 3.5rem;
+  font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+  background: transparent;
+  border: 2px solid var(--danger);
+  color: var(--text);
+}
+
+.divider {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.25rem;
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: 0.9rem;
+  writing-mode: vertical-rl;
+}
+
+.winner-banner {
+  position: fixed;
+  top: calc(0.75rem + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--win);
+  color: #06210f;
+  font-weight: 800;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  text-align: center;
+  max-width: calc(100vw - 2rem);
+}
+
+.winner-banner[hidden] {
+  display: none;
+}
+
+.app-footer {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0.5rem calc(0.75rem + var(--safe-bottom));
+}
+
+.btn-reset {
+  background: var(--panel-bg);
+  border: 2px solid var(--text-dim);
+  padding: 0.6rem 1.5rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  min-height: 3rem;
+  min-width: 8rem;
+}
+
+@media (min-width: 700px) {
+  .controls {
+    max-width: 24rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+  .btn:active {
+    transform: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --bg: #000000;
+    --panel-bg: #000000;
+    --text-dim: #ffffff;
+  }
+  .btn-decrease {
+    border-width: 3px;
+  }
+}

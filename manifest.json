@@ -1,0 +1,19 @@
+{
+  "name": "Brevard Volleyball Club Scoreboard",
+  "short_name": "BVC Score",
+  "description": "Mobile scoreboard for beach volleyball games to 21.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1b1e",
+  "theme_color": "#0d7377",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

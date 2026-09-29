@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Beach Volleyball Scoreboard</title>
+<meta name="description" content="Simple mobile scoreboard for beach volleyball games to 21 — Brevard Volleyball Club.">
+<meta name="theme-color" content="#0d7377">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Beach Volleyball Scoreboard</h1>
+  <p class="subtitle">Brevard Volleyball Club</p>
+</header>
+
+<main class="scoreboard">
+
+  <section class="team-panel team-a" aria-labelledby="teamAName">
+    <h2 id="teamAName" class="team-name" contenteditable="true" spellcheck="false"
+        role="textbox" aria-label="Team A name, tap to edit" tabindex="0">Team A</h2>
+
+    <div class="score-display">
+      <span class="score" id="scoreA" aria-live="polite" aria-atomic="true">0</span>
+    </div>
+
+    <div class="controls">
+      <button type="button" class="btn btn-increase" id="incA" aria-label="Add point to Team A">
+        <span aria-hidden="true">+1</span>
+      </button>
+      <button type="button" class="btn btn-decrease" id="decA" aria-label="Remove point from Team A, fix a mistake">
+        <span aria-hidden="true">&minus;1</span>
+      </button>
+    </div>
+  </section>
+
+  <div class="divider" aria-hidden="true">
+    <span>VS</span>
+  </div>
+
+  <section class="team-panel team-b" aria-labelledby="teamBName">
+    <h2 id="teamBName" class="team-name" contenteditable="true" spellcheck="false"
+        role="textbox" aria-label="Team B name, tap to edit" tabindex="0">Team B</h2>
+
+    <div class="score-display">
+      <span class="score" id="scoreB" aria-live="polite" aria-atomic="true">0</span>
+    </div>
+
+    <div class="controls">
+      <button type="button" class="btn btn-increase" id="incB" aria-label="Add point to Team B">
+        <span aria-hidden="true">+1</span>
+      </button>
+      <button type="button" class="btn btn-decrease" id="decB" aria-label="Remove point from Team B, fix a mistake">
+        <span aria-hidden="true">&minus;1</span>
+      </button>
+    </div>
+  </section>
+
+</main>
+
+<div id="winnerBanner" class="winner-banner" role="alert" hidden></div>
+
+<footer class="app-footer">
+  <button type="button" id="resetBtn" class="btn btn-reset" aria-label="Start a new game, resets both scores to zero">
+    New Game
+  </button>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
