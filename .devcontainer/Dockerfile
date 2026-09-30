@@ -1,7 +1,7 @@
 FROM node:20-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git openssh-client ca-certificates curl \
+    && apt-get install -y --no-install-recommends git openssh-client ca-certificates curl chromium tmux jq unzip \
     && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g @anthropic-ai/claude-code
