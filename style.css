@@ -360,3 +360,280 @@ body {
     border-width: 3px;
   }
 }
+
+/* Splash screen */
+
+.splash {
+  position: fixed;
+  inset: 0;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.4s ease;
+}
+
+.splash.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash[hidden] {
+  display: none;
+}
+
+.splash-logo {
+  width: min(70vw, 420px);
+  height: auto;
+  overflow: visible;
+}
+
+.logo-letter {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-weight: 800;
+  font-size: 140px;
+  fill: #ffffff;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: letterPop 2.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+#letterB { animation-delay: 0s; }
+#letterV { animation-delay: 0.12s; }
+#letterC { animation-delay: 0.24s; }
+
+@keyframes letterPop {
+  0%   { opacity: 0; transform: scale(0.2); }
+  15%  { opacity: 1; transform: scale(1.2); }
+  25%  { opacity: 1; transform: scale(1); }
+  75%  { opacity: 1; transform: scale(1); }
+  90%  { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(0.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-letter {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* App root / section shells */
+
+.app-root {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.app-root[hidden] {
+  display: none;
+}
+
+.app-shell {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.app-shell[hidden] {
+  display: none;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: initial;
+}
+
+.app-header-text {
+  flex: 1 1 auto;
+  text-align: center;
+  padding-right: 3rem;
+}
+
+.app-header-text h1 {
+  margin: 0;
+}
+
+/* Landing page */
+
+.landing-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.landing-kicker {
+  margin: 0;
+  color: var(--text-dim);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.landing-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 24rem;
+}
+
+.landing-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--panel-bg);
+  border: 2px solid transparent;
+  border-radius: 1.25rem;
+  color: var(--text);
+  padding: 1.75rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: border-color 0.2s ease, transform 0.1s ease;
+}
+
+.landing-card:active {
+  transform: scale(0.97);
+}
+
+.landing-card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.landing-icon {
+  font-size: 2rem;
+}
+
+/* Sub header + back button (Where to Play) */
+
+.sub-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: calc(0.5rem + var(--safe-top)) 0.75rem 0.5rem;
+  flex: 0 0 auto;
+}
+
+.sub-header .view-title {
+  flex: 1 1 auto;
+  margin: 0;
+  padding-right: 3rem;
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.back-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Where to Play Today list */
+
+#playTodayView {
+  overflow-y: auto;
+}
+
+.play-list {
+  padding: 0.5rem 0.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.today-group {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.15);
+}
+
+.upcoming-days {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.day-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.day-heading {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.today-group .day-heading {
+  color: var(--focus);
+  font-size: 1.15rem;
+}
+
+.gym-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gym-card {
+  background: var(--panel-bg);
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.today-group .gym-card {
+  border-left: 4px solid var(--focus);
+}
+
+.gym-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.gym-location {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.gym-time {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}

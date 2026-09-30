@@ -15,6 +15,30 @@
   var views = { game: document.getElementById("gameView"), history: document.getElementById("historyView") };
   var tabs = { game: document.getElementById("tabGame"), history: document.getElementById("tabHistory") };
 
+  var splashEl = document.getElementById("splash");
+  var appRootEl = document.getElementById("appRoot");
+  var sections = {
+    landing: document.getElementById("landingView"),
+    play: document.getElementById("playTodayView"),
+    game: document.getElementById("gameTrackingSection")
+  };
+  var playListEl = document.getElementById("playList");
+
+  var PLAY_LOCATIONS = [
+    "Paradise Beach Park",
+    "Ballard Park Courts",
+    "Wells Park",
+    "Kiwanis Island Park",
+    "Cocoa Beach Pier Courts",
+    "Jetty Park",
+    "Rotary Park"
+  ];
+
+  var PLAY_TIME_SLOTS = [
+    { label: "Morning Open Gym", time: "9:00 AM – 11:00 AM" },
+    { label: "Evening Open Gym", time: "6:00 PM – 8:00 PM" }
+  ];
+
   var state = {
     a: 0,
     b: 0,
@@ -183,6 +207,87 @@
     if (name === "history") renderHistory();
   }
 
+  function showSection(name) {
+    Object.keys(sections).forEach(function (key) {
+      sections[key].hidden = key !== name;
+    });
+    if (name === "play") renderPlayList();
+  }
+
+  function renderPlayList() {
+    playListEl.innerHTML = "";
+
+    var today = new Date();
+    var todayGroup = null;
+    var upcomingWrap = document.createElement("div");
+    upcomingWrap.className = "upcoming-days";
+
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+      var weekday = d.toLocaleDateString("en-US", { weekday: "long" });
+      var dateLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+      var section = document.createElement("section");
+      section.className = "day-group" + (i === 0 ? " today-group" : "");
+
+      var heading = document.createElement("h3");
+      heading.className = "day-heading";
+      heading.textContent = (i === 0 ? "Today · " : "") + weekday + ", " + dateLabel;
+      section.appendChild(heading);
+
+      var list = document.createElement("ul");
+      list.className = "gym-list";
+
+      var gyms = [
+        { label: PLAY_TIME_SLOTS[0].label, time: PLAY_TIME_SLOTS[0].time, location: PLAY_LOCATIONS[i % PLAY_LOCATIONS.length] },
+        { label: PLAY_TIME_SLOTS[1].label, time: PLAY_TIME_SLOTS[1].time, location: PLAY_LOCATIONS[(i + 3) % PLAY_LOCATIONS.length] }
+      ];
+
+      gyms.forEach(function (gym) {
+        var li = document.createElement("li");
+        li.className = "gym-card";
+
+        var labelEl = document.createElement("div");
+        labelEl.className = "gym-label";
+        labelEl.textContent = gym.label;
+
+        var locationEl = document.createElement("div");
+        locationEl.className = "gym-location";
+        locationEl.textContent = gym.location;
+
+        var timeEl = document.createElement("div");
+        timeEl.className = "gym-time";
+        timeEl.textContent = gym.time;
+
+        li.appendChild(labelEl);
+        li.appendChild(locationEl);
+        li.appendChild(timeEl);
+        list.appendChild(li);
+      });
+
+      section.appendChild(list);
+
+      if (i === 0) {
+        todayGroup = section;
+      } else {
+        upcomingWrap.appendChild(section);
+      }
+    }
+
+    playListEl.appendChild(todayGroup);
+    playListEl.appendChild(upcomingWrap);
+  }
+
+  function initSplash() {
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var delay = reduced ? 400 : 2500;
+    setTimeout(function () {
+      splashEl.classList.add("hide");
+      appRootEl.hidden = false;
+      setTimeout(function () { splashEl.hidden = true; }, 400);
+    }, delay);
+  }
+
   function sanitizeName(el, fallback) {
     var text = (el.textContent || "").replace(/\s+/g, " ").trim();
     if (!text) text = fallback;
@@ -254,9 +359,15 @@
   tabs.game.addEventListener("click", function () { showView("game"); });
   tabs.history.addEventListener("click", function () { showView("history"); });
 
+  document.getElementById("goPlayToday").addEventListener("click", function () { showSection("play"); });
+  document.getElementById("goGameTracking").addEventListener("click", function () { showSection("game"); });
+  document.getElementById("backFromPlay").addEventListener("click", function () { showSection("landing"); });
+  document.getElementById("backFromGame").addEventListener("click", function () { showSection("landing"); });
+
   bindNameEditing(nameEls.a, "nameA", "Team A");
   bindNameEditing(nameEls.b, "nameB", "Team B");
 
   load();
   render();
+  initSplash();
 })();
