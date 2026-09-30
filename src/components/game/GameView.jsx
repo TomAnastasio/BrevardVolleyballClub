@@ -1,7 +1,7 @@
 import { Button, Card } from "@heroui/react";
 import TeamPanel from "./TeamPanel.jsx";
 
-export default function GameView({ scoreboard, onSaveGame }) {
+export default function GameView({ scoreboard, onSaveGame, effectiveWidth, effectiveHeight }) {
   const { state, aWins, bWins, winnerName, showBanner, changeScore, setName, dismissBanner } = scoreboard;
 
   return (
@@ -17,6 +17,8 @@ export default function GameView({ scoreboard, onSaveGame }) {
           onInc={() => changeScore("a", 1)}
           onDec={() => changeScore("a", -1)}
           onNameCommit={(slot, next) => setName("a", slot, next)}
+          effectiveWidth={effectiveWidth}
+          effectiveHeight={effectiveHeight}
         />
 
         <div
@@ -36,6 +38,8 @@ export default function GameView({ scoreboard, onSaveGame }) {
           onInc={() => changeScore("b", 1)}
           onDec={() => changeScore("b", -1)}
           onNameCommit={(slot, next) => setName("b", slot, next)}
+          effectiveWidth={effectiveWidth}
+          effectiveHeight={effectiveHeight}
         />
       </div>
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useScoreboardState } from "../../hooks/useScoreboardState.js";
 import { useGameHistory } from "../../hooks/useGameHistory.js";
+import { useForcedLandscape } from "../../hooks/useForcedLandscape.js";
 import GameMenu from "./GameMenu.jsx";
 import NewGameForm from "./NewGameForm.jsx";
 import GameView from "./GameView.jsx";
@@ -42,9 +43,15 @@ export default function GameTrackingShell({ onBack }) {
 
   const meta = SCREEN_META[screen];
   const isMenu = screen === "menu";
+  const { forced, width: effectiveWidth, height: effectiveHeight } = useForcedLandscape(screen === "active");
+  const isPhoneLandscape = effectiveHeight <= 520;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div
+      className={`flex min-h-0 flex-1 flex-col ${forced ? "force-landscape" : ""} ${
+        isPhoneLandscape ? "is-phone-landscape" : ""
+      }`}
+    >
       <header
         className="flex items-center gap-2 px-2 pb-1 phone-landscape:pb-0"
         style={{ paddingTop: "calc(0.5rem + var(--safe-top))" }}
@@ -78,7 +85,14 @@ export default function GameTrackingShell({ onBack }) {
           />
         )}
         {screen === "new" && <NewGameForm onStart={handleStartGame} />}
-        {screen === "active" && scoreboard.state && <GameView scoreboard={scoreboard} onSaveGame={handleSaveGame} />}
+        {screen === "active" && scoreboard.state && (
+          <GameView
+            scoreboard={scoreboard}
+            onSaveGame={handleSaveGame}
+            effectiveWidth={effectiveWidth}
+            effectiveHeight={effectiveHeight}
+          />
+        )}
         {screen === "history" && <HistoryView history={history} />}
       </main>
     </div>

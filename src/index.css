@@ -1,10 +1,31 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
-/* Matches phones held sideways (short viewport height), not landscape-oriented
-   tablets/desktops, so the compact scoreboard layout only kicks in where it's
-   actually needed. */
-@custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 520px));
+/* Matches short viewports (real landscape phones, or the scoreboard's
+   forced-landscape mode — see useForcedLandscape.js) so the compact layout
+   kicks in based on the *effective* dimensions the user actually sees, not
+   the real (possibly rotated-away-from) viewport. Driven by a JS-toggled
+   class rather than a media query, since the forced-landscape case can't be
+   detected from CSS alone: the real viewport stays portrait-shaped even
+   though the content is visually rotated into landscape. */
+@custom-variant phone-landscape (&:where(.is-phone-landscape, .is-phone-landscape *));
+
+/* Scoreboard: force the landscape presentation even when the device is held
+   in portrait, by rotating the whole screen 90deg. Applied only while the
+   scoreboard is the active screen (see GameTrackingShell) — every other
+   screen keeps its normal portrait layout. Landscape orientation itself is
+   untouched, since this rule only exists inside the portrait media query. */
+@media (orientation: portrait) {
+  .force-landscape {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vh;
+    height: 100vw;
+    transform-origin: 0 0;
+    transform: rotate(90deg) translateY(-100%);
+  }
+}
 
 /* Brevard Volleyball Club theme — HeroUI's stock dark theme (activated via
    the `dark` class on <html>) provides every semantic color (surfaces,

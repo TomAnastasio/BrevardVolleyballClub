@@ -11,7 +11,7 @@ function selectAllText(el) {
   sel.addRange(range);
 }
 
-function EditableTeamName({ id, name, fallback, label, onCommit }) {
+function EditableTeamName({ id, name, fallback, label, onCommit, fontSize }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -30,7 +30,8 @@ function EditableTeamName({ id, name, fallback, label, onCommit }) {
       role="textbox"
       aria-label={label}
       tabIndex={0}
-      className="m-0 max-w-full cursor-text break-words rounded-lg px-2 py-0.5 text-center text-[clamp(1.3rem,5.5vw,2rem)] font-bold phone-landscape:text-[clamp(1.05rem,4.2vh,1.5rem)] focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+      style={{ fontSize }}
+      className="m-0 max-w-full cursor-text break-words rounded-lg px-2 py-0.5 text-center font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
       onFocus={(e) => selectAllText(e.currentTarget)}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
@@ -52,10 +53,56 @@ function EditableTeamName({ id, name, fallback, label, onCommit }) {
   );
 }
 
-export default function TeamPanel({ winner, score, names, fallbacks, side, color, onInc, onDec, onNameCommit }) {
+// Mirrors the same clamp(min, val, max) formulas the scoreboard always used,
+// but evaluated against the *effective* width/height (see
+// useForcedLandscape.js) instead of raw vw/vh — those units read the real,
+// unrotated viewport, which is wrong while the forced-landscape rotation is
+// active, so relying on them made portrait-forced text/buttons render
+// smaller than true landscape.
+function clampPx(min, value, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+export default function TeamPanel({
+  winner,
+  score,
+  names,
+  fallbacks,
+  side,
+  color,
+  onInc,
+  onDec,
+  onNameCommit,
+  effectiveWidth,
+  effectiveHeight,
+}) {
   const teamLabel = `Team ${side}`;
   const fg = colorForeground(color);
   const isLeft = side === "A";
+
+  const vw = (n) => (n / 100) * effectiveWidth;
+  const vh = (n) => (n / 100) * effectiveHeight;
+  const isCompact = effectiveHeight <= 520;
+
+  const nameFontSize = isCompact
+    ? `${clampPx(1.05 * 16, vh(4.2), 1.5 * 16)}px`
+    : `${clampPx(1.3 * 16, vw(5.5), 2 * 16)}px`;
+
+  const scoreFontSize = isCompact
+    ? `${clampPx(1.5 * 16, Math.min(vh(50), vw(35.5) - 116), 9.5 * 16)}px`
+    : effectiveWidth >= 700
+      ? `${clampPx(7 * 16, vw(35.5) - 127, 26 * 16)}px`
+      : effectiveWidth >= 420
+        ? `${clampPx(2.5 * 16, vw(35.5) - 105, 9 * 16)}px`
+        : `${clampPx(1 * 16, vw(35.5) - 94, 3.5 * 16)}px`;
+
+  const buttonsWidth = isCompact ? "8rem" : effectiveWidth >= 700 ? "9rem" : effectiveWidth >= 420 ? "7rem" : "6rem";
+
+  const incFontSize = isCompact
+    ? `${clampPx(1.5 * 16, vh(9), 2.4 * 16)}px`
+    : `${clampPx(1.75 * 16, vw(7), 3.5 * 16)}px`;
+
+  const decFontSize = isCompact ? `${clampPx(1 * 16, vh(6), 1.5 * 16)}px` : `${clampPx(1.1 * 16, vw(4), 2 * 16)}px`;
 
   const nameAndScore = (
     <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 phone-landscape:gap-0.5">
@@ -66,6 +113,7 @@ export default function TeamPanel({ winner, score, names, fallbacks, side, color
           fallback={fallbacks[0]}
           label={`${teamLabel}, player 1 name, tap to edit`}
           onCommit={(next) => onNameCommit(1, next)}
+          fontSize={nameFontSize}
         />
         <EditableTeamName
           id={`${side}-name-2`}
@@ -73,6 +121,7 @@ export default function TeamPanel({ winner, score, names, fallbacks, side, color
           fallback={fallbacks[1]}
           label={`${teamLabel}, player 2 name, tap to edit`}
           onCommit={(next) => onNameCommit(2, next)}
+          fontSize={nameFontSize}
         />
       </div>
 
@@ -80,7 +129,8 @@ export default function TeamPanel({ winner, score, names, fallbacks, side, color
         <span
           aria-live="polite"
           aria-atomic="true"
-          className="text-[clamp(1rem,calc(35.5vw_-_94px),3.5rem)] font-extrabold leading-none [font-variant-numeric:tabular-nums] min-[420px]:text-[clamp(2.5rem,calc(35.5vw_-_105px),9rem)] min-[700px]:text-[clamp(7rem,calc(35.5vw_-_127px),26rem)] phone-landscape:text-[clamp(1.5rem,min(50vh,calc(35.5vw_-_116px)),9.5rem)]"
+          style={{ fontSize: scoreFontSize }}
+          className="font-extrabold leading-none [font-variant-numeric:tabular-nums]"
         >
           {score}
         </span>
@@ -89,7 +139,7 @@ export default function TeamPanel({ winner, score, names, fallbacks, side, color
   );
 
   const buttons = (
-    <div className="flex h-full w-24 flex-none flex-col gap-0 min-[420px]:w-28 min-[700px]:w-36 phone-landscape:w-32">
+    <div className="flex h-full flex-none flex-col gap-0" style={{ width: buttonsWidth }}>
       <Button
         variant="primary"
         onPress={onInc}
@@ -99,8 +149,9 @@ export default function TeamPanel({ winner, score, names, fallbacks, side, color
           "--button-bg-hover": `color-mix(in oklab, ${color} 85%, black)`,
           "--button-bg-pressed": `color-mix(in oklab, ${color} 85%, black)`,
           "--button-fg": fg,
+          fontSize: incFontSize,
         }}
-        className="min-h-0 w-full flex-[4_0_0%] rounded-none text-[clamp(1.75rem,7vw,3.5rem)] font-extrabold leading-none active:scale-96 phone-landscape:text-[clamp(1.5rem,9vh,2.4rem)]"
+        className="min-h-0 w-full flex-[4_0_0%] rounded-none font-extrabold leading-none active:scale-96"
       >
         +1
       </Button>
@@ -108,7 +159,8 @@ export default function TeamPanel({ winner, score, names, fallbacks, side, color
         variant="outline"
         onPress={onDec}
         aria-label={`Remove point from ${teamLabel}, fix a mistake`}
-        className="min-h-0 w-full flex-[1_0_0%] rounded-none border-2 border-danger text-[clamp(1.1rem,4vw,2rem)] font-extrabold leading-none text-foreground active:scale-96 phone-landscape:text-[clamp(1rem,6vh,1.5rem)]"
+        style={{ fontSize: decFontSize }}
+        className="min-h-0 w-full flex-[1_0_0%] rounded-none border-2 border-danger font-extrabold leading-none text-foreground active:scale-96"
       >
         −1
       </Button>
