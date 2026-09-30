@@ -5,12 +5,6 @@
   var STORAGE_KEY = "bvc-scoreboard-v1";
   var HISTORY_KEY = "bvc-game-history-v1";
 
-  var FAKE_HISTORY_SEED = [
-    { id: "seed-1", nameA: "Sand Sharks", nameB: "Net Ninjas", a: 21, b: 18, date: "2026-09-27", time: "10:30" },
-    { id: "seed-2", nameA: "Spike Squad", nameB: "Beach Bums", a: 15, b: 21, date: "2026-09-25", time: "17:05" },
-    { id: "seed-3", nameA: "Ace Ventura", nameB: "Block Party", a: 21, b: 12, date: "2026-09-20", time: "09:15" }
-  ];
-
   var scoreEls = { a: document.getElementById("scoreA"), b: document.getElementById("scoreB") };
   var panelEls = { a: document.querySelector(".team-a"), b: document.querySelector(".team-b") };
   var nameEls = { a: document.getElementById("teamAName"), b: document.getElementById("teamBName") };
@@ -98,10 +92,7 @@
   function loadHistory() {
     try {
       var raw = localStorage.getItem(HISTORY_KEY);
-      if (!raw) {
-        saveHistory(FAKE_HISTORY_SEED);
-        return FAKE_HISTORY_SEED.slice();
-      }
+      if (!raw) return [];
       var parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
@@ -199,7 +190,19 @@
     return text;
   }
 
+  function selectAllText(el) {
+    var range = document.createRange();
+    range.selectNodeContents(el);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
   function bindNameEditing(el, key, fallback) {
+    el.addEventListener("focus", function () {
+      selectAllText(el);
+    });
+
     el.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
