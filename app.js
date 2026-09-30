@@ -3,11 +3,23 @@
 
   var WIN_SCORE = 21;
   var STORAGE_KEY = "bvc-scoreboard-v1";
+  var HISTORY_KEY = "bvc-game-history-v1";
+
+  var FAKE_HISTORY_SEED = [
+    { id: "seed-1", nameA: "Sand Sharks", nameB: "Net Ninjas", a: 21, b: 18, date: "2026-09-27", time: "10:30" },
+    { id: "seed-2", nameA: "Spike Squad", nameB: "Beach Bums", a: 15, b: 21, date: "2026-09-25", time: "17:05" },
+    { id: "seed-3", nameA: "Ace Ventura", nameB: "Block Party", a: 21, b: 12, date: "2026-09-20", time: "09:15" }
+  ];
 
   var scoreEls = { a: document.getElementById("scoreA"), b: document.getElementById("scoreB") };
   var panelEls = { a: document.querySelector(".team-a"), b: document.querySelector(".team-b") };
   var nameEls = { a: document.getElementById("teamAName"), b: document.getElementById("teamBName") };
   var winnerBanner = document.getElementById("winnerBanner");
+  var winnerText = document.getElementById("winnerText");
+  var historyListEl = document.getElementById("historyList");
+  var historyEmptyEl = document.getElementById("historyEmpty");
+  var views = { game: document.getElementById("gameView"), history: document.getElementById("historyView") };
+  var tabs = { game: document.getElementById("tabGame"), history: document.getElementById("tabHistory") };
 
   var state = {
     a: 0,
@@ -15,6 +27,8 @@
     nameA: "Team A",
     nameB: "Team B"
   };
+
+  var bannerDismissed = false;
 
   function load() {
     try {
@@ -57,13 +71,13 @@
     panelEls.a.classList.toggle("winner", aWins);
     panelEls.b.classList.toggle("winner", bWins);
 
-    if (aWins || bWins) {
+    if ((aWins || bWins) && !bannerDismissed) {
       var winnerName = aWins ? state.nameA : state.nameB;
-      winnerBanner.textContent = winnerName + " wins!";
+      winnerText.textContent = winnerName + " wins!";
       winnerBanner.hidden = false;
     } else {
       winnerBanner.hidden = true;
-      winnerBanner.textContent = "";
+      winnerText.textContent = "";
     }
   }
 
@@ -71,9 +85,111 @@
     var next = state[team] + delta;
     if (next < 0) next = 0;
     state[team] = next;
+    bannerDismissed = false;
     save();
     render();
     vibrate(delta > 0 ? 15 : [10, 30, 10]);
+  }
+
+  function pad2(n) {
+    return n < 10 ? "0" + n : String(n);
+  }
+
+  function loadHistory() {
+    try {
+      var raw = localStorage.getItem(HISTORY_KEY);
+      if (!raw) {
+        saveHistory(FAKE_HISTORY_SEED);
+        return FAKE_HISTORY_SEED.slice();
+      }
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveHistory(history) {
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch (e) {
+      /* storage unavailable, continue without persistence */
+    }
+  }
+
+  function renderHistory() {
+    var history = loadHistory();
+    historyListEl.innerHTML = "";
+
+    if (!history.length) {
+      historyEmptyEl.hidden = false;
+      return;
+    }
+    historyEmptyEl.hidden = true;
+
+    history.forEach(function (game) {
+      var li = document.createElement("li");
+      li.className = "history-item";
+
+      var teams = document.createElement("div");
+      teams.className = "history-teams";
+
+      var teamA = document.createElement("span");
+      teamA.className = "history-team" + (game.a > game.b ? " winner" : "");
+      teamA.textContent = game.nameA;
+
+      var score = document.createElement("span");
+      score.className = "history-score";
+      score.textContent = game.a + " – " + game.b;
+
+      var teamB = document.createElement("span");
+      teamB.className = "history-team" + (game.b > game.a ? " winner" : "");
+      teamB.textContent = game.nameB;
+
+      teams.appendChild(teamA);
+      teams.appendChild(score);
+      teams.appendChild(teamB);
+
+      var meta = document.createElement("div");
+      meta.className = "history-meta";
+      meta.textContent = game.date + " at " + game.time;
+
+      li.appendChild(teams);
+      li.appendChild(meta);
+      historyListEl.appendChild(li);
+    });
+  }
+
+  function saveFinishedGame() {
+    var now = new Date();
+    var record = {
+      id: "game-" + now.getTime(),
+      nameA: state.nameA,
+      nameB: state.nameB,
+      a: state.a,
+      b: state.b,
+      date: now.getFullYear() + "-" + pad2(now.getMonth() + 1) + "-" + pad2(now.getDate()),
+      time: pad2(now.getHours()) + ":" + pad2(now.getMinutes())
+    };
+    var history = loadHistory();
+    history.unshift(record);
+    saveHistory(history);
+
+    state.a = 0;
+    state.b = 0;
+    bannerDismissed = false;
+    save();
+    render();
+    renderHistory();
+  }
+
+  function showView(name) {
+    Object.keys(views).forEach(function (key) {
+      views[key].hidden = key !== name;
+      tabs[key].removeAttribute("aria-current");
+    });
+    tabs[name].setAttribute("aria-current", "page");
+    if (name === "history") renderHistory();
   }
 
   function sanitizeName(el, fallback) {
@@ -116,10 +232,24 @@
     if (!confirmed) return;
     state.a = 0;
     state.b = 0;
+    bannerDismissed = false;
     save();
     render();
     vibrate(20);
   });
+
+  document.getElementById("saveGameBtn").addEventListener("click", function () {
+    saveFinishedGame();
+    vibrate(20);
+  });
+
+  document.getElementById("keepPlayingBtn").addEventListener("click", function () {
+    bannerDismissed = true;
+    render();
+  });
+
+  tabs.game.addEventListener("click", function () { showView("game"); });
+  tabs.history.addEventListener("click", function () { showView("history"); });
 
   bindNameEditing(nameEls.a, "nameA", "Team A");
   bindNameEditing(nameEls.b, "nameB", "Team B");

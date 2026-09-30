@@ -33,6 +33,17 @@ body {
   overflow-x: hidden;
 }
 
+.view {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.view[hidden] {
+  display: none;
+}
+
 .app-header {
   text-align: center;
   padding: calc(0.5rem + var(--safe-top)) 0.5rem 0.25rem;
@@ -55,6 +66,13 @@ body {
   display: flex;
   flex-direction: row;
   min-height: 0;
+}
+
+.game-actions {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0.5rem;
 }
 
 .team-panel {
@@ -174,23 +192,50 @@ body {
   background: var(--win);
   color: #06210f;
   font-weight: 800;
-  padding: 0.6rem 1.2rem;
-  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  border-radius: 1.25rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   z-index: 10;
   text-align: center;
   max-width: calc(100vw - 2rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.winner-banner p {
+  margin: 0;
+}
+
+.winner-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.winner-actions .btn {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  min-height: 2.5rem;
+}
+
+.btn-save {
+  background: #06210f;
+  color: var(--win);
+  border: none;
+}
+
+.btn-keep-playing {
+  background: transparent;
+  color: #06210f;
+  border: 2px solid #06210f;
 }
 
 .winner-banner[hidden] {
   display: none;
-}
-
-.app-footer {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: center;
-  padding: 0.5rem 0.5rem calc(0.75rem + var(--safe-bottom));
 }
 
 .btn-reset {
@@ -201,6 +246,97 @@ body {
   font-size: 1rem;
   min-height: 3rem;
   min-width: 8rem;
+}
+
+.view-title {
+  text-align: center;
+  margin: 0.75rem 0 0.5rem;
+  font-size: clamp(1.1rem, 4.5vw, 1.4rem);
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  overflow-y: auto;
+}
+
+.history-item {
+  background: var(--panel-bg);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.history-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.history-team {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.history-team.winner {
+  color: var(--win);
+}
+
+.history-score {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.1rem;
+}
+
+.history-meta {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 1.5rem 1rem;
+}
+
+.tab-bar {
+  flex: 0 0 auto;
+  display: flex;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: var(--safe-bottom);
+}
+
+.tab-btn {
+  flex: 1 1 50%;
+  background: var(--panel-bg);
+  color: var(--text-dim);
+  border: none;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  min-height: 3.25rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.tab-btn[aria-current="page"] {
+  color: var(--text);
+  box-shadow: inset 0 3px 0 var(--focus);
+}
+
+.tab-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
 }
 
 @media (min-width: 700px) {
