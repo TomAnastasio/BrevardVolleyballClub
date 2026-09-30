@@ -3,21 +3,31 @@ import { useScoreboardState } from "../../hooks/useScoreboardState.js";
 import { useGameHistory } from "../../hooks/useGameHistory.js";
 import { useForcedLandscape } from "../../hooks/useForcedLandscape.js";
 import GameMenu from "./GameMenu.jsx";
+import GameFormatMenu from "./GameFormatMenu.jsx";
 import NewGameForm from "./NewGameForm.jsx";
 import GameView from "./GameView.jsx";
 import HistoryView from "./HistoryView.jsx";
 
 const SCREEN_META = {
   menu: { title: "Beach Volleyball Scoreboard", subtitle: "Brevard Volleyball Club" },
+  format: { title: "Select Game Type", subtitle: null },
   new: { title: "New Game", subtitle: null },
   active: { title: null, subtitle: null },
   history: { title: "Past Games", subtitle: null },
 };
 
+const BACK_MAP = { format: "menu", new: "format", active: "menu", history: "menu" };
+
 export default function GameTrackingShell({ onBack }) {
   const scoreboard = useScoreboardState();
   const { history, addGame } = useGameHistory();
   const [screen, setScreen] = useState("menu");
+  const [pendingFormat, setPendingFormat] = useState(null);
+
+  function handleSelectFormat(format) {
+    setPendingFormat(format);
+    setScreen("new");
+  }
 
   function handleStartGame(payload) {
     scoreboard.startGame(payload);
@@ -26,7 +36,7 @@ export default function GameTrackingShell({ onBack }) {
 
   function handleEraseAndStartNew() {
     scoreboard.clearActiveGame();
-    setScreen("new");
+    setScreen("format");
   }
 
   function handleSaveGame() {
@@ -58,7 +68,7 @@ export default function GameTrackingShell({ onBack }) {
       >
         <button
           type="button"
-          onClick={() => (isMenu ? onBack() : setScreen("menu"))}
+          onClick={() => (isMenu ? onBack() : setScreen(BACK_MAP[screen] || "menu"))}
           aria-label={isMenu ? "Back to main menu" : "Back to game tracking menu"}
           className="rounded-lg px-2 py-2 font-bold phone-landscape:px-1.5 phone-landscape:py-1 phone-landscape:text-sm focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
         >
@@ -78,13 +88,14 @@ export default function GameTrackingShell({ onBack }) {
         {screen === "menu" && (
           <GameMenu
             hasActiveGame={scoreboard.hasActiveGame}
-            onNewGame={() => setScreen("new")}
+            onNewGame={() => setScreen("format")}
             onEraseAndStartNew={handleEraseAndStartNew}
             onResumeGame={() => setScreen("active")}
             onPastGames={() => setScreen("history")}
           />
         )}
-        {screen === "new" && <NewGameForm onStart={handleStartGame} />}
+        {screen === "format" && <GameFormatMenu onSelectFormat={handleSelectFormat} />}
+        {screen === "new" && <NewGameForm format={pendingFormat} onStart={handleStartGame} />}
         {screen === "active" && scoreboard.state && (
           <GameView
             scoreboard={scoreboard}

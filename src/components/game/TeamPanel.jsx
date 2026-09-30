@@ -107,22 +107,19 @@ export default function TeamPanel({
   const nameAndScore = (
     <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 phone-landscape:gap-0.5">
       <div className="flex flex-none flex-col items-center">
-        <EditableTeamName
-          id={`${side}-name-1`}
-          name={names[0]}
-          fallback={fallbacks[0]}
-          label={`${teamLabel}, player 1 name, tap to edit`}
-          onCommit={(next) => onNameCommit(1, next)}
-          fontSize={nameFontSize}
-        />
-        <EditableTeamName
-          id={`${side}-name-2`}
-          name={names[1]}
-          fallback={fallbacks[1]}
-          label={`${teamLabel}, player 2 name, tap to edit`}
-          onCommit={(next) => onNameCommit(2, next)}
-          fontSize={nameFontSize}
-        />
+        {names.map((name, i) => (
+          <EditableTeamName
+            key={i}
+            id={`${side}-name-${i + 1}`}
+            name={name}
+            fallback={fallbacks[i]}
+            label={
+              names.length > 1 ? `${teamLabel}, player ${i + 1} name, tap to edit` : `${teamLabel} name, tap to edit`
+            }
+            onCommit={(next) => onNameCommit(i + 1, next)}
+            fontSize={nameFontSize}
+          />
+        ))}
       </div>
 
       <div className="flex w-full flex-none items-center justify-center">

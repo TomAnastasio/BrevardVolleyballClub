@@ -2,7 +2,12 @@ import { Button, Card } from "@heroui/react";
 import TeamPanel from "./TeamPanel.jsx";
 
 export default function GameView({ scoreboard, onSaveGame, effectiveWidth, effectiveHeight }) {
-  const { state, aWins, bWins, winnerName, showBanner, changeScore, setName, dismissBanner } = scoreboard;
+  const { state, isIndoor, aWins, bWins, winnerName, showBanner, changeScore, setName, dismissBanner } = scoreboard;
+
+  const namesA = isIndoor ? [state.nameA] : [state.nameA1, state.nameA2];
+  const namesB = isIndoor ? [state.nameB] : [state.nameB1, state.nameB2];
+  const fallbacks = isIndoor ? ["Team A"] : ["Player 1", "Player 2"];
+  const fallbacksB = isIndoor ? ["Team B"] : ["Player 1", "Player 2"];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -10,8 +15,8 @@ export default function GameView({ scoreboard, onSaveGame, effectiveWidth, effec
         <TeamPanel
           winner={aWins}
           score={state.a}
-          names={[state.nameA1, state.nameA2]}
-          fallbacks={["Player 1", "Player 2"]}
+          names={namesA}
+          fallbacks={fallbacks}
           side="A"
           color={state.colorA}
           onInc={() => changeScore("a", 1)}
@@ -31,8 +36,8 @@ export default function GameView({ scoreboard, onSaveGame, effectiveWidth, effec
         <TeamPanel
           winner={bWins}
           score={state.b}
-          names={[state.nameB1, state.nameB2]}
-          fallbacks={["Player 1", "Player 2"]}
+          names={namesB}
+          fallbacks={fallbacksB}
           side="B"
           color={state.colorB}
           onInc={() => changeScore("b", 1)}

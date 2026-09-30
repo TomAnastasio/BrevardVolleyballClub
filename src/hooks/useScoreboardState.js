@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../lib/teamColors.js";
 
 const STORAGE_KEY = "bvc-scoreboard-v1";
-const WIN_SCORE = 21;
+const DEFAULT_FORMAT = "beach";
+const WIN_SCORE_BY_FORMAT = { beach: 21, indoor: 25 };
 
 const NAME_FIELDS = {
   nameA1: "Player 1",
@@ -11,6 +12,14 @@ const NAME_FIELDS = {
   nameB2: "Player 2",
 };
 
+function normalizeFormat(format) {
+  return format === "indoor" ? "indoor" : DEFAULT_FORMAT;
+}
+
+function winScoreFor(format) {
+  return WIN_SCORE_BY_FORMAT[normalizeFormat(format)];
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -18,10 +27,18 @@ function loadState() {
     const saved = JSON.parse(raw);
     if (typeof saved.a !== "number" || typeof saved.b !== "number") return null;
 
-    const state = { a: saved.a, b: saved.b };
-    for (const key of Object.keys(NAME_FIELDS)) {
-      state[key] = typeof saved[key] === "string" && saved[key].trim() ? saved[key] : NAME_FIELDS[key];
+    const format = normalizeFormat(saved.format);
+    const state = { a: saved.a, b: saved.b, format };
+
+    if (format === "indoor") {
+      state.nameA = typeof saved.nameA === "string" && saved.nameA.trim() ? saved.nameA : "Team A";
+      state.nameB = typeof saved.nameB === "string" && saved.nameB.trim() ? saved.nameB : "Team B";
+    } else {
+      for (const key of Object.keys(NAME_FIELDS)) {
+        state[key] = typeof saved[key] === "string" && saved[key].trim() ? saved[key] : NAME_FIELDS[key];
+      }
     }
+
     state.colorA = typeof saved.colorA === "string" ? saved.colorA : DEFAULT_COLOR_A;
     state.colorB = typeof saved.colorB === "string" ? saved.colorB : DEFAULT_COLOR_B;
     return state;
@@ -68,21 +85,26 @@ export function useScoreboardState() {
   }, []);
 
   const setName = useCallback((team, slot, name) => {
-    const key = `name${team === "a" ? "A" : "B"}${slot}`;
-    setState((prev) => ({ ...prev, [key]: name }));
+    setState((prev) => {
+      const key =
+        prev.format === "indoor" ? `name${team === "a" ? "A" : "B"}` : `name${team === "a" ? "A" : "B"}${slot}`;
+      return { ...prev, [key]: name };
+    });
   }, []);
 
   const startGame = useCallback((payload) => {
-    setState({
-      a: 0,
-      b: 0,
-      nameA1: payload.nameA1,
-      nameA2: payload.nameA2,
-      nameB1: payload.nameB1,
-      nameB2: payload.nameB2,
-      colorA: payload.colorA,
-      colorB: payload.colorB,
-    });
+    const format = normalizeFormat(payload.format);
+    const next = { a: 0, b: 0, format, colorA: payload.colorA, colorB: payload.colorB };
+    if (format === "indoor") {
+      next.nameA = payload.nameA;
+      next.nameB = payload.nameB;
+    } else {
+      next.nameA1 = payload.nameA1;
+      next.nameA2 = payload.nameA2;
+      next.nameB1 = payload.nameB1;
+      next.nameB2 = payload.nameB2;
+    }
+    setState(next);
     setBannerDismissed(false);
   }, []);
 
@@ -95,16 +117,22 @@ export function useScoreboardState() {
     setBannerDismissed(true);
   }, []);
 
-  const aWins = Boolean(state) && state.a >= WIN_SCORE && state.a > state.b;
-  const bWins = Boolean(state) && state.b >= WIN_SCORE && state.b > state.a;
-  const teamAName = state ? `${state.nameA1} & ${state.nameA2}` : "";
-  const teamBName = state ? `${state.nameB1} & ${state.nameB2}` : "";
+  const format = state ? normalizeFormat(state.format) : DEFAULT_FORMAT;
+  const winScore = winScoreFor(format);
+  const isIndoor = format === "indoor";
+  const aWins = Boolean(state) && state.a >= winScore && state.a - state.b >= 2;
+  const bWins = Boolean(state) && state.b >= winScore && state.b - state.a >= 2;
+  const teamAName = !state ? "" : isIndoor ? state.nameA : `${state.nameA1} & ${state.nameA2}`;
+  const teamBName = !state ? "" : isIndoor ? state.nameB : `${state.nameB1} & ${state.nameB2}`;
   const winnerName = aWins ? teamAName : bWins ? teamBName : null;
   const showBanner = Boolean(winnerName) && !bannerDismissed;
 
   return {
     state,
     hasActiveGame: state !== null,
+    format,
+    isIndoor,
+    winScore,
     aWins,
     bWins,
     teamAName,
@@ -119,4 +147,4 @@ export function useScoreboardState() {
   };
 }
 
-export { WIN_SCORE };
+export { WIN_SCORE_BY_FORMAT };

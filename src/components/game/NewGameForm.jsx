@@ -33,52 +33,80 @@ function nameInputClass() {
   return "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center text-base font-bold text-foreground placeholder:font-normal placeholder:text-muted focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2";
 }
 
-function SideFields({ label, color, otherColor, onColorChange, name1, name2, onName1, onName2 }) {
+function SideFields({ label, color, otherColor, onColorChange, isIndoor, teamName, onTeamName, name1, onName1, name2, onName2 }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
       <span aria-hidden="true" className="h-2 w-16 rounded-full" style={{ backgroundColor: color }} />
       <div className="flex w-full flex-col gap-2">
-        <input
-          type="text"
-          value={name1}
-          maxLength={24}
-          placeholder="Player 1 name"
-          aria-label={`${label}, player 1 name`}
-          onChange={(e) => onName1(e.target.value)}
-          className={nameInputClass()}
-        />
-        <input
-          type="text"
-          value={name2}
-          maxLength={24}
-          placeholder="Player 2 name"
-          aria-label={`${label}, player 2 name`}
-          onChange={(e) => onName2(e.target.value)}
-          className={nameInputClass()}
-        />
+        {isIndoor ? (
+          <input
+            type="text"
+            value={teamName}
+            maxLength={24}
+            placeholder="Team name"
+            aria-label={`${label}, team name`}
+            onChange={(e) => onTeamName(e.target.value)}
+            className={nameInputClass()}
+          />
+        ) : (
+          <>
+            <input
+              type="text"
+              value={name1}
+              maxLength={24}
+              placeholder="Player 1 name"
+              aria-label={`${label}, player 1 name`}
+              onChange={(e) => onName1(e.target.value)}
+              className={nameInputClass()}
+            />
+            <input
+              type="text"
+              value={name2}
+              maxLength={24}
+              placeholder="Player 2 name"
+              aria-label={`${label}, player 2 name`}
+              onChange={(e) => onName2(e.target.value)}
+              className={nameInputClass()}
+            />
+          </>
+        )}
       </div>
       <ColorSwatchPicker label={`${label} color`} selected={color} disabledColor={otherColor} onSelect={onColorChange} />
     </div>
   );
 }
 
-export default function NewGameForm({ onStart }) {
+export default function NewGameForm({ format, onStart }) {
+  const isIndoor = format === "indoor";
   const [nameA1, setNameA1] = useState("");
   const [nameA2, setNameA2] = useState("");
   const [nameB1, setNameB1] = useState("");
   const [nameB2, setNameB2] = useState("");
+  const [teamNameA, setTeamNameA] = useState("");
+  const [teamNameB, setTeamNameB] = useState("");
   const [colorA, setColorA] = useState(DEFAULT_COLOR_A);
   const [colorB, setColorB] = useState(DEFAULT_COLOR_B);
 
   function handleStart() {
-    onStart({
-      nameA1: sanitizeName(nameA1, "Player 1"),
-      nameA2: sanitizeName(nameA2, "Player 2"),
-      nameB1: sanitizeName(nameB1, "Player 1"),
-      nameB2: sanitizeName(nameB2, "Player 2"),
-      colorA,
-      colorB,
-    });
+    if (isIndoor) {
+      onStart({
+        format: "indoor",
+        nameA: sanitizeName(teamNameA, "Team A"),
+        nameB: sanitizeName(teamNameB, "Team B"),
+        colorA,
+        colorB,
+      });
+    } else {
+      onStart({
+        format: "beach",
+        nameA1: sanitizeName(nameA1, "Player 1"),
+        nameA2: sanitizeName(nameA2, "Player 2"),
+        nameB1: sanitizeName(nameB1, "Player 1"),
+        nameB2: sanitizeName(nameB2, "Player 2"),
+        colorA,
+        colorB,
+      });
+    }
   }
 
   return (
@@ -89,6 +117,9 @@ export default function NewGameForm({ onStart }) {
           color={colorA}
           otherColor={colorB}
           onColorChange={setColorA}
+          isIndoor={isIndoor}
+          teamName={teamNameA}
+          onTeamName={setTeamNameA}
           name1={nameA1}
           onName1={setNameA1}
           name2={nameA2}
@@ -99,6 +130,9 @@ export default function NewGameForm({ onStart }) {
           color={colorB}
           otherColor={colorA}
           onColorChange={setColorB}
+          isIndoor={isIndoor}
+          teamName={teamNameB}
+          onTeamName={setTeamNameB}
           name1={nameB1}
           onName1={setNameB1}
           name2={nameB2}
