@@ -57,15 +57,10 @@ function EditableTeamName({ id, name, fallback, label, onCommit }) {
   );
 }
 
-export default function TeamPanel({ accent, winner, score, name, fallback, onInc, onDec, onNameCommit }) {
+export default function TeamPanel({ winner, score, name, fallback, onInc, onDec, onNameCommit }) {
   return (
     <section
       aria-labelledby={`${fallback}-name`}
-      style={{
-        "--accent": accent,
-        "--accent-hover": `color-mix(in oklab, ${accent} 85%, black)`,
-        "--accent-foreground": "#06210f",
-      }}
       className={`flex min-w-0 flex-1 flex-col items-center justify-start border-t-[6px] p-2 transition-colors ${
         winner ? "bg-success/10 border-t-success" : "border-t-accent"
       }`}

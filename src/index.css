@@ -1,61 +1,19 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
-/* Brevard Volleyball Club brand theme — overrides HeroUI's default light
-   theme variables with a single permanent dark palette. Written unlayered
-   (after the imports above) so it wins over HeroUI's layered defaults
-   regardless of selector specificity. */
-:root {
-  color-scheme: dark;
+/* Brevard Volleyball Club theme — HeroUI's stock dark theme (activated via
+   the `dark` class on <html>) provides every semantic color (surfaces,
+   success, danger, warning, borders, etc). We only override the three
+   brand-facing tokens: pure black background, white foreground, and a
+   yellow accent. Written unlayered (after the imports above) so it wins
+   over HeroUI's layered theme regardless of selector specificity. */
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
 
-  --background: #0d1b1e;
-  --foreground: #f5f7f8;
-
-  --surface: #14282c;
-  --surface-foreground: #f5f7f8;
-  --surface-secondary: #182f33;
-  --surface-secondary-foreground: #f5f7f8;
-  --surface-tertiary: #1c363b;
-  --surface-tertiary-foreground: #f5f7f8;
-
-  --overlay: #16303a;
-  --overlay-foreground: #f5f7f8;
-
-  --muted: #b8c4c6;
-
-  --default: #1a3237;
-  --default-foreground: #f5f7f8;
-
-  --field-background: #14282c;
-  --field-foreground: #f5f7f8;
-  --field-placeholder: #b8c4c6;
-
-  --accent: #ffd166;
-  --accent-foreground: #1a1200;
-
-  --success: #2ecc71;
-  --success-foreground: #06210f;
-
-  --danger: #c0392b;
-  --danger-foreground: #f5f7f8;
-
-  --border: rgba(255, 255, 255, 0.12);
-  --separator: rgba(255, 255, 255, 0.12);
-
-  --backdrop: rgba(0, 0, 0, 0.6);
-
-  /* Dark surfaces read better without light-theme drop shadows */
-  --surface-shadow: 0 0 0 0 transparent inset;
-  --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.3) inset;
-  --field-shadow: 0 0 0 0 transparent inset;
-
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-@theme {
-  --color-team-a: #ff6b35;
-  --color-team-b: #1fb6ff;
+  --accent: #facc15;
+  --accent-hover: color-mix(in oklab, #facc15 85%, black);
+  --accent-foreground: #000000;
 }
 
 * {
@@ -73,13 +31,9 @@ body {
   overflow-x: hidden;
 }
 
-@media (prefers-contrast: more) {
-  :root {
-    --background: #000000;
-    --surface: #000000;
-    --surface-secondary: #000000;
-    --muted: #ffffff;
-  }
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Splash screen letter-pop animation (bespoke, not a HeroUI component) */

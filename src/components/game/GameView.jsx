@@ -8,7 +8,6 @@ export default function GameView({ scoreboard, onSaveGame }) {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-row">
         <TeamPanel
-          accent="var(--color-team-a)"
           winner={aWins}
           score={state.a}
           name={state.nameA}
@@ -26,7 +25,6 @@ export default function GameView({ scoreboard, onSaveGame }) {
         </div>
 
         <TeamPanel
-          accent="var(--color-team-b)"
           winner={bWins}
           score={state.b}
           name={state.nameB}
@@ -48,7 +46,7 @@ export default function GameView({ scoreboard, onSaveGame }) {
               variant="secondary"
               size="sm"
               onPress={onSaveGame}
-              className="rounded-full bg-[#06210f] text-success"
+              className="rounded-full bg-success-foreground text-success"
             >
               Save &amp; New Game
             </Button>
@@ -56,7 +54,7 @@ export default function GameView({ scoreboard, onSaveGame }) {
               variant="outline"
               size="sm"
               onPress={dismissBanner}
-              className="rounded-full border-2 border-[#06210f] text-[#06210f]"
+              className="rounded-full border-2 border-success-foreground text-success-foreground"
             >
               Keep Playing
             </Button>
