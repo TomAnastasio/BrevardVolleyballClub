@@ -21,9 +21,9 @@ export default function GameView({ scoreboard, onSaveGame }) {
 
         <div
           aria-hidden="true"
-          className="flex flex-none items-center justify-center px-1 text-sm font-bold text-muted [writing-mode:vertical-rl]"
+          className="flex flex-none items-center justify-center px-1 text-sm font-bold tracking-wide text-muted"
         >
-          <span>VS</span>
+          <span>BVC</span>
         </div>
 
         <TeamPanel

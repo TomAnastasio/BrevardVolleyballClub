@@ -9,7 +9,7 @@ import HistoryView from "./HistoryView.jsx";
 const SCREEN_META = {
   menu: { title: "Beach Volleyball Scoreboard", subtitle: "Brevard Volleyball Club" },
   new: { title: "New Game", subtitle: null },
-  active: { title: "Beach Volleyball Scoreboard", subtitle: null },
+  active: { title: null, subtitle: null },
   history: { title: "Past Games", subtitle: null },
 };
 
@@ -58,7 +58,9 @@ export default function GameTrackingShell({ onBack }) {
           &lsaquo; {isMenu ? "Menu" : "Back"}
         </button>
         <div className="flex-1 pr-12 text-center phone-landscape:pr-9">
-          <h1 className="m-0 text-[clamp(1rem,4vw,1.4rem)] font-bold phone-landscape:text-sm">{meta.title}</h1>
+          {meta.title && (
+            <h1 className="m-0 text-[clamp(1rem,4vw,1.4rem)] font-bold phone-landscape:text-sm">{meta.title}</h1>
+          )}
           {meta.subtitle && (
             <p className="m-0 mt-0.5 text-sm text-muted phone-landscape:hidden">{meta.subtitle}</p>
           )}
