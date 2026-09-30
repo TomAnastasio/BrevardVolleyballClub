@@ -1,3 +1,5 @@
+import SocialLinks from "./SocialLinks.jsx";
+
 function LandingCard({ icon, label, subtitle, onClick, delay }) {
   return (
     <button
@@ -53,6 +55,9 @@ export default function LandingView({ onPlayToday, onGameTracking }) {
           onClick={onGameTracking}
           delay="160ms"
         />
+      </div>
+      <div className="animate-landing-in relative" style={{ animationDelay: "240ms" }}>
+        <SocialLinks />
       </div>
     </main>
   );
