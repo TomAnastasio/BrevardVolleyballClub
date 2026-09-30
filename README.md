@@ -6,7 +6,17 @@ A free, mobile-first web app for keeping score of a beach volleyball game to 21.
 No install, no backend — just open it in a phone browser. Live at
 [brevardvolleyballclub.com](https://brevardvolleyballclub.com).
 
-Files: `index.html`, `style.css`, `app.js` (plain HTML/CSS/JS, no build step).
+Built with React, Vite, Tailwind CSS, and [HeroUI](https://www.heroui.com) as
+the component/design library.
+
+### Local development
+
+```bash
+npm install
+npm run dev       # dev server with hot reload
+npm run build      # production build to dist/
+npm run preview    # preview the production build locally
+```
 
 ### Hosting: GitHub Pages
 
