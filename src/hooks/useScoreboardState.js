@@ -1,22 +1,32 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../lib/teamColors.js";
 
 const STORAGE_KEY = "bvc-scoreboard-v1";
 const WIN_SCORE = 21;
 
+const NAME_FIELDS = {
+  nameA1: "Player 1",
+  nameA2: "Player 2",
+  nameB1: "Player 1",
+  nameB2: "Player 2",
+};
+
 function loadState() {
-  const fallback = { a: 0, b: 0, nameA: "Team A", nameB: "Team B" };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return fallback;
+    if (!raw) return null;
     const saved = JSON.parse(raw);
-    return {
-      a: typeof saved.a === "number" ? saved.a : fallback.a,
-      b: typeof saved.b === "number" ? saved.b : fallback.b,
-      nameA: typeof saved.nameA === "string" && saved.nameA.trim() ? saved.nameA : fallback.nameA,
-      nameB: typeof saved.nameB === "string" && saved.nameB.trim() ? saved.nameB : fallback.nameB,
-    };
+    if (typeof saved.a !== "number" || typeof saved.b !== "number") return null;
+
+    const state = { a: saved.a, b: saved.b };
+    for (const key of Object.keys(NAME_FIELDS)) {
+      state[key] = typeof saved[key] === "string" && saved[key].trim() ? saved[key] : NAME_FIELDS[key];
+    }
+    state.colorA = typeof saved.colorA === "string" ? saved.colorA : DEFAULT_COLOR_A;
+    state.colorB = typeof saved.colorB === "string" ? saved.colorB : DEFAULT_COLOR_B;
+    return state;
   } catch (e) {
-    return fallback;
+    return null;
   }
 }
 
@@ -35,14 +45,17 @@ function vibrate(pattern) {
 export function useScoreboardState() {
   const [state, setState] = useState(loadState);
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
+    if (state === null) {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (e) {
+        /* storage unavailable, continue without persistence */
+      }
+    } else {
+      saveState(state);
     }
-    saveState(state);
   }, [state]);
 
   const changeScore = useCallback((team, delta) => {
@@ -54,39 +67,55 @@ export function useScoreboardState() {
     vibrate(delta > 0 ? 15 : [10, 30, 10]);
   }, []);
 
-  const setName = useCallback((team, name) => {
-    setState((prev) => ({ ...prev, [team === "a" ? "nameA" : "nameB"]: name }));
+  const setName = useCallback((team, slot, name) => {
+    const key = `name${team === "a" ? "A" : "B"}${slot}`;
+    setState((prev) => ({ ...prev, [key]: name }));
   }, []);
 
-  const resetGame = useCallback(() => {
-    setState((prev) => ({ ...prev, a: 0, b: 0 }));
+  const startGame = useCallback((payload) => {
+    setState({
+      a: 0,
+      b: 0,
+      nameA1: payload.nameA1,
+      nameA2: payload.nameA2,
+      nameB1: payload.nameB1,
+      nameB2: payload.nameB2,
+      colorA: payload.colorA,
+      colorB: payload.colorB,
+    });
     setBannerDismissed(false);
-    vibrate(20);
+  }, []);
+
+  const clearActiveGame = useCallback(() => {
+    setState(null);
+    setBannerDismissed(false);
   }, []);
 
   const dismissBanner = useCallback(() => {
     setBannerDismissed(true);
   }, []);
 
-  const aWins = state.a >= WIN_SCORE && state.a > state.b;
-  const bWins = state.b >= WIN_SCORE && state.b > state.a;
-  const winnerName = aWins ? state.nameA : bWins ? state.nameB : null;
+  const aWins = Boolean(state) && state.a >= WIN_SCORE && state.a > state.b;
+  const bWins = Boolean(state) && state.b >= WIN_SCORE && state.b > state.a;
+  const teamAName = state ? `${state.nameA1} & ${state.nameA2}` : "";
+  const teamBName = state ? `${state.nameB1} & ${state.nameB2}` : "";
+  const winnerName = aWins ? teamAName : bWins ? teamBName : null;
   const showBanner = Boolean(winnerName) && !bannerDismissed;
 
   return {
     state,
+    hasActiveGame: state !== null,
     aWins,
     bWins,
+    teamAName,
+    teamBName,
     winnerName,
     showBanner,
     changeScore,
     setName,
-    resetGame,
+    startGame,
+    clearActiveGame,
     dismissBanner,
-    resetScoresOnly: () => {
-      setState((prev) => ({ ...prev, a: 0, b: 0 }));
-      setBannerDismissed(false);
-    },
   };
 }
 

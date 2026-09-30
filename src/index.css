@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
+/* Matches phones held sideways (short viewport height), not landscape-oriented
+   tablets/desktops, so the compact scoreboard layout only kicks in where it's
+   actually needed. */
+@custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 520px));
+
 /* Brevard Volleyball Club theme — HeroUI's stock dark theme (activated via
    the `dark` class on <html>) provides every semantic color (surfaces,
    success, danger, warning, borders, etc). We only override the three
@@ -81,5 +86,31 @@ body {
     animation: none;
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Landing page entrance (bespoke, not a HeroUI component) */
+
+@keyframes landing-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-landing-in {
+  opacity: 0;
+  animation: landing-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-landing-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

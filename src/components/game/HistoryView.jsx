@@ -2,9 +2,7 @@ import { Card } from "@heroui/react";
 
 export default function HistoryView({ history }) {
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto px-3 pb-6">
-      <h2 className="m-0 mt-3 mb-2 text-center text-[clamp(1.1rem,4.5vw,1.4rem)] font-bold">Game History</h2>
-
+    <div className="flex flex-1 flex-col overflow-y-auto px-3 pt-3 pb-6">
       {history.length === 0 ? (
         <p className="p-6 text-center text-muted">No games saved yet. Finish a game to see it here.</p>
       ) : (
@@ -31,6 +29,6 @@ export default function HistoryView({ history }) {
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }

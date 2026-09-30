@@ -1,8 +1,8 @@
-import { AlertDialog, Button, Card, buttonVariants } from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import TeamPanel from "./TeamPanel.jsx";
 
 export default function GameView({ scoreboard, onSaveGame }) {
-  const { state, aWins, bWins, winnerName, showBanner, changeScore, setName, resetGame, dismissBanner } = scoreboard;
+  const { state, aWins, bWins, winnerName, showBanner, changeScore, setName, dismissBanner } = scoreboard;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -10,11 +10,13 @@ export default function GameView({ scoreboard, onSaveGame }) {
         <TeamPanel
           winner={aWins}
           score={state.a}
-          name={state.nameA}
-          fallback="Team A"
+          names={[state.nameA1, state.nameA2]}
+          fallbacks={["Player 1", "Player 2"]}
+          side="A"
+          color={state.colorA}
           onInc={() => changeScore("a", 1)}
           onDec={() => changeScore("a", -1)}
-          onNameCommit={(next) => setName("a", next)}
+          onNameCommit={(slot, next) => setName("a", slot, next)}
         />
 
         <div
@@ -27,20 +29,22 @@ export default function GameView({ scoreboard, onSaveGame }) {
         <TeamPanel
           winner={bWins}
           score={state.b}
-          name={state.nameB}
-          fallback="Team B"
+          names={[state.nameB1, state.nameB2]}
+          fallbacks={["Player 1", "Player 2"]}
+          side="B"
+          color={state.colorB}
           onInc={() => changeScore("b", 1)}
           onDec={() => changeScore("b", -1)}
-          onNameCommit={(next) => setName("b", next)}
+          onNameCommit={(slot, next) => setName("b", slot, next)}
         />
       </div>
 
       {showBanner && (
         <Card
           role="alert"
-          className="mx-3 mt-2 flex flex-col items-center gap-2 bg-success p-4 text-center text-success-foreground shadow-lg"
+          className="mx-3 mt-2 flex flex-col items-center gap-2 bg-success p-4 text-center text-success-foreground shadow-lg phone-landscape:mx-2 phone-landscape:mt-1 phone-landscape:flex-row phone-landscape:flex-wrap phone-landscape:gap-2 phone-landscape:p-2"
         >
-          <p className="m-0 font-extrabold">{winnerName} wins!</p>
+          <p className="m-0 font-extrabold phone-landscape:text-sm">{winnerName} wins!</p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button
               variant="secondary"
@@ -48,7 +52,7 @@ export default function GameView({ scoreboard, onSaveGame }) {
               onPress={onSaveGame}
               className="rounded-full bg-success-foreground text-success"
             >
-              Save &amp; New Game
+              Save Game
             </Button>
             <Button
               variant="outline"
@@ -61,35 +65,6 @@ export default function GameView({ scoreboard, onSaveGame }) {
           </div>
         </Card>
       )}
-
-      <div className="flex flex-none justify-center p-2">
-        <AlertDialog>
-          <AlertDialog.Trigger
-            className={buttonVariants({ variant: "secondary" }) + " min-w-32 min-h-12"}
-            aria-label="Start a new game, resets both scores to zero"
-          >
-            New Game
-          </AlertDialog.Trigger>
-          <AlertDialog.Backdrop>
-            <AlertDialog.Container>
-              <AlertDialog.Dialog>
-                <AlertDialog.Header>
-                  <AlertDialog.Heading>Start a new game?</AlertDialog.Heading>
-                </AlertDialog.Header>
-                <AlertDialog.Body>This resets both scores to 0.</AlertDialog.Body>
-                <AlertDialog.Footer>
-                  <Button variant="outline" slot="close">
-                    Cancel
-                  </Button>
-                  <Button variant="danger" slot="close" onPress={resetGame}>
-                    Start New Game
-                  </Button>
-                </AlertDialog.Footer>
-              </AlertDialog.Dialog>
-            </AlertDialog.Container>
-          </AlertDialog.Backdrop>
-        </AlertDialog>
-      </div>
     </div>
   );
 }
