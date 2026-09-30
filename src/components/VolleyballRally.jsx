@@ -15,43 +15,29 @@ function randomBetween(min, max) {
   return min + Math.random() * (max - min);
 }
 
-function easeInOutQuad(t) {
-  return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
+function easeOutCubic(t) {
+  return 1 - (1 - t) ** 3;
 }
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-function drawPlayer(ctx, { x, groundY, facing, swing, wobble }) {
-  const legW = 3;
-  const legGap = 2;
-  const legH = 7;
-  const bodyW = 8;
-  const bodyH = 9;
+function drawPlayer(ctx, { x, groundY, squash, hop }) {
+  const bodyW = 9;
+  const bodyH = 15;
   const headW = 7;
   const headH = 7;
-  const armW = 3;
-  const armH = 8;
 
-  ctx.fillRect(Math.round(x - legGap - legW + wobble), groundY - legH, legW, legH);
-  ctx.fillRect(Math.round(x + legGap - wobble), groundY - legH, legW, legH);
+  const squashedW = bodyW * (1 + squash * 0.35);
+  const squashedH = bodyH * (1 - squash * 0.35);
 
-  const bodyTop = groundY - legH - bodyH;
-  ctx.fillRect(Math.round(x - bodyW / 2), bodyTop, bodyW, bodyH);
+  const bodyBottom = groundY - hop;
+  const bodyTop = bodyBottom - squashedH;
+  ctx.fillRect(Math.round(x - squashedW / 2), Math.round(bodyTop), Math.round(squashedW), Math.round(squashedH));
 
   const headTop = bodyTop - headH;
-  ctx.fillRect(Math.round(x - headW / 2), headTop, headW, headH);
-
-  const armTop = bodyTop + 1;
-  const backArmX = x - facing * (bodyW / 2 + armW);
-  ctx.fillRect(Math.round(backArmX), armTop, armW, armH);
-
-  const forwardRestX = x + facing * (bodyW / 2);
-  const forwardSwingX = x + facing * (bodyW / 2 + armW + 5);
-  const forwardX = lerp(forwardRestX, forwardSwingX, swing);
-  const forwardTop = armTop - swing * 9;
-  ctx.fillRect(Math.round(forwardX), Math.round(forwardTop), armW, armH);
+  ctx.fillRect(Math.round(x - headW / 2), Math.round(headTop), headW, headH);
 }
 
 export default function VolleyballRally({ className = "" }) {
@@ -164,25 +150,31 @@ export default function VolleyballRally({ className = "" }) {
 
       const receiverSide = rally.hitterSide === "left" ? "right" : "left";
       const hitterX = positions[rally.hitterSide];
-      const receiverX = lerp(rally.receiverStartX, rally.targetX, t);
-      positions[receiverSide] = receiverX;
-
-      const ballHitY = groundY - FIGURE_HEIGHT_PX * 0.6;
+      // The ball itself moves at a constant clip (true parabola, no ease) so it snaps off
+      // the hitter and into the receiver instead of drifting in and out slowly.
       const ballX = lerp(hitterX, rally.targetX, t);
+      const ballHitY = groundY - FIGURE_HEIGHT_PX * 0.6;
       const ballY = ballHitY - 4 * rally.arc * t * (1 - t);
 
-      const hitterSwing = t < 0.18 ? 1 - t / 0.18 : 0;
-      const receiverSwing = t > 0.8 ? (t - 0.8) / 0.2 : 0;
+      // The receiver's footwork eases out (quick reaction, gentle settle) rather than
+      // tracking the ball's linear pace 1:1.
+      const receiverX = lerp(rally.receiverStartX, rally.targetX, easeOutCubic(t));
+      positions[receiverSide] = receiverX;
+
+      // Bounce/squash cue right at contact (t≈0 = just hit, t≈1 = about to hit).
+      const contactProximity = Math.min(t, 1 - t);
+      const contactSquash = contactProximity < 0.08 ? 1 - contactProximity / 0.08 : 0;
+      const hitterSquash = t < 0.08 ? contactSquash : 0;
+      const receiverSquash = t > 0.92 ? contactSquash : 0;
 
       ctx.fillStyle = "rgba(255,255,255,0.88)";
       const drawSide = (side) => {
-        const isLeft = side === "left";
-        const x = side === rally.hitterSide ? hitterX : receiverX;
-        const swing = side === rally.hitterSide ? hitterSwing : receiverSwing;
         const isMoving = side === receiverSide;
-        const wobbleAmplitude = isMoving ? 1.4 : 0.4;
-        const wobble = Math.sin(nowSeconds * 6 + (isLeft ? 0 : Math.PI)) * wobbleAmplitude;
-        drawPlayer(ctx, { x, groundY, facing: isLeft ? 1 : -1, swing, wobble });
+        const x = isMoving ? receiverX : hitterX;
+        const squash = isMoving ? receiverSquash : hitterSquash;
+        const idleAmplitude = isMoving ? 1.6 : 0.6;
+        const hop = Math.abs(Math.sin(nowSeconds * 5 + (side === "left" ? 0 : Math.PI))) * idleAmplitude;
+        drawPlayer(ctx, { x, groundY, squash, hop });
       };
       drawSide("left");
       drawSide("right");
@@ -193,9 +185,10 @@ export default function VolleyballRally({ className = "" }) {
       ctx.ellipse(ballX, groundY, 4 * shadowScale, 1.5 * shadowScale, 0, 0, Math.PI * 2);
       ctx.fill();
 
+      const ballSquash = contactSquash;
       ctx.fillStyle = "#facc15";
       ctx.beginPath();
-      ctx.arc(ballX, ballY, 3, 0, Math.PI * 2);
+      ctx.ellipse(ballX, ballY, 3 * (1 + ballSquash * 0.6), 3 * (1 - ballSquash * 0.5), 0, 0, Math.PI * 2);
       ctx.fill();
     };
 
@@ -218,16 +211,15 @@ export default function VolleyballRally({ className = "" }) {
       lastTime = now;
 
       rally.elapsed += dt;
-      let t = rally.duration > 0 ? rally.elapsed / rally.duration : 1;
+      const t = rally.duration > 0 ? rally.elapsed / rally.duration : 1;
       if (t >= 1) {
-        t = 1;
-        render(easeInOutQuad(t), now / 1000);
+        render(1, now / 1000);
         positions[rally.hitterSide === "left" ? "right" : "left"] = rally.targetX;
         rally.hitterSide = rally.hitterSide === "left" ? "right" : "left";
         startNextFlight();
         return;
       }
-      render(easeInOutQuad(t), now / 1000);
+      render(t, now / 1000);
     };
     raf = requestAnimationFrame(tick);
 
