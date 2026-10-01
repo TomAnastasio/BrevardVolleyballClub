@@ -163,14 +163,16 @@ export function useGameHistory() {
 
             // Link whichever other-player slots were picked from the known-
             // player search (not free-typed) to their real profiles, so they
-            // can see this game in their own history too. A failure here
-            // must not undo or block the game save above — it's a separate
-            // insert, logged on its own.
-            if (data && game.participantIds?.length) {
+            // can see this game in their own history too, and so a ranked
+            // game's Elo trigger (migration 0006) knows which team each
+            // linked player was on. A failure here must not undo or block
+            // the game save above — it's a separate insert, logged on its
+            // own.
+            if (data && game.participants?.length) {
               try {
-                const { error: linkError } = await supabase
-                  .from("game_players")
-                  .insert(game.participantIds.map((participantId) => ({ game_id: data.id, user_id: participantId })));
+                const { error: linkError } = await supabase.from("game_players").insert(
+                  game.participants.map((p) => ({ game_id: data.id, user_id: p.userId, slot: p.slot })),
+                );
                 if (linkError) throw linkError;
               } catch (linkErr) {
                 console.error("Failed to link game participants in Supabase:", linkErr);

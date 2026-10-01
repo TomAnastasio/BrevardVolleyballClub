@@ -30,7 +30,7 @@ function LandingCard({ icon, label, subtitle, onClick, delay }) {
   );
 }
 
-export default function LandingView({ onPlayToday, onGameTracking }) {
+export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard }) {
   const { user } = useAuth();
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const isAuthenticated = Boolean(user);
@@ -61,6 +61,13 @@ export default function LandingView({ onPlayToday, onGameTracking }) {
             subtitle="Score and track live matches"
             onClick={onGameTracking}
             delay="160ms"
+          />
+          <LandingCard
+            icon="🏆"
+            label="Rankings"
+            subtitle="See where you stand county-wide"
+            onClick={onLeaderboard}
+            delay="240ms"
           />
         </div>
         <div className="animate-landing-in relative" style={{ animationDelay: "240ms" }}>

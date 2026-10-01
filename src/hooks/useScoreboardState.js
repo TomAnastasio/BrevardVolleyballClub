@@ -133,10 +133,18 @@ export function useScoreboardState() {
   const teamAName = !state ? "" : isIndoor ? state.nameA : `${state.nameA1} & ${state.nameA2}`;
   const teamBName = !state ? "" : isIndoor ? state.nameB : `${state.nameB1} & ${state.nameB2}`;
   // The submitter doesn't need a link of their own (already identified via
-  // games.user_id) — only the other 3 slots' picked-from-search profile ids,
-  // when present, become game_players rows once the game is saved.
-  const participantIds =
-    !state || isIndoor ? [] : [state.playerIdA2, state.playerIdB1, state.playerIdB2].filter(Boolean);
+  // games.user_id, implicit slot a1) — only the other 3 slots' picked-from-
+  // search profile ids, when present, become game_players rows once the
+  // game is saved. Each one is tagged with its slot (not just flattened to
+  // an id) so the Elo trigger can tell which team a linked player was on.
+  const participants =
+    !state || isIndoor
+      ? []
+      : [
+          { slot: "a2", userId: state.playerIdA2 },
+          { slot: "b1", userId: state.playerIdB1 },
+          { slot: "b2", userId: state.playerIdB2 },
+        ].filter((p) => p.userId);
   const winnerName = aWins ? teamAName : bWins ? teamBName : null;
   const showBanner = Boolean(winnerName) && !bannerDismissed;
 
@@ -150,7 +158,7 @@ export function useScoreboardState() {
     bWins,
     teamAName,
     teamBName,
-    participantIds,
+    participants,
     winnerName,
     showBanner,
     changeScore,

@@ -2,6 +2,7 @@ import { useState } from "react";
 import SplashScreen from "./components/SplashScreen.jsx";
 import LandingView from "./components/LandingView.jsx";
 import PlayTodayView from "./components/PlayTodayView.jsx";
+import LeaderboardView from "./components/LeaderboardView.jsx";
 import GameTrackingShell from "./components/game/GameTrackingShell.jsx";
 import { AuthProvider } from "./hooks/AuthContext.jsx";
 import { hasPendingRankedGame } from "./lib/pendingRankedGame.js";
@@ -20,9 +21,14 @@ export default function App() {
       {appReady && (
         <div className="flex min-h-dvh flex-col bg-background text-foreground [font-family:system-ui,-apple-system,'Segoe_UI',Roboto,sans-serif]">
           {view === "landing" && (
-            <LandingView onPlayToday={() => setView("play")} onGameTracking={() => setView("game")} />
+            <LandingView
+              onPlayToday={() => setView("play")}
+              onGameTracking={() => setView("game")}
+              onLeaderboard={() => setView("leaderboard")}
+            />
           )}
           {view === "play" && <PlayTodayView onBack={() => setView("landing")} />}
+          {view === "leaderboard" && <LeaderboardView onBack={() => setView("landing")} />}
           {view === "game" && <GameTrackingShell onBack={() => setView("landing")} />}
         </div>
       )}

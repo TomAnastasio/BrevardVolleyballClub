@@ -264,6 +264,12 @@ export default function NewGameForm({ format, mode, onStart }) {
     : findDuplicateNameKeys({ a1: nameA1, a2: nameA2, b1: nameB1, b2: nameB2 });
   const hasDuplicateNames = duplicateNameKeys.size > 0;
 
+  // Ranked beach games require every participant to be a known profile (not
+  // free-typed) so Elo has something real to attach a rating to. Casual and
+  // indoor are unaffected.
+  const requireLinkedPlayers = !isIndoor && mode === "ranked";
+  const hasUnlinkedPlayers = requireLinkedPlayers && (!playerIdA2 || !playerIdB1 || !playerIdB2);
+
   function handleStart() {
     if (isIndoor) {
       onStart({
@@ -274,7 +280,7 @@ export default function NewGameForm({ format, mode, onStart }) {
         colorB,
       });
     } else {
-      if (hasDuplicateNames) return;
+      if (hasDuplicateNames || hasUnlinkedPlayers) return;
       onStart({
         format: "beach",
         nameA1: sanitizeName(nameA1, "Player 1"),
@@ -344,10 +350,15 @@ export default function NewGameForm({ format, mode, onStart }) {
             Fix the duplicate player name(s) above before starting.
           </p>
         )}
+        {!hasDuplicateNames && hasUnlinkedPlayers && (
+          <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
+            Every player must be picked from search to start a ranked game — they need to have signed in at least once.
+          </p>
+        )}
         <Button
           variant="primary"
           onPress={handleStart}
-          isDisabled={hasDuplicateNames}
+          isDisabled={hasDuplicateNames || hasUnlinkedPlayers}
           className="min-h-14 w-full text-lg font-extrabold"
         >
           Start Game
