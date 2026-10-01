@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@heroui/react";
 import { sanitizeName } from "../../lib/sanitizeName.js";
 import { TEAM_COLORS, DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../../lib/teamColors.js";
+import { useAuth } from "../../hooks/useAuth.js";
 
 function ColorSwatchPicker({ label, selected, disabledColor, onSelect }) {
   return (
@@ -33,7 +34,7 @@ function nameInputClass() {
   return "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center text-base font-bold text-foreground placeholder:font-normal placeholder:text-muted focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2";
 }
 
-function SideFields({ label, color, otherColor, onColorChange, isIndoor, teamName, onTeamName, name1, onName1, name2, onName2 }) {
+function SideFields({ label, color, otherColor, onColorChange, isIndoor, teamName, onTeamName, name1, onName1, name2, onName2, selfAvatar }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
       <span aria-hidden="true" className="h-2 w-16 rounded-full" style={{ backgroundColor: color }} />
@@ -50,15 +51,28 @@ function SideFields({ label, color, otherColor, onColorChange, isIndoor, teamNam
           />
         ) : (
           <>
-            <input
-              type="text"
-              value={name1}
-              maxLength={24}
-              placeholder="Player 1 name"
-              aria-label={`${label}, player 1 name`}
-              onChange={(e) => onName1(e.target.value)}
-              className={nameInputClass()}
-            />
+            <div className="flex items-center gap-2">
+              {selfAvatar && (
+                <img
+                  src={selfAvatar}
+                  alt=""
+                  aria-hidden="true"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                  className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover"
+                />
+              )}
+              <input
+                type="text"
+                value={name1}
+                maxLength={24}
+                placeholder="Player 1 name"
+                aria-label={`${label}, player 1 name`}
+                onChange={(e) => onName1(e.target.value)}
+                className={nameInputClass()}
+              />
+            </div>
             <input
               type="text"
               value={name2}
@@ -76,9 +90,14 @@ function SideFields({ label, color, otherColor, onColorChange, isIndoor, teamNam
   );
 }
 
-export default function NewGameForm({ format, onStart }) {
+export default function NewGameForm({ format, mode, onStart }) {
   const isIndoor = format === "indoor";
-  const [nameA1, setNameA1] = useState("");
+  const { user } = useAuth();
+  const prefillSelf = mode === "ranked" && !isIndoor && Boolean(user);
+  const selfName = prefillSelf ? user.user_metadata?.full_name || user.user_metadata?.name || "" : "";
+  const selfAvatar = prefillSelf ? user.user_metadata?.avatar_url || user.user_metadata?.picture || null : null;
+
+  const [nameA1, setNameA1] = useState(selfName);
   const [nameA2, setNameA2] = useState("");
   const [nameB1, setNameB1] = useState("");
   const [nameB2, setNameB2] = useState("");
@@ -124,6 +143,7 @@ export default function NewGameForm({ format, onStart }) {
           onName1={setNameA1}
           name2={nameA2}
           onName2={setNameA2}
+          selfAvatar={selfAvatar}
         />
         <SideFields
           label="Second side"

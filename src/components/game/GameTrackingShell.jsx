@@ -148,7 +148,7 @@ export default function GameTrackingShell({ onBack }) {
           <GameModeMenu onSelectMode={handleSelectMode} isSupabaseConfigured={isConfigured} authLoading={loading} />
         )}
         {screen === "signin" && <RankedSignInGate onSignIn={handleRankedSignIn} loading={loading} />}
-        {screen === "new" && <NewGameForm format={pendingFormat} onStart={handleStartGame} />}
+        {screen === "new" && <NewGameForm format={pendingFormat} mode={pendingMode} onStart={handleStartGame} />}
         {screen === "active" && scoreboard.state && (
           <GameView
             scoreboard={scoreboard}
