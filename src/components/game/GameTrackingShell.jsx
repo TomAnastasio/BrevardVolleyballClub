@@ -3,7 +3,6 @@ import { useScoreboardState } from "../../hooks/useScoreboardState.js";
 import { useGameHistory } from "../../hooks/useGameHistory.js";
 import { useForcedLandscape } from "../../hooks/useForcedLandscape.js";
 import { useAuth } from "../../hooks/useAuth.js";
-import { AuthProvider } from "../../hooks/AuthContext.jsx";
 import GameMenu from "./GameMenu.jsx";
 import GameFormatMenu from "./GameFormatMenu.jsx";
 import GameModeMenu from "./GameModeMenu.jsx";
@@ -26,14 +25,6 @@ const SCREEN_META = {
 const BACK_MAP = { format: "menu", mode: "format", signin: "mode", new: "mode", active: "menu", history: "menu" };
 
 export default function GameTrackingShell({ onBack }) {
-  return (
-    <AuthProvider>
-      <GameTrackingShellInner onBack={onBack} />
-    </AuthProvider>
-  );
-}
-
-function GameTrackingShellInner({ onBack }) {
   const scoreboard = useScoreboardState();
   const { history, addGame } = useGameHistory();
   const { user, loading, isConfigured, signInWithGoogle } = useAuth();

@@ -23,7 +23,7 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-function drawPlayer(ctx, { x, groundY, squash, hop }) {
+function drawPlayer(ctx, { x, groundY, squash, hop, avatarImg }) {
   const bodyW = 9;
   const bodyH = 15;
   const headW = 7;
@@ -36,13 +36,54 @@ function drawPlayer(ctx, { x, groundY, squash, hop }) {
   const bodyTop = bodyBottom - squashedH;
   ctx.fillRect(Math.round(x - squashedW / 2), Math.round(bodyTop), Math.round(squashedW), Math.round(squashedH));
 
-  const headTop = bodyTop - headH;
-  ctx.fillRect(Math.round(x - headW / 2), Math.round(headTop), headW, headH);
+  if (avatarImg) {
+    const diameter = bodyH * 2;
+    const radius = diameter / 2;
+    const centerX = x;
+    const centerY = bodyTop - radius;
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(avatarImg, centerX - radius, centerY - radius, diameter, diameter);
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(255,255,255,0.85)";
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    const headTop = bodyTop - headH;
+    ctx.fillRect(Math.round(x - headW / 2), Math.round(headTop), headW, headH);
+  }
 }
 
-export default function VolleyballRally({ className = "" }) {
+export default function VolleyballRally({ className = "", avatarUrl = null }) {
   const canvasRef = useRef(null);
   const wrapperRef = useRef(null);
+  const avatarImageRef = useRef(null);
+
+  useEffect(() => {
+    if (!avatarUrl) {
+      avatarImageRef.current = null;
+      return undefined;
+    }
+    let cancelled = false;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      if (!cancelled) avatarImageRef.current = img;
+    };
+    img.src = avatarUrl;
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarUrl]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -174,7 +215,8 @@ export default function VolleyballRally({ className = "" }) {
         const squash = isMoving ? receiverSquash : hitterSquash;
         const idleAmplitude = isMoving ? 1.6 : 0.6;
         const hop = Math.abs(Math.sin(nowSeconds * 5 + (side === "left" ? 0 : Math.PI))) * idleAmplitude;
-        drawPlayer(ctx, { x, groundY, squash, hop });
+        const avatarImg = side === "left" ? avatarImageRef.current : null;
+        drawPlayer(ctx, { x, groundY, squash, hop, avatarImg });
       };
       drawSide("left");
       drawSide("right");
