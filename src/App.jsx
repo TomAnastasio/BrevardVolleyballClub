@@ -3,10 +3,15 @@ import SplashScreen from "./components/SplashScreen.jsx";
 import LandingView from "./components/LandingView.jsx";
 import PlayTodayView from "./components/PlayTodayView.jsx";
 import GameTrackingShell from "./components/game/GameTrackingShell.jsx";
+import { hasPendingRankedGame } from "./lib/pendingRankedGame.js";
 
 export default function App() {
   const [appReady, setAppReady] = useState(false);
-  const [view, setView] = useState("landing");
+  // The Google OAuth sign-in redirect reloads the page from scratch, which
+  // would otherwise always reset to "landing". Jump straight back into game
+  // tracking so a signed-in user lands on their in-progress ranked game
+  // instead of having to re-navigate from the top.
+  const [view, setView] = useState(() => (hasPendingRankedGame() ? "game" : "landing"));
 
   return (
     <>

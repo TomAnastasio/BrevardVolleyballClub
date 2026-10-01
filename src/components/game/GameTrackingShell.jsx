@@ -11,6 +11,7 @@ import RankedSignInGate from "./RankedSignInGate.jsx";
 import NewGameForm from "./NewGameForm.jsx";
 import GameView from "./GameView.jsx";
 import HistoryView from "./HistoryView.jsx";
+import { consumePendingRankedGame, setPendingRankedGame } from "../../lib/pendingRankedGame.js";
 
 const SCREEN_META = {
   menu: { title: "Beach Volleyball Scoreboard", subtitle: "Brevard Volleyball Club" },
@@ -23,9 +24,6 @@ const SCREEN_META = {
 };
 
 const BACK_MAP = { format: "menu", mode: "format", signin: "mode", new: "mode", active: "menu", history: "menu" };
-
-const PENDING_RANKED_GAME_KEY = "bvc-pending-ranked-game";
-const PENDING_RANKED_GAME_TTL_MS = 5 * 60 * 1000;
 
 export default function GameTrackingShell({ onBack }) {
   return (
@@ -70,45 +68,21 @@ function GameTrackingShellInner({ onBack }) {
   // before signInWithGoogle() was called) and resumes straight into the
   // "new" game screen for a signed-in user, skipping format/mode re-selection.
   useEffect(() => {
-    let raw;
-    try {
-      raw = sessionStorage.getItem(PENDING_RANKED_GAME_KEY);
-    } catch (e) {
-      raw = null;
-    }
-    if (!raw) return;
+    // Wait for the initial getSession() round trip to resolve; consuming
+    // (and thus deleting) the breadcrumb while `user` is still its default
+    // null would discard it before we actually know whether sign-in worked.
+    if (loading) return;
 
-    try {
-      sessionStorage.removeItem(PENDING_RANKED_GAME_KEY);
-    } catch (e) {
-      /* storage unavailable, continue without persistence */
-    }
-
-    let pending;
-    try {
-      pending = JSON.parse(raw);
-    } catch (e) {
-      return;
-    }
-
-    if (!pending || typeof pending.expiresAt !== "number") return;
-    if (Date.now() >= pending.expiresAt) return;
-    if (!user) return;
+    const pending = consumePendingRankedGame();
+    if (!pending || !user) return;
 
     setPendingFormat(pending.format);
     setPendingMode("ranked");
     setScreen("new");
-  }, [user]);
+  }, [loading, user]);
 
   function handleRankedSignIn() {
-    try {
-      sessionStorage.setItem(
-        PENDING_RANKED_GAME_KEY,
-        JSON.stringify({ format: pendingFormat, expiresAt: Date.now() + PENDING_RANKED_GAME_TTL_MS }),
-      );
-    } catch (e) {
-      /* storage unavailable, continue without persistence */
-    }
+    setPendingRankedGame(pendingFormat);
     signInWithGoogle();
   }
 
