@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../lib/teamColors.js";
+import { normalizeMode } from "../lib/gameMode.js";
 
 const STORAGE_KEY = "bvc-scoreboard-v1";
 const DEFAULT_FORMAT = "beach";
@@ -41,6 +42,7 @@ function loadState() {
 
     state.colorA = typeof saved.colorA === "string" ? saved.colorA : DEFAULT_COLOR_A;
     state.colorB = typeof saved.colorB === "string" ? saved.colorB : DEFAULT_COLOR_B;
+    state.mode = normalizeMode(saved.mode);
     return state;
   } catch (e) {
     return null;
@@ -94,7 +96,7 @@ export function useScoreboardState() {
 
   const startGame = useCallback((payload) => {
     const format = normalizeFormat(payload.format);
-    const next = { a: 0, b: 0, format, colorA: payload.colorA, colorB: payload.colorB };
+    const next = { a: 0, b: 0, format, colorA: payload.colorA, colorB: payload.colorB, mode: payload.mode };
     if (format === "indoor") {
       next.nameA = payload.nameA;
       next.nameB = payload.nameB;

@@ -4,3 +4,5 @@ dist/
 *.log
 .claude/settings.local.json
 TODO.md
+.env
+.env.local
