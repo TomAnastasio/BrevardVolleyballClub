@@ -74,6 +74,8 @@ declare
   b2 record;
   team_a_avg numeric;
   team_b_avg numeric;
+  rating_diff numeric;
+  odds numeric;
   expected_a numeric;
   actual_a numeric;
 begin
@@ -111,7 +113,9 @@ begin
 
   team_a_avg := (a1.elo_rating + a2.elo_rating) / 2.0;
   team_b_avg := (b1.elo_rating + b2.elo_rating) / 2.0;
-  expected_a := 1.0 / (1.0 + power(10.0, (team_b_avg - team_a_avg) / 400.0));
+  rating_diff := team_b_avg - team_a_avg;
+  odds := power(10.0, rating_diff / 400.0);
+  expected_a := 1.0 / (1.0 + odds);
   actual_a := case when g.score_a > g.score_b then 1.0 else 0.0 end;
 
   perform public.apply_elo_update(new.game_id, a1_id, a1.elo_rating, a1.elo_games_played, actual_a, expected_a);
@@ -143,10 +147,12 @@ security definer set search_path = public
 as $$
 declare
   k integer;
+  score_diff numeric;
   rating_after integer;
 begin
   k := case when p_games_played < 15 then 40 else 20 end;
-  rating_after := round(p_rating_before + k * (p_actual - p_expected));
+  score_diff := p_actual - p_expected;
+  rating_after := round(p_rating_before + k * score_diff);
 
   update public.profiles
     set elo_rating = rating_after, elo_games_played = p_games_played + 1
