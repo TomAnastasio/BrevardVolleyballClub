@@ -3,26 +3,26 @@ import { fuzzyFilter } from "../../lib/fuzzyMatch.js";
 
 // Free-text name input with a fuzzy-matched dropdown of known players
 // (accounts that have signed in at least once) layered on top. Selecting a
-// suggestion fills the name field and reports that player's avatar back via
-// onChange's second argument, so the caller can show it the same way the
-// signed-in submitter's own avatar is shown. It's still plain text
-// underneath, matching every other player-name field in the app (see
-// TODO.md item 6: "every participant must have a known profile" is a
-// still-open rule this doesn't enforce, it just makes picking a known name
-// easier).
-export default function PlayerSearchField({ value, onChange, placeholder, ariaLabel, directory, excludeId, inputClassName }) {
+// suggestion fills the name field and reports that player's avatar and id
+// back via onChange's 2nd/3rd arguments, so the caller can show the avatar
+// (like the signed-in submitter's own) and keep the same profile from being
+// picked into more than one player slot. It's still plain text underneath,
+// matching every other player-name field in the app (see TODO.md item 6:
+// "every participant must have a known profile" is a still-open rule this
+// doesn't enforce, it just makes picking a known name easier).
+export default function PlayerSearchField({ value, onChange, placeholder, ariaLabel, directory, excludeIds, inputClassName }) {
   const [isOpen, setIsOpen] = useState(false);
   const listId = useId();
 
   const candidates = useMemo(
-    () => (excludeId ? directory.filter((p) => p.id !== excludeId) : directory),
-    [directory, excludeId],
+    () => (excludeIds?.length ? directory.filter((p) => !excludeIds.includes(p.id)) : directory),
+    [directory, excludeIds],
   );
   const matches = useMemo(() => fuzzyFilter(value, candidates, (p) => p.display_name), [value, candidates]);
   const showDropdown = isOpen && matches.length > 0;
 
   function handleSelect(player) {
-    onChange(player.display_name, player.avatar_url || null);
+    onChange(player.display_name, player.avatar_url || null, player.id);
     setIsOpen(false);
   }
 
@@ -40,7 +40,7 @@ export default function PlayerSearchField({ value, onChange, placeholder, ariaLa
         aria-autocomplete="list"
         autoComplete="off"
         onChange={(e) => {
-          onChange(e.target.value, null);
+          onChange(e.target.value, null, null);
           setIsOpen(true);
         }}
         onFocus={() => setIsOpen(true)}

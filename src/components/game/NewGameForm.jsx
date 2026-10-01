@@ -86,7 +86,8 @@ function SideFields({
   name1IsSelf,
   enableSearch,
   directory,
-  excludeId,
+  excludeIds1,
+  excludeIds2,
 }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -113,7 +114,7 @@ function SideFields({
                   placeholder="Player 1 name"
                   ariaLabel={`${label}, player 1 name`}
                   directory={directory}
-                  excludeId={excludeId}
+                  excludeIds={excludeIds1}
                   inputClassName={nameInputClass()}
                 />
               ) : (
@@ -137,7 +138,7 @@ function SideFields({
                   placeholder="Player 2 name"
                   ariaLabel={`${label}, player 2 name`}
                   directory={directory}
-                  excludeId={excludeId}
+                  excludeIds={excludeIds2}
                   inputClassName={nameInputClass()}
                 />
               ) : (
@@ -176,26 +177,37 @@ export default function NewGameForm({ format, mode, onStart }) {
   const [avatarA2, setAvatarA2] = useState(null);
   const [avatarB1, setAvatarB1] = useState(null);
   const [avatarB2, setAvatarB2] = useState(null);
+  const [playerIdA2, setPlayerIdA2] = useState(null);
+  const [playerIdB1, setPlayerIdB1] = useState(null);
+  const [playerIdB2, setPlayerIdB2] = useState(null);
   const [teamNameA, setTeamNameA] = useState("");
   const [teamNameB, setTeamNameB] = useState("");
   const [colorA, setColorA] = useState(DEFAULT_COLOR_A);
   const [colorB, setColorB] = useState(DEFAULT_COLOR_B);
 
-  // Selecting a search suggestion fills both the name and its avatar;
-  // editing the text afterward un-selects it, so the avatar (which would no
-  // longer necessarily match) is cleared rather than left stale.
-  function handleNameA2(value, avatarUrl = null) {
+  // Selecting a search suggestion fills the name, its avatar, and the
+  // underlying profile id; editing the text afterward un-selects it (avatar
+  // and id both clear), since neither one is still guaranteed to match.
+  // Tracking the id (not just the displayed name) is what lets the other
+  // fields exclude an already-picked player from their own suggestions —
+  // the same profile should never end up filling more than one player slot.
+  function handleNameA2(value, avatarUrl = null, playerId = null) {
     setNameA2(value);
     setAvatarA2(avatarUrl);
+    setPlayerIdA2(playerId);
   }
-  function handleNameB1(value, avatarUrl = null) {
+  function handleNameB1(value, avatarUrl = null, playerId = null) {
     setNameB1(value);
     setAvatarB1(avatarUrl);
+    setPlayerIdB1(playerId);
   }
-  function handleNameB2(value, avatarUrl = null) {
+  function handleNameB2(value, avatarUrl = null, playerId = null) {
     setNameB2(value);
     setAvatarB2(avatarUrl);
+    setPlayerIdB2(playerId);
   }
+
+  const selfId = user?.id ?? null;
 
   function handleStart() {
     if (isIndoor) {
@@ -239,7 +251,8 @@ export default function NewGameForm({ format, mode, onStart }) {
           name1IsSelf={prefillSelf}
           enableSearch={enableSearch}
           directory={directory}
-          excludeId={user?.id}
+          excludeIds1={[selfId, playerIdB1, playerIdB2].filter(Boolean)}
+          excludeIds2={[selfId, playerIdB1, playerIdB2].filter(Boolean)}
         />
         <SideFields
           label="Second side"
@@ -257,7 +270,8 @@ export default function NewGameForm({ format, mode, onStart }) {
           avatar2={avatarB2}
           enableSearch={enableSearch}
           directory={directory}
-          excludeId={user?.id}
+          excludeIds1={[selfId, playerIdA2, playerIdB2].filter(Boolean)}
+          excludeIds2={[selfId, playerIdA2, playerIdB1].filter(Boolean)}
         />
       </div>
 
