@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./useAuth.js";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 import { normalizeMode } from "../lib/gameMode.js";
@@ -45,8 +45,15 @@ export function useGameHistory() {
   const { user } = useAuth();
   const [localHistory, setLocalHistory] = useState(loadHistory);
   const [remoteHistory, setRemoteHistory] = useState(null);
+  // Games inserted via addGame() while a fetch is still in flight, keyed by
+  // id. A fetch that was already in flight when the insert happened can read
+  // a pre-insert snapshot and resolve afterward; without this, its result
+  // would blindly replace remoteHistory and silently drop the new game.
+  const pendingInsertsRef = useRef(new Map());
 
   useEffect(() => {
+    pendingInsertsRef.current.clear();
+
     if (!isSupabaseConfigured || !user) {
       setRemoteHistory(null);
       return;
@@ -62,7 +69,22 @@ export function useGameHistory() {
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
         if (error) throw error;
-        if (active) setRemoteHistory((data || []).map(mapRowToRecord));
+        if (!active) return;
+
+        const fetched = (data || []).map(mapRowToRecord);
+        const fetchedIds = new Set(fetched.map((g) => g.id));
+        // Carry forward any optimistic insert this fetch raced past (i.e.
+        // doesn't yet reflect) instead of letting it disappear; drop entries
+        // the fetch already confirmed so the pending set doesn't grow stale.
+        const stillPending = [];
+        for (const [id, game] of pendingInsertsRef.current) {
+          if (fetchedIds.has(id)) {
+            pendingInsertsRef.current.delete(id);
+          } else {
+            stillPending.push(game);
+          }
+        }
+        setRemoteHistory([...stillPending, ...fetched]);
       } catch (e) {
         console.error("Failed to fetch game history from Supabase:", e);
         // Leave remoteHistory as null (not []) so `history` falls back to
@@ -126,6 +148,7 @@ export function useGameHistory() {
             // DB-returned row (has real id/created_at); fall back to the
             // locally-generated record if the insert didn't return one.
             const newRecord = data ? mapRowToRecord(data) : record;
+            pendingInsertsRef.current.set(newRecord.id, newRecord);
             setRemoteHistory((prev) => {
               const base = prev ?? [];
               if (base.some((g) => g.id === newRecord.id)) return base;
