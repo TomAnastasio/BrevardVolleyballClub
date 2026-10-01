@@ -43,6 +43,8 @@ alter table public.elo_history enable row level security;
 -- Same visibility rule as profiles (migration 0004): any signed-in member,
 -- not the public internet. No insert/update policy for regular users —
 -- only the trigger function below (security definer) writes rows.
+drop policy if exists "Elo history is viewable by authenticated users" on public.elo_history;
+
 create policy "Elo history is viewable by authenticated users"
   on public.elo_history for select
   using (auth.role() = 'authenticated');
@@ -66,10 +68,10 @@ declare
   a2_id uuid;
   b1_id uuid;
   b2_id uuid;
-  a1_rating integer; a1_games integer;
-  a2_rating integer; a2_games integer;
-  b1_rating integer; b1_games integer;
-  b2_rating integer; b2_games integer;
+  a1 record;
+  a2 record;
+  b1 record;
+  b2 record;
   team_a_avg numeric;
   team_b_avg numeric;
   expected_a numeric;
@@ -102,20 +104,20 @@ begin
     return new;
   end if;
 
-  select elo_rating, elo_games_played into a1_rating, a1_games from public.profiles where id = a1_id;
-  select elo_rating, elo_games_played into a2_rating, a2_games from public.profiles where id = a2_id;
-  select elo_rating, elo_games_played into b1_rating, b1_games from public.profiles where id = b1_id;
-  select elo_rating, elo_games_played into b2_rating, b2_games from public.profiles where id = b2_id;
+  select * into a1 from public.profiles where id = a1_id;
+  select * into a2 from public.profiles where id = a2_id;
+  select * into b1 from public.profiles where id = b1_id;
+  select * into b2 from public.profiles where id = b2_id;
 
-  team_a_avg := (a1_rating + a2_rating) / 2.0;
-  team_b_avg := (b1_rating + b2_rating) / 2.0;
+  team_a_avg := (a1.elo_rating + a2.elo_rating) / 2.0;
+  team_b_avg := (b1.elo_rating + b2.elo_rating) / 2.0;
   expected_a := 1.0 / (1.0 + power(10.0, (team_b_avg - team_a_avg) / 400.0));
   actual_a := case when g.score_a > g.score_b then 1.0 else 0.0 end;
 
-  perform public.apply_elo_update(new.game_id, a1_id, a1_rating, a1_games, actual_a, expected_a);
-  perform public.apply_elo_update(new.game_id, a2_id, a2_rating, a2_games, actual_a, expected_a);
-  perform public.apply_elo_update(new.game_id, b1_id, b1_rating, b1_games, 1.0 - actual_a, 1.0 - expected_a);
-  perform public.apply_elo_update(new.game_id, b2_id, b2_rating, b2_games, 1.0 - actual_a, 1.0 - expected_a);
+  perform public.apply_elo_update(new.game_id, a1_id, a1.elo_rating, a1.elo_games_played, actual_a, expected_a);
+  perform public.apply_elo_update(new.game_id, a2_id, a2.elo_rating, a2.elo_games_played, actual_a, expected_a);
+  perform public.apply_elo_update(new.game_id, b1_id, b1.elo_rating, b1.elo_games_played, 1.0 - actual_a, 1.0 - expected_a);
+  perform public.apply_elo_update(new.game_id, b2_id, b2.elo_rating, b2.elo_games_played, 1.0 - actual_a, 1.0 - expected_a);
 
   return new;
 end;
