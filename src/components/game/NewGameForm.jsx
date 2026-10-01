@@ -36,6 +36,21 @@ function nameInputClass() {
   return "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center text-base font-bold text-foreground placeholder:font-normal placeholder:text-muted focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2";
 }
 
+function PlayerAvatar({ src }) {
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      onError={(e) => {
+        e.currentTarget.style.display = "none";
+      }}
+      className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover"
+    />
+  );
+}
+
 function SideFields({
   label,
   color,
@@ -48,7 +63,8 @@ function SideFields({
   onName1,
   name2,
   onName2,
-  selfAvatar,
+  avatar1,
+  avatar2,
   name1IsSelf,
   enableSearch,
   directory,
@@ -71,17 +87,7 @@ function SideFields({
         ) : (
           <>
             <div className="flex items-center gap-2">
-              {selfAvatar && (
-                <img
-                  src={selfAvatar}
-                  alt=""
-                  aria-hidden="true"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                  className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover"
-                />
-              )}
+              <PlayerAvatar src={avatar1} />
               {enableSearch && !name1IsSelf ? (
                 <PlayerSearchField
                   value={name1}
@@ -104,27 +110,30 @@ function SideFields({
                 />
               )}
             </div>
-            {enableSearch ? (
-              <PlayerSearchField
-                value={name2}
-                onChange={onName2}
-                placeholder="Player 2 name"
-                ariaLabel={`${label}, player 2 name`}
-                directory={directory}
-                excludeId={excludeId}
-                inputClassName={nameInputClass()}
-              />
-            ) : (
-              <input
-                type="text"
-                value={name2}
-                maxLength={24}
-                placeholder="Player 2 name"
-                aria-label={`${label}, player 2 name`}
-                onChange={(e) => onName2(e.target.value)}
-                className={nameInputClass()}
-              />
-            )}
+            <div className="flex items-center gap-2">
+              <PlayerAvatar src={avatar2} />
+              {enableSearch ? (
+                <PlayerSearchField
+                  value={name2}
+                  onChange={onName2}
+                  placeholder="Player 2 name"
+                  ariaLabel={`${label}, player 2 name`}
+                  directory={directory}
+                  excludeId={excludeId}
+                  inputClassName={nameInputClass()}
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={name2}
+                  maxLength={24}
+                  placeholder="Player 2 name"
+                  aria-label={`${label}, player 2 name`}
+                  onChange={(e) => onName2(e.target.value)}
+                  className={nameInputClass()}
+                />
+              )}
+            </div>
           </>
         )}
       </div>
@@ -146,10 +155,29 @@ export default function NewGameForm({ format, mode, onStart }) {
   const [nameA2, setNameA2] = useState("");
   const [nameB1, setNameB1] = useState("");
   const [nameB2, setNameB2] = useState("");
+  const [avatarA2, setAvatarA2] = useState(null);
+  const [avatarB1, setAvatarB1] = useState(null);
+  const [avatarB2, setAvatarB2] = useState(null);
   const [teamNameA, setTeamNameA] = useState("");
   const [teamNameB, setTeamNameB] = useState("");
   const [colorA, setColorA] = useState(DEFAULT_COLOR_A);
   const [colorB, setColorB] = useState(DEFAULT_COLOR_B);
+
+  // Selecting a search suggestion fills both the name and its avatar;
+  // editing the text afterward un-selects it, so the avatar (which would no
+  // longer necessarily match) is cleared rather than left stale.
+  function handleNameA2(value, avatarUrl = null) {
+    setNameA2(value);
+    setAvatarA2(avatarUrl);
+  }
+  function handleNameB1(value, avatarUrl = null) {
+    setNameB1(value);
+    setAvatarB1(avatarUrl);
+  }
+  function handleNameB2(value, avatarUrl = null) {
+    setNameB2(value);
+    setAvatarB2(avatarUrl);
+  }
 
   function handleStart() {
     if (isIndoor) {
@@ -187,8 +215,9 @@ export default function NewGameForm({ format, mode, onStart }) {
           name1={nameA1}
           onName1={setNameA1}
           name2={nameA2}
-          onName2={setNameA2}
-          selfAvatar={selfAvatar}
+          onName2={handleNameA2}
+          avatar1={selfAvatar}
+          avatar2={avatarA2}
           name1IsSelf={prefillSelf}
           enableSearch={enableSearch}
           directory={directory}
@@ -203,9 +232,11 @@ export default function NewGameForm({ format, mode, onStart }) {
           teamName={teamNameB}
           onTeamName={setTeamNameB}
           name1={nameB1}
-          onName1={setNameB1}
+          onName1={handleNameB1}
           name2={nameB2}
-          onName2={setNameB2}
+          onName2={handleNameB2}
+          avatar1={avatarB1}
+          avatar2={avatarB2}
           enableSearch={enableSearch}
           directory={directory}
           excludeId={user?.id}
