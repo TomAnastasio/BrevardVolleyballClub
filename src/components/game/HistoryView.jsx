@@ -2,7 +2,7 @@ import { Card } from "@heroui/react";
 import AuthButton from "../AuthButton.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 
-export default function HistoryView({ history }) {
+export default function HistoryView({ history, historyLoading }) {
   const { user, loading, isConfigured } = useAuth();
 
   return (
@@ -13,7 +13,9 @@ export default function HistoryView({ history }) {
       {isConfigured && !loading && !user && (
         <p className="mb-2 text-sm text-muted">Sign in to sync your games across devices.</p>
       )}
-      {history.length === 0 ? (
+      {historyLoading ? (
+        <p className="p-6 text-center text-muted">Loading your games…</p>
+      ) : history.length === 0 ? (
         <p className="p-6 text-center text-muted">No games saved yet. Finish a game to see it here.</p>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">

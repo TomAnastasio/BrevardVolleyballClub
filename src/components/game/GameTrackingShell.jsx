@@ -26,7 +26,7 @@ const BACK_MAP = { format: "menu", mode: "format", signin: "mode", new: "mode", 
 
 export default function GameTrackingShell({ onBack }) {
   const scoreboard = useScoreboardState();
-  const { history, addGame } = useGameHistory();
+  const { history, addGame, historyLoading } = useGameHistory();
   const { user, loading, isConfigured, signInWithGoogle } = useAuth();
   const [screen, setScreen] = useState("menu");
   const [pendingFormat, setPendingFormat] = useState(null);
@@ -157,7 +157,7 @@ export default function GameTrackingShell({ onBack }) {
             effectiveHeight={effectiveHeight}
           />
         )}
-        {screen === "history" && <HistoryView history={history} />}
+        {screen === "history" && <HistoryView history={history} historyLoading={historyLoading} />}
       </main>
     </div>
   );

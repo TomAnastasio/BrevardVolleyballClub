@@ -45,6 +45,12 @@ export function useGameHistory() {
   const { user } = useAuth();
   const [localHistory, setLocalHistory] = useState(loadHistory);
   const [remoteHistory, setRemoteHistory] = useState(null);
+  // True only while the current user's fetch is actually in flight — distinct
+  // from remoteHistory being null, which also covers "fetch failed, fall
+  // back to local". Lets the UI show a loading state instead of flashing
+  // localHistory (which may be stale/pre-signin) and then replacing it with
+  // the real remote list a moment later.
+  const [remoteLoading, setRemoteLoading] = useState(false);
   // Games inserted via addGame() while a fetch is still in flight, keyed by
   // id. A fetch that was already in flight when the insert happened can read
   // a pre-insert snapshot and resolve afterward; without this, its result
@@ -56,10 +62,12 @@ export function useGameHistory() {
 
     if (!isSupabaseConfigured || !user) {
       setRemoteHistory(null);
+      setRemoteLoading(false);
       return;
     }
 
     let active = true;
+    setRemoteLoading(true);
 
     async function fetchRemoteHistory() {
       try {
@@ -89,6 +97,8 @@ export function useGameHistory() {
         console.error("Failed to fetch game history from Supabase:", e);
         // Leave remoteHistory as null (not []) so `history` falls back to
         // localHistory instead of appearing as a definitive "zero games".
+      } finally {
+        if (active) setRemoteLoading(false);
       }
     }
 
@@ -164,6 +174,7 @@ export function useGameHistory() {
   );
 
   const history = isSupabaseConfigured && user && remoteHistory !== null ? remoteHistory : localHistory;
+  const historyLoading = isSupabaseConfigured && Boolean(user) && remoteLoading;
 
-  return { history, addGame };
+  return { history, addGame, historyLoading };
 }
