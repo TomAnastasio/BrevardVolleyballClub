@@ -38,6 +38,9 @@ function loadState() {
       for (const key of Object.keys(NAME_FIELDS)) {
         state[key] = typeof saved[key] === "string" && saved[key].trim() ? saved[key] : NAME_FIELDS[key];
       }
+      state.playerIdA2 = typeof saved.playerIdA2 === "string" ? saved.playerIdA2 : null;
+      state.playerIdB1 = typeof saved.playerIdB1 === "string" ? saved.playerIdB1 : null;
+      state.playerIdB2 = typeof saved.playerIdB2 === "string" ? saved.playerIdB2 : null;
     }
 
     state.colorA = typeof saved.colorA === "string" ? saved.colorA : DEFAULT_COLOR_A;
@@ -105,6 +108,9 @@ export function useScoreboardState() {
       next.nameA2 = payload.nameA2;
       next.nameB1 = payload.nameB1;
       next.nameB2 = payload.nameB2;
+      next.playerIdA2 = payload.playerIdA2 ?? null;
+      next.playerIdB1 = payload.playerIdB1 ?? null;
+      next.playerIdB2 = payload.playerIdB2 ?? null;
     }
     setState(next);
     setBannerDismissed(false);
@@ -126,6 +132,11 @@ export function useScoreboardState() {
   const bWins = Boolean(state) && state.b >= winScore && state.b - state.a >= 2;
   const teamAName = !state ? "" : isIndoor ? state.nameA : `${state.nameA1} & ${state.nameA2}`;
   const teamBName = !state ? "" : isIndoor ? state.nameB : `${state.nameB1} & ${state.nameB2}`;
+  // The submitter doesn't need a link of their own (already identified via
+  // games.user_id) — only the other 3 slots' picked-from-search profile ids,
+  // when present, become game_players rows once the game is saved.
+  const participantIds =
+    !state || isIndoor ? [] : [state.playerIdA2, state.playerIdB1, state.playerIdB2].filter(Boolean);
   const winnerName = aWins ? teamAName : bWins ? teamBName : null;
   const showBanner = Boolean(winnerName) && !bannerDismissed;
 
@@ -139,6 +150,7 @@ export function useScoreboardState() {
     bWins,
     teamAName,
     teamBName,
+    participantIds,
     winnerName,
     showBanner,
     changeScore,

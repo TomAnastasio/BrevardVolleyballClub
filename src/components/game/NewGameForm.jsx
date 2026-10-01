@@ -208,10 +208,13 @@ function SideFields({
 export default function NewGameForm({ format, mode, onStart }) {
   const isIndoor = format === "indoor";
   const { user } = useAuth();
-  const prefillSelf = mode === "ranked" && !isIndoor && Boolean(user);
+  // Signed-in players get the self-prefill + known-player search in both
+  // ranked and casual beach games (casual still works fully anonymously if
+  // not signed in — it never requires an account). Indoor is untouched.
+  const prefillSelf = !isIndoor && Boolean(user);
   const selfName = prefillSelf ? user.user_metadata?.full_name || user.user_metadata?.name || "" : "";
   const selfAvatar = prefillSelf ? user.user_metadata?.avatar_url || user.user_metadata?.picture || null : null;
-  const enableSearch = mode === "ranked" && !isIndoor;
+  const enableSearch = !isIndoor && Boolean(user);
   const directory = usePlayerDirectory(enableSearch);
 
   const [nameA1, setNameA1] = useState(selfName);
@@ -278,6 +281,9 @@ export default function NewGameForm({ format, mode, onStart }) {
         nameA2: sanitizeName(nameA2, "Player 2"),
         nameB1: sanitizeName(nameB1, "Player 1"),
         nameB2: sanitizeName(nameB2, "Player 2"),
+        playerIdA2,
+        playerIdB1,
+        playerIdB2,
         colorA,
         colorB,
       });

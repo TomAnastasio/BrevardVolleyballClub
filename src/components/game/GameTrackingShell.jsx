@@ -94,6 +94,7 @@ export default function GameTrackingShell({ onBack }) {
       a: scoreboard.state.a,
       b: scoreboard.state.b,
       mode: scoreboard.state.mode,
+      participantIds: scoreboard.participantIds,
     });
     scoreboard.clearActiveGame();
     if (navigator.vibrate) navigator.vibrate(20);

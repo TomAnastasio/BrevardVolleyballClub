@@ -47,6 +47,9 @@ export default function HistoryView({ history, historyLoading }) {
                     {game.mode === "ranked" ? "🏆 Ranked" : "🎲 Casual"}
                   </span>
                 </div>
+                {user && game.submittedByName && game.submittedByUserId !== user.id && (
+                  <p className="m-0 text-xs text-muted">Submitted by {game.submittedByName}</p>
+                )}
               </Card>
             </li>
           ))}

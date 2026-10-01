@@ -38,6 +38,8 @@ function mapRowToRecord(row) {
     date: row.played_date,
     time: row.played_time,
     mode: row.mode,
+    submittedByUserId: row.user_id,
+    submittedByName: row.submitted_by_name,
   };
 }
 
@@ -71,10 +73,13 @@ export function useGameHistory() {
 
     async function fetchRemoteHistory() {
       try {
+        // No .eq("user_id", ...) filter — RLS now scopes this to games the
+        // user either submitted or is a linked participant in (see migration
+        // 0005), and an explicit submitter-only filter here would wrongly
+        // exclude the ones they're merely linked to.
         const { data, error } = await supabase
           .from("games")
           .select("*")
-          .eq("user_id", user.id)
           .order("created_at", { ascending: false });
         if (error) throw error;
         if (!active) return;
@@ -136,6 +141,9 @@ export function useGameHistory() {
       if (isSupabaseConfigured && user) {
         (async () => {
           try {
+            const submittedByName =
+              user.user_metadata?.full_name || user.user_metadata?.name || user.email || "A player";
+
             const { data, error } = await supabase
               .from("games")
               .insert({
@@ -147,10 +155,27 @@ export function useGameHistory() {
                 played_date: date,
                 played_time: time,
                 user_id: user.id,
+                submitted_by_name: submittedByName,
               })
               .select()
               .single();
             if (error) throw error;
+
+            // Link whichever other-player slots were picked from the known-
+            // player search (not free-typed) to their real profiles, so they
+            // can see this game in their own history too. A failure here
+            // must not undo or block the game save above — it's a separate
+            // insert, logged on its own.
+            if (data && game.participantIds?.length) {
+              try {
+                const { error: linkError } = await supabase
+                  .from("game_players")
+                  .insert(game.participantIds.map((participantId) => ({ game_id: data.id, user_id: participantId })));
+                if (linkError) throw linkError;
+              } catch (linkErr) {
+                console.error("Failed to link game participants in Supabase:", linkErr);
+              }
+            }
 
             // Optimistically (and asynchronously) merge the saved game into
             // remoteHistory so it shows up immediately, without waiting for
