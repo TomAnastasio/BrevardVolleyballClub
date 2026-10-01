@@ -10,6 +10,7 @@ const FIGURE_HEIGHT_PX = 23;
 const NET_HEIGHT_PX = 22;
 const NET_SKEW_PX = 13; // horizontal spread between the two net posts (the angled camera view)
 const GROUND_MARGIN_PX = 16; // gap between the ground line and the bottom of the canvas
+const TOM_AVATAR_URL = "/Tom.jpg"; // always worn by the right-side figure once anyone is signed in
 
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
@@ -63,27 +64,34 @@ function drawPlayer(ctx, { x, groundY, squash, hop, avatarImg }) {
   }
 }
 
-export default function VolleyballRally({ className = "", avatarUrl = null }) {
-  const canvasRef = useRef(null);
-  const wrapperRef = useRef(null);
-  const avatarImageRef = useRef(null);
+function useAvatarImage(url) {
+  const imgRef = useRef(null);
 
   useEffect(() => {
-    if (!avatarUrl) {
-      avatarImageRef.current = null;
+    if (!url) {
+      imgRef.current = null;
       return undefined;
     }
     let cancelled = false;
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
-      if (!cancelled) avatarImageRef.current = img;
+      if (!cancelled) imgRef.current = img;
     };
-    img.src = avatarUrl;
+    img.src = url;
     return () => {
       cancelled = true;
     };
-  }, [avatarUrl]);
+  }, [url]);
+
+  return imgRef;
+}
+
+export default function VolleyballRally({ className = "", avatarUrl = null, isAuthenticated = false }) {
+  const canvasRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const avatarImageRef = useAvatarImage(avatarUrl);
+  const tomAvatarImageRef = useAvatarImage(isAuthenticated ? TOM_AVATAR_URL : null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -215,7 +223,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null }) {
         const squash = isMoving ? receiverSquash : hitterSquash;
         const idleAmplitude = isMoving ? 1.6 : 0.6;
         const hop = Math.abs(Math.sin(nowSeconds * 5 + (side === "left" ? 0 : Math.PI))) * idleAmplitude;
-        const avatarImg = side === "left" ? avatarImageRef.current : null;
+        const avatarImg = side === "left" ? avatarImageRef.current : tomAvatarImageRef.current;
         drawPlayer(ctx, { x, groundY, squash, hop, avatarImg });
       };
       drawSide("left");

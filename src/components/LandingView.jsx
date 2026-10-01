@@ -33,6 +33,7 @@ function LandingCard({ icon, label, subtitle, onClick, delay }) {
 export default function LandingView({ onPlayToday, onGameTracking }) {
   const { user } = useAuth();
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+  const isAuthenticated = Boolean(user);
 
   return (
     <main className="relative flex flex-1 flex-col overflow-hidden">
@@ -66,7 +67,11 @@ export default function LandingView({ onPlayToday, onGameTracking }) {
           <SocialLinks />
         </div>
       </div>
-      <VolleyballRally className="h-[clamp(96px,14vh,140px)] w-full flex-none" avatarUrl={avatarUrl} />
+      <VolleyballRally
+        className="h-[clamp(96px,14vh,140px)] w-full flex-none"
+        avatarUrl={avatarUrl}
+        isAuthenticated={isAuthenticated}
+      />
     </main>
   );
 }
