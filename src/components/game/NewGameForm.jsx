@@ -32,8 +32,36 @@ function ColorSwatchPicker({ label, selected, disabledColor, onSelect }) {
   );
 }
 
-function nameInputClass() {
-  return "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center text-base font-bold text-foreground placeholder:font-normal placeholder:text-muted focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2";
+function nameInputClass(hasError) {
+  const base =
+    "w-full rounded-lg border px-3 py-2 text-center text-base font-bold text-foreground placeholder:font-normal placeholder:text-muted focus-visible:outline-[3px] focus-visible:outline-offset-2";
+  return hasError
+    ? `${base} border-red-500 bg-red-500/10 focus-visible:outline-red-500`
+    : `${base} border-white/10 bg-white/5 focus-visible:outline-accent`;
+}
+
+function normalizeName(text) {
+  return (text || "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+// Any two (or more) of the 4 beach player-name fields that are non-empty and
+// equal (case/whitespace-insensitive) are flagged — whether the match came
+// from picking the same known player's name or just typing the same text by
+// hand, in ranked or casual games alike.
+function findDuplicateNameKeys(names) {
+  const byNormalized = new Map();
+  for (const [key, value] of Object.entries(names)) {
+    const normalized = normalizeName(value);
+    if (!normalized) continue;
+    const keys = byNormalized.get(normalized) || [];
+    keys.push(key);
+    byNormalized.set(normalized, keys);
+  }
+  const duplicateKeys = new Set();
+  for (const keys of byNormalized.values()) {
+    if (keys.length > 1) keys.forEach((key) => duplicateKeys.add(key));
+  }
+  return duplicateKeys;
 }
 
 // Reserves the same fixed-width slot whether a player is picked yet or not,
@@ -83,6 +111,8 @@ function SideFields({
   onName2,
   avatar1,
   avatar2,
+  error1,
+  error2,
   name1IsSelf,
   enableSearch,
   directory,
@@ -105,52 +135,66 @@ function SideFields({
           />
         ) : (
           <>
-            <div className="flex items-center gap-2">
-              <PlayerAvatar src={avatar1} showPlaceholder={enableSearch} />
-              {enableSearch && !name1IsSelf ? (
-                <PlayerSearchField
-                  value={name1}
-                  onChange={onName1}
-                  placeholder="Player 1 name"
-                  ariaLabel={`${label}, player 1 name`}
-                  directory={directory}
-                  excludeIds={excludeIds1}
-                  inputClassName={nameInputClass()}
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={name1}
-                  maxLength={24}
-                  placeholder="Player 1 name"
-                  aria-label={`${label}, player 1 name`}
-                  onChange={(e) => onName1(e.target.value)}
-                  className={nameInputClass()}
-                />
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <PlayerAvatar src={avatar1} showPlaceholder={enableSearch} />
+                {enableSearch && !name1IsSelf ? (
+                  <PlayerSearchField
+                    value={name1}
+                    onChange={onName1}
+                    placeholder="Player 1 name"
+                    ariaLabel={`${label}, player 1 name`}
+                    directory={directory}
+                    excludeIds={excludeIds1}
+                    inputClassName={nameInputClass(error1)}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={name1}
+                    maxLength={24}
+                    placeholder="Player 1 name"
+                    aria-label={`${label}, player 1 name`}
+                    onChange={(e) => onName1(e.target.value)}
+                    className={nameInputClass(error1)}
+                  />
+                )}
+              </div>
+              {error1 && (
+                <p role="alert" className="text-center text-xs font-semibold text-red-400">
+                  Same name as another player — names must be unique.
+                </p>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <PlayerAvatar src={avatar2} showPlaceholder={enableSearch} />
-              {enableSearch ? (
-                <PlayerSearchField
-                  value={name2}
-                  onChange={onName2}
-                  placeholder="Player 2 name"
-                  ariaLabel={`${label}, player 2 name`}
-                  directory={directory}
-                  excludeIds={excludeIds2}
-                  inputClassName={nameInputClass()}
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={name2}
-                  maxLength={24}
-                  placeholder="Player 2 name"
-                  aria-label={`${label}, player 2 name`}
-                  onChange={(e) => onName2(e.target.value)}
-                  className={nameInputClass()}
-                />
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <PlayerAvatar src={avatar2} showPlaceholder={enableSearch} />
+                {enableSearch ? (
+                  <PlayerSearchField
+                    value={name2}
+                    onChange={onName2}
+                    placeholder="Player 2 name"
+                    ariaLabel={`${label}, player 2 name`}
+                    directory={directory}
+                    excludeIds={excludeIds2}
+                    inputClassName={nameInputClass(error2)}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={name2}
+                    maxLength={24}
+                    placeholder="Player 2 name"
+                    aria-label={`${label}, player 2 name`}
+                    onChange={(e) => onName2(e.target.value)}
+                    className={nameInputClass(error2)}
+                  />
+                )}
+              </div>
+              {error2 && (
+                <p role="alert" className="text-center text-xs font-semibold text-red-400">
+                  Same name as another player — names must be unique.
+                </p>
               )}
             </div>
           </>
@@ -209,6 +253,14 @@ export default function NewGameForm({ format, mode, onStart }) {
 
   const selfId = user?.id ?? null;
 
+  // Applies to beach only (indoor has team names, not individual players) —
+  // and to every player field regardless of mode or whether its name came
+  // from a profile pick or was just typed, per the user's ask.
+  const duplicateNameKeys = isIndoor
+    ? new Set()
+    : findDuplicateNameKeys({ a1: nameA1, a2: nameA2, b1: nameB1, b2: nameB2 });
+  const hasDuplicateNames = duplicateNameKeys.size > 0;
+
   function handleStart() {
     if (isIndoor) {
       onStart({
@@ -219,6 +271,7 @@ export default function NewGameForm({ format, mode, onStart }) {
         colorB,
       });
     } else {
+      if (hasDuplicateNames) return;
       onStart({
         format: "beach",
         nameA1: sanitizeName(nameA1, "Player 1"),
@@ -248,6 +301,8 @@ export default function NewGameForm({ format, mode, onStart }) {
           onName2={handleNameA2}
           avatar1={selfAvatar}
           avatar2={avatarA2}
+          error1={duplicateNameKeys.has("a1")}
+          error2={duplicateNameKeys.has("a2")}
           name1IsSelf={prefillSelf}
           enableSearch={enableSearch}
           directory={directory}
@@ -268,6 +323,8 @@ export default function NewGameForm({ format, mode, onStart }) {
           onName2={handleNameB2}
           avatar1={avatarB1}
           avatar2={avatarB2}
+          error1={duplicateNameKeys.has("b1")}
+          error2={duplicateNameKeys.has("b2")}
           enableSearch={enableSearch}
           directory={directory}
           excludeIds1={[selfId, playerIdA2, playerIdB2].filter(Boolean)}
@@ -276,9 +333,15 @@ export default function NewGameForm({ format, mode, onStart }) {
       </div>
 
       <div className="flex-none p-3" style={{ paddingBottom: "calc(0.75rem + var(--safe-bottom))" }}>
+        {hasDuplicateNames && (
+          <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
+            Fix the duplicate player name(s) above before starting.
+          </p>
+        )}
         <Button
           variant="primary"
           onPress={handleStart}
+          isDisabled={hasDuplicateNames}
           className="min-h-14 w-full text-lg font-extrabold"
         >
           Start Game
