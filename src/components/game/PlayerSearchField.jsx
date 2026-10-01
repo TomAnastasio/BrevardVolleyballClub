@@ -27,7 +27,7 @@ export default function PlayerSearchField({ value, onChange, placeholder, ariaLa
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <input
         type="text"
         value={value}

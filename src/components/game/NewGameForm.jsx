@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@heroui/react";
 import { sanitizeName } from "../../lib/sanitizeName.js";
 import { TEAM_COLORS, DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../../lib/teamColors.js";
@@ -36,19 +36,37 @@ function nameInputClass() {
   return "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center text-base font-bold text-foreground placeholder:font-normal placeholder:text-muted focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2";
 }
 
-function PlayerAvatar({ src }) {
-  if (!src) return null;
-  return (
-    <img
-      src={src}
-      alt=""
-      aria-hidden="true"
-      onError={(e) => {
-        e.currentTarget.style.display = "none";
-      }}
-      className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover"
-    />
-  );
+// Reserves the same fixed-width slot whether a player is picked yet or not,
+// so the name field next to it never shifts width/position: an actual photo
+// once a known player is selected, otherwise a bold "?" placeholder (when
+// this field is part of the ranked player search) or nothing at all
+// (casual/indoor, which have no search/avatars to show).
+function PlayerAvatar({ src, showPlaceholder }) {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [src]);
+
+  if (src && !broken) {
+    return (
+      <img
+        src={src}
+        alt=""
+        aria-hidden="true"
+        onError={() => setBroken(true)}
+        className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover"
+      />
+    );
+  }
+  if (showPlaceholder) {
+    return (
+      <span
+        aria-hidden="true"
+        className="flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/10 bg-black text-base font-extrabold text-accent"
+      >
+        ?
+      </span>
+    );
+  }
+  return null;
 }
 
 function SideFields({
@@ -87,7 +105,7 @@ function SideFields({
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <PlayerAvatar src={avatar1} />
+              <PlayerAvatar src={avatar1} showPlaceholder={enableSearch} />
               {enableSearch && !name1IsSelf ? (
                 <PlayerSearchField
                   value={name1}
@@ -111,7 +129,7 @@ function SideFields({
               )}
             </div>
             <div className="flex items-center gap-2">
-              <PlayerAvatar src={avatar2} />
+              <PlayerAvatar src={avatar2} showPlaceholder={enableSearch} />
               {enableSearch ? (
                 <PlayerSearchField
                   value={name2}
