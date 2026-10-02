@@ -4,6 +4,7 @@ import LandingView from "./components/LandingView.jsx";
 import PlayTodayView from "./components/PlayTodayView.jsx";
 import LeaderboardView from "./components/LeaderboardView.jsx";
 import GameTrackingShell from "./components/game/GameTrackingShell.jsx";
+import AdminPanelView from "./components/admin/AdminPanelView.jsx";
 import VersionBadge from "./components/VersionBadge.jsx";
 import { AuthProvider } from "./hooks/AuthContext.jsx";
 import { hasPendingRankedGame } from "./lib/pendingRankedGame.js";
@@ -27,11 +28,13 @@ export default function App() {
               onPlayToday={() => setView("play")}
               onGameTracking={() => setView("game")}
               onLeaderboard={() => setView("leaderboard")}
+              onAdminPanel={() => setView("admin")}
             />
           )}
           {view === "play" && <PlayTodayView onBack={() => setView("landing")} />}
           {view === "leaderboard" && <LeaderboardView onBack={() => setView("landing")} />}
           {view === "game" && <GameTrackingShell onBack={() => setView("landing")} />}
+          {view === "admin" && <AdminPanelView onBack={() => setView("landing")} />}
         </div>
       )}
     </AuthProvider>
