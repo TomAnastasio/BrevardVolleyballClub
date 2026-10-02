@@ -14,13 +14,14 @@ const BALL_CX = 95;
 const BALL_CY = 124;
 const BALL_R = 38;
 
-export default function LoadingMeteor({ className = "" }) {
+export default function LoadingMeteor({ size = 64, className = "" }) {
   return (
     <svg
       viewBox="0 0 134 161"
       role="img"
       aria-label="Loading"
-      className={`h-auto w-16 overflow-visible text-foreground ${className}`}
+      className={`overflow-visible text-accent ${className}`}
+      style={{ width: size, height: "auto" }}
     >
       <defs>
         <clipPath id="meteor-ball-clip" clipPathUnits="userSpaceOnUse">
