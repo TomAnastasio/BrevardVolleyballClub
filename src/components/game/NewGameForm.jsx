@@ -5,6 +5,9 @@ import { TEAM_COLORS, DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../../lib/teamCol
 import { useAuth } from "../../hooks/useAuth.js";
 import { usePlayerDirectory } from "../../hooks/usePlayerDirectory.js";
 import PlayerSearchField from "./PlayerSearchField.jsx";
+import TeamRosterPicker from "./TeamRosterPicker.jsx";
+
+const MIN_ROSTER_SIZE = 4;
 
 function ColorSwatchPicker({ label, selected, disabledColor, onSelect }) {
   return (
@@ -103,8 +106,10 @@ function SideFields({
   otherColor,
   onColorChange,
   isIndoor,
-  teamName,
-  onTeamName,
+  roster,
+  onAddPlayer,
+  onRemovePlayer,
+  rosterExcludeIds,
   name1,
   onName1,
   name2,
@@ -124,14 +129,13 @@ function SideFields({
       <span aria-hidden="true" className="h-2 w-16 rounded-full" style={{ backgroundColor: color }} />
       <div className="flex w-full flex-col gap-2">
         {isIndoor ? (
-          <input
-            type="text"
-            value={teamName}
-            maxLength={24}
-            placeholder="Team name"
-            aria-label={`${label}, team name`}
-            onChange={(e) => onTeamName(e.target.value)}
-            className={nameInputClass()}
+          <TeamRosterPicker
+            label={label}
+            roster={roster}
+            onAdd={onAddPlayer}
+            onRemove={onRemovePlayer}
+            directory={directory}
+            excludeIds={rosterExcludeIds}
           />
         ) : (
           <>
@@ -214,7 +218,10 @@ export default function NewGameForm({ format, mode, onStart }) {
   const prefillSelf = !isIndoor && Boolean(user);
   const selfName = prefillSelf ? user.user_metadata?.full_name || user.user_metadata?.name || "" : "";
   const selfAvatar = prefillSelf ? user.user_metadata?.avatar_url || user.user_metadata?.picture || null : null;
-  const enableSearch = !isIndoor && Boolean(user);
+  // Indoor has no free-text fallback left — every player must come from the
+  // directory, ranked or casual, signed in or not (ranked's sign-in
+  // requirement is already gated a screen earlier, in GameTrackingShell).
+  const enableSearch = isIndoor || Boolean(user);
   const directory = usePlayerDirectory(enableSearch);
 
   const [nameA1, setNameA1] = useState(selfName);
@@ -227,10 +234,23 @@ export default function NewGameForm({ format, mode, onStart }) {
   const [playerIdA2, setPlayerIdA2] = useState(null);
   const [playerIdB1, setPlayerIdB1] = useState(null);
   const [playerIdB2, setPlayerIdB2] = useState(null);
-  const [teamNameA, setTeamNameA] = useState("");
-  const [teamNameB, setTeamNameB] = useState("");
+  const [teamAPlayers, setTeamAPlayers] = useState([]);
+  const [teamBPlayers, setTeamBPlayers] = useState([]);
   const [colorA, setColorA] = useState(DEFAULT_COLOR_A);
   const [colorB, setColorB] = useState(DEFAULT_COLOR_B);
+
+  function addPlayerA(player) {
+    setTeamAPlayers((prev) => [...prev, player]);
+  }
+  function removePlayerA(id) {
+    setTeamAPlayers((prev) => prev.filter((p) => p.id !== id));
+  }
+  function addPlayerB(player) {
+    setTeamBPlayers((prev) => [...prev, player]);
+  }
+  function removePlayerB(id) {
+    setTeamBPlayers((prev) => prev.filter((p) => p.id !== id));
+  }
 
   // Selecting a search suggestion fills the name, its avatar, and the
   // underlying profile id; editing the text afterward un-selects it (avatar
@@ -266,16 +286,21 @@ export default function NewGameForm({ format, mode, onStart }) {
 
   // Ranked beach games require every participant to be a known profile (not
   // free-typed) so Elo has something real to attach a rating to. Casual and
-  // indoor are unaffected.
+  // indoor are unaffected (indoor already requires every player to come from
+  // the directory, regardless of mode).
   const requireLinkedPlayers = !isIndoor && mode === "ranked";
   const hasUnlinkedPlayers = requireLinkedPlayers && (!playerIdA2 || !playerIdB1 || !playerIdB2);
 
+  const hasUndersizedRoster =
+    isIndoor && (teamAPlayers.length < MIN_ROSTER_SIZE || teamBPlayers.length < MIN_ROSTER_SIZE);
+
   function handleStart() {
     if (isIndoor) {
+      if (hasUndersizedRoster) return;
       onStart({
         format: "indoor",
-        nameA: sanitizeName(teamNameA, "Team A"),
-        nameB: sanitizeName(teamNameB, "Team B"),
+        teamAPlayers,
+        teamBPlayers,
         colorA,
         colorB,
       });
@@ -305,8 +330,10 @@ export default function NewGameForm({ format, mode, onStart }) {
           otherColor={colorB}
           onColorChange={setColorA}
           isIndoor={isIndoor}
-          teamName={teamNameA}
-          onTeamName={setTeamNameA}
+          roster={teamAPlayers}
+          onAddPlayer={addPlayerA}
+          onRemovePlayer={removePlayerA}
+          rosterExcludeIds={[...teamAPlayers, ...teamBPlayers].map((p) => p.id)}
           name1={nameA1}
           onName1={setNameA1}
           name2={nameA2}
@@ -327,8 +354,10 @@ export default function NewGameForm({ format, mode, onStart }) {
           otherColor={colorA}
           onColorChange={setColorB}
           isIndoor={isIndoor}
-          teamName={teamNameB}
-          onTeamName={setTeamNameB}
+          roster={teamBPlayers}
+          onAddPlayer={addPlayerB}
+          onRemovePlayer={removePlayerB}
+          rosterExcludeIds={[...teamAPlayers, ...teamBPlayers].map((p) => p.id)}
           name1={nameB1}
           onName1={handleNameB1}
           name2={nameB2}
@@ -355,10 +384,15 @@ export default function NewGameForm({ format, mode, onStart }) {
             Every player must be picked from search to start a ranked game — they need to have signed in at least once.
           </p>
         )}
+        {isIndoor && hasUndersizedRoster && (
+          <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
+            Each side needs at least {MIN_ROSTER_SIZE} players to start.
+          </p>
+        )}
         <Button
           variant="primary"
           onPress={handleStart}
-          isDisabled={hasDuplicateNames || hasUnlinkedPlayers}
+          isDisabled={hasDuplicateNames || hasUnlinkedPlayers || hasUndersizedRoster}
           className="min-h-14 w-full text-lg font-extrabold"
         >
           Start Game

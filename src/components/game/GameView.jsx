@@ -4,10 +4,10 @@ import TeamPanel from "./TeamPanel.jsx";
 export default function GameView({ scoreboard, onSaveGame, effectiveWidth, effectiveHeight }) {
   const { state, isIndoor, aWins, bWins, winnerName, showBanner, changeScore, setName, dismissBanner } = scoreboard;
 
-  const namesA = isIndoor ? [state.nameA] : [state.nameA1, state.nameA2];
-  const namesB = isIndoor ? [state.nameB] : [state.nameB1, state.nameB2];
-  const fallbacks = isIndoor ? ["Team A"] : ["Player 1", "Player 2"];
-  const fallbacksB = isIndoor ? ["Team B"] : ["Player 1", "Player 2"];
+  const namesA = isIndoor ? null : [state.nameA1, state.nameA2];
+  const namesB = isIndoor ? null : [state.nameB1, state.nameB2];
+  const fallbacks = isIndoor ? null : ["Player 1", "Player 2"];
+  const fallbacksB = isIndoor ? null : ["Player 1", "Player 2"];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -17,6 +17,7 @@ export default function GameView({ scoreboard, onSaveGame, effectiveWidth, effec
           score={state.a}
           names={namesA}
           fallbacks={fallbacks}
+          roster={isIndoor ? state.teamAPlayers : null}
           side="A"
           color={state.colorA}
           onInc={() => changeScore("a", 1)}
@@ -38,6 +39,7 @@ export default function GameView({ scoreboard, onSaveGame, effectiveWidth, effec
           score={state.b}
           names={namesB}
           fallbacks={fallbacksB}
+          roster={isIndoor ? state.teamBPlayers : null}
           side="B"
           color={state.colorB}
           onInc={() => changeScore("b", 1)}

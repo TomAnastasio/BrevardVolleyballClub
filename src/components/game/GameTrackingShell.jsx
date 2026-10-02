@@ -95,6 +95,9 @@ export default function GameTrackingShell({ onBack }) {
       b: scoreboard.state.b,
       mode: scoreboard.state.mode,
       participants: scoreboard.participants,
+      format: scoreboard.format,
+      teamAPlayers: scoreboard.isIndoor ? scoreboard.state.teamAPlayers : undefined,
+      teamBPlayers: scoreboard.isIndoor ? scoreboard.state.teamBPlayers : undefined,
     });
     scoreboard.clearActiveGame();
     if (navigator.vibrate) navigator.vibrate(20);

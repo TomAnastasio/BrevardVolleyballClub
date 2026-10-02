@@ -28,6 +28,17 @@ function saveHistory(history) {
   }
 }
 
+function mapTeamPlayers(gamePlayers, team) {
+  return (gamePlayers || [])
+    .filter((gp) => gp.team === team)
+    .map((gp) => ({
+      id: gp.user_id,
+      name: gp.profiles?.display_name || "Player",
+      avatarUrl: gp.profiles?.avatar_url || null,
+    }))
+    .sort((x, y) => x.name.localeCompare(y.name));
+}
+
 function mapRowToRecord(row) {
   return {
     id: row.id,
@@ -40,6 +51,9 @@ function mapRowToRecord(row) {
     mode: row.mode,
     submittedByUserId: row.user_id,
     submittedByName: row.submitted_by_name,
+    format: row.format,
+    teamAPlayers: row.format === "indoor" ? mapTeamPlayers(row.game_players, "a") : [],
+    teamBPlayers: row.format === "indoor" ? mapTeamPlayers(row.game_players, "b") : [],
   };
 }
 
@@ -79,7 +93,7 @@ export function useGameHistory() {
         // optimistic inserts tied to the new session correctly.
         const { data, error } = await supabase
           .from("games")
-          .select("*")
+          .select("*, game_players(user_id, team, profiles(id, display_name, avatar_url))")
           .order("created_at", { ascending: false });
         if (error) throw error;
         if (!active) return;
@@ -130,6 +144,9 @@ export function useGameHistory() {
         date,
         time,
         mode,
+        format: game.format || "beach",
+        teamAPlayers: game.format === "indoor" ? game.teamAPlayers || [] : [],
+        teamBPlayers: game.format === "indoor" ? game.teamBPlayers || [] : [],
       };
 
       setLocalHistory((prev) => {
@@ -156,6 +173,7 @@ export function useGameHistory() {
                 played_time: time,
                 user_id: user.id,
                 submitted_by_name: submittedByName,
+                format: game.format || "beach",
               })
               .select()
               .single();
@@ -168,12 +186,22 @@ export function useGameHistory() {
             // linked player was on. A failure here must not undo or block
             // the game save above — it's a separate insert, logged on its
             // own.
+            let insertedPlayers = null;
             if (data && game.participants?.length) {
               try {
-                const { error: linkError } = await supabase.from("game_players").insert(
-                  game.participants.map((p) => ({ game_id: data.id, user_id: p.userId, slot: p.slot })),
-                );
+                const { data: linkData, error: linkError } = await supabase
+                  .from("game_players")
+                  .insert(
+                    game.participants.map((p) => ({
+                      game_id: data.id,
+                      user_id: p.userId,
+                      slot: p.slot ?? null,
+                      team: p.team ?? null,
+                    })),
+                  )
+                  .select("user_id, team, profiles(id, display_name, avatar_url)");
                 if (linkError) throw linkError;
+                insertedPlayers = linkData;
               } catch (linkErr) {
                 console.error("Failed to link game participants in Supabase:", linkErr);
               }
@@ -184,7 +212,9 @@ export function useGameHistory() {
             // user?.id to change and re-trigger the fetch effect. Prefer the
             // DB-returned row (has real id/created_at); fall back to the
             // locally-generated record if the insert didn't return one.
-            const newRecord = data ? mapRowToRecord(data) : record;
+            const newRecord = data
+              ? mapRowToRecord({ ...data, game_players: insertedPlayers })
+              : record;
             pendingInsertsRef.current.set(newRecord.id, newRecord);
             setRemoteHistory((prev) => {
               const base = prev ?? [];

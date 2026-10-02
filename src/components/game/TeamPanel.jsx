@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@heroui/react";
 import { sanitizeName } from "../../lib/sanitizeName.js";
 import { colorForeground } from "../../lib/teamColors.js";
@@ -53,6 +53,36 @@ function EditableTeamName({ id, name, fallback, label, onCommit, fontSize }) {
   );
 }
 
+// Reserves a fixed circular slot whether the photo loads or not, so a 404
+// just swaps in a placeholder rather than collapsing the grid.
+function RosterAvatar({ player, size }) {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [player.avatarUrl]);
+
+  const style = { height: size, width: size };
+
+  if (player.avatarUrl && !broken) {
+    return (
+      <img
+        src={player.avatarUrl}
+        alt={player.name}
+        onError={() => setBroken(true)}
+        style={style}
+        className="flex-none rounded-full border border-white/10 object-cover"
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      style={style}
+      className="flex flex-none items-center justify-center rounded-full border border-white/10 bg-black text-[0.6em] font-extrabold text-accent"
+    >
+      {player.name ? player.name.charAt(0).toUpperCase() : "?"}
+    </span>
+  );
+}
+
 // Mirrors the same clamp(min, val, max) formulas the scoreboard always used,
 // but evaluated against the *effective* width/height (see
 // useForcedLandscape.js) instead of raw vw/vh — those units read the real,
@@ -68,6 +98,7 @@ export default function TeamPanel({
   score,
   names,
   fallbacks,
+  roster,
   side,
   color,
   onInc,
@@ -104,23 +135,42 @@ export default function TeamPanel({
 
   const decFontSize = isCompact ? `${clampPx(1 * 16, vh(6), 1.5 * 16)}px` : `${clampPx(1.1 * 16, vw(4), 2 * 16)}px`;
 
+  const avatarSize = isCompact
+    ? clampPx(18, vh(10), 34)
+    : clampPx(20, Math.min(vh(14), vw(7)), 44);
+
+  const rosterGap = isCompact ? 2 : 4;
+
+  const nameOrRoster = roster ? (
+    <div
+      className="flex flex-none flex-wrap items-center justify-center overflow-y-auto"
+      style={{ gap: rosterGap, maxHeight: isCompact ? vh(34) : vh(45), maxWidth: "100%" }}
+    >
+      {roster.map((player) => (
+        <RosterAvatar key={player.id} player={player} size={avatarSize} />
+      ))}
+    </div>
+  ) : (
+    <div className="flex flex-none flex-col items-center">
+      {names.map((name, i) => (
+        <EditableTeamName
+          key={i}
+          id={`${side}-name-${i + 1}`}
+          name={name}
+          fallback={fallbacks[i]}
+          label={
+            names.length > 1 ? `${teamLabel}, player ${i + 1} name, tap to edit` : `${teamLabel} name, tap to edit`
+          }
+          onCommit={(next) => onNameCommit(i + 1, next)}
+          fontSize={nameFontSize}
+        />
+      ))}
+    </div>
+  );
+
   const nameAndScore = (
     <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 phone-landscape:gap-0.5">
-      <div className="flex flex-none flex-col items-center">
-        {names.map((name, i) => (
-          <EditableTeamName
-            key={i}
-            id={`${side}-name-${i + 1}`}
-            name={name}
-            fallback={fallbacks[i]}
-            label={
-              names.length > 1 ? `${teamLabel}, player ${i + 1} name, tap to edit` : `${teamLabel} name, tap to edit`
-            }
-            onCommit={(next) => onNameCommit(i + 1, next)}
-            fontSize={nameFontSize}
-          />
-        ))}
-      </div>
+      {nameOrRoster}
 
       <div className="flex w-full flex-none items-center justify-center">
         <span

@@ -21,6 +21,13 @@ function winScoreFor(format) {
   return WIN_SCORE_BY_FORMAT[normalizeFormat(format)];
 }
 
+function sanitizeRoster(roster) {
+  if (!Array.isArray(roster)) return [];
+  return roster
+    .filter((p) => p && typeof p.id === "string" && typeof p.name === "string")
+    .map((p) => ({ id: p.id, name: p.name, avatarUrl: typeof p.avatarUrl === "string" ? p.avatarUrl : null }));
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -32,8 +39,8 @@ function loadState() {
     const state = { a: saved.a, b: saved.b, format };
 
     if (format === "indoor") {
-      state.nameA = typeof saved.nameA === "string" && saved.nameA.trim() ? saved.nameA : "Team A";
-      state.nameB = typeof saved.nameB === "string" && saved.nameB.trim() ? saved.nameB : "Team B";
+      state.teamAPlayers = sanitizeRoster(saved.teamAPlayers);
+      state.teamBPlayers = sanitizeRoster(saved.teamBPlayers);
     } else {
       for (const key of Object.keys(NAME_FIELDS)) {
         state[key] = typeof saved[key] === "string" && saved[key].trim() ? saved[key] : NAME_FIELDS[key];
@@ -91,8 +98,8 @@ export function useScoreboardState() {
 
   const setName = useCallback((team, slot, name) => {
     setState((prev) => {
-      const key =
-        prev.format === "indoor" ? `name${team === "a" ? "A" : "B"}` : `name${team === "a" ? "A" : "B"}${slot}`;
+      if (prev.format === "indoor") return prev; // rosters replace editable team names
+      const key = `name${team === "a" ? "A" : "B"}${slot}`;
       return { ...prev, [key]: name };
     });
   }, []);
@@ -101,8 +108,8 @@ export function useScoreboardState() {
     const format = normalizeFormat(payload.format);
     const next = { a: 0, b: 0, format, colorA: payload.colorA, colorB: payload.colorB, mode: payload.mode };
     if (format === "indoor") {
-      next.nameA = payload.nameA;
-      next.nameB = payload.nameB;
+      next.teamAPlayers = sanitizeRoster(payload.teamAPlayers);
+      next.teamBPlayers = sanitizeRoster(payload.teamBPlayers);
     } else {
       next.nameA1 = payload.nameA1;
       next.nameA2 = payload.nameA2;
@@ -130,16 +137,30 @@ export function useScoreboardState() {
   const isIndoor = format === "indoor";
   const aWins = Boolean(state) && state.a >= winScore && state.a - state.b >= 2;
   const bWins = Boolean(state) && state.b >= winScore && state.b - state.a >= 2;
-  const teamAName = !state ? "" : isIndoor ? state.nameA : `${state.nameA1} & ${state.nameA2}`;
-  const teamBName = !state ? "" : isIndoor ? state.nameB : `${state.nameB1} & ${state.nameB2}`;
+  const teamAName = !state
+    ? ""
+    : isIndoor
+      ? state.teamAPlayers.map((p) => p.name).join(", ")
+      : `${state.nameA1} & ${state.nameA2}`;
+  const teamBName = !state
+    ? ""
+    : isIndoor
+      ? state.teamBPlayers.map((p) => p.name).join(", ")
+      : `${state.nameB1} & ${state.nameB2}`;
   // The submitter doesn't need a link of their own (already identified via
   // games.user_id, implicit slot a1) — only the other 3 slots' picked-from-
   // search profile ids, when present, become game_players rows once the
   // game is saved. Each one is tagged with its slot (not just flattened to
   // an id) so the Elo trigger can tell which team a linked player was on.
-  const participants =
-    !state || isIndoor
-      ? []
+  // Indoor has no implicit submitter slot (roster size is variable, see
+  // migration 0011), so every picked player on both rosters becomes a row.
+  const participants = !state
+    ? []
+    : isIndoor
+      ? [
+          ...state.teamAPlayers.map((p) => ({ team: "a", userId: p.id })),
+          ...state.teamBPlayers.map((p) => ({ team: "b", userId: p.id })),
+        ]
       : [
           { slot: "a2", userId: state.playerIdA2 },
           { slot: "b1", userId: state.playerIdB1 },

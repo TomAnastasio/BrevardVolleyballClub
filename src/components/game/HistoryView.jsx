@@ -2,6 +2,30 @@ import { Card } from "@heroui/react";
 import AuthButton from "../AuthButton.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 
+function RosterAvatars({ players, align }) {
+  if (!players?.length) return null;
+  return (
+    <div className={`flex min-w-0 flex-1 flex-wrap gap-1 ${align === "right" ? "justify-end" : ""}`}>
+      {players.map((p) =>
+        p.avatarUrl ? (
+          <img
+            key={p.id}
+            src={p.avatarUrl}
+            alt=""
+            aria-hidden="true"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+            className="h-6 w-6 flex-none rounded-full border border-white/10 object-cover"
+          />
+        ) : (
+          <span key={p.id} aria-hidden="true" className="h-6 w-6 flex-none rounded-full bg-white/10" />
+        ),
+      )}
+    </div>
+  );
+}
+
 export default function HistoryView({ history, historyLoading }) {
   const { user, loading, isConfigured } = useAuth();
 
@@ -33,6 +57,12 @@ export default function HistoryView({ history, historyLoading }) {
                     {game.nameB}
                   </span>
                 </div>
+                {game.format === "indoor" && (
+                  <div className="flex items-start justify-between gap-2">
+                    <RosterAvatars players={game.teamAPlayers} />
+                    <RosterAvatars players={game.teamBPlayers} align="right" />
+                  </div>
+                )}
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm text-muted">
                     {game.date} at {game.time}
