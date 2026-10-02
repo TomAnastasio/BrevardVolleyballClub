@@ -10,9 +10,8 @@ function PlayerAvatar({ src }) {
 }
 
 export default function LeaderboardView({ onBack }) {
-  const { user, loading: authLoading, isConfigured } = useAuth();
-  const canFetch = isConfigured && !authLoading && Boolean(user);
-  const { players, loading } = useLeaderboard(canFetch);
+  const { user, isConfigured } = useAuth();
+  const { players, loading } = useLeaderboard(isConfigured);
 
   return (
     <main className="flex flex-1 flex-col overflow-y-auto">
@@ -36,8 +35,6 @@ export default function LeaderboardView({ onBack }) {
       <div className="flex flex-col gap-2 px-3 pb-6">
         {!isConfigured ? (
           <p className="p-6 text-center text-muted">Rankings aren't available yet.</p>
-        ) : authLoading ? null : !user ? (
-          <p className="p-6 text-center text-muted">Sign in to see the county rankings.</p>
         ) : loading ? (
           <p className="p-6 text-center text-muted">Loading rankings…</p>
         ) : players.length === 0 ? (
@@ -45,7 +42,7 @@ export default function LeaderboardView({ onBack }) {
         ) : (
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {players.map((player, index) => {
-              const isSelf = player.id === user.id;
+              const isSelf = player.id === user?.id;
               return (
                 <li key={player.id}>
                   <Card className={`gap-1 p-3 ${isSelf ? "border border-accent/60 bg-accent/5" : ""}`}>

@@ -62,7 +62,7 @@ export function useGameHistory() {
   useEffect(() => {
     pendingInsertsRef.current.clear();
 
-    if (!isSupabaseConfigured || !user) {
+    if (!isSupabaseConfigured) {
       setRemoteHistory(null);
       setRemoteLoading(false);
       return;
@@ -73,10 +73,10 @@ export function useGameHistory() {
 
     async function fetchRemoteHistory() {
       try {
-        // No .eq("user_id", ...) filter — RLS now scopes this to games the
-        // user either submitted or is a linked participant in (see migration
-        // 0005), and an explicit submitter-only filter here would wrongly
-        // exclude the ones they're merely linked to.
+        // No .eq("user_id", ...) filter — `games` is publicly readable
+        // (migration 0009), a club-wide history, not a per-user one. Still
+        // fetched on `user?.id` changes below so a sign-in/out swaps in any
+        // optimistic inserts tied to the new session correctly.
         const { data, error } = await supabase
           .from("games")
           .select("*")
@@ -200,8 +200,8 @@ export function useGameHistory() {
     [user],
   );
 
-  const history = isSupabaseConfigured && user && remoteHistory !== null ? remoteHistory : localHistory;
-  const historyLoading = isSupabaseConfigured && Boolean(user) && remoteLoading;
+  const history = isSupabaseConfigured && remoteHistory !== null ? remoteHistory : localHistory;
+  const historyLoading = isSupabaseConfigured && remoteLoading;
 
   return { history, addGame, historyLoading };
 }

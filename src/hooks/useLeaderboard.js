@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient.js";
 
-// County-wide Elo leaderboard (TODO.md item 4), ranked games only. Only
-// fetched when `enabled` (the viewer is signed in), since `profiles` is only
-// readable to authenticated users (migration 0004).
+// County-wide Elo leaderboard (TODO.md item 4), ranked games only. `profiles`
+// is readable by anyone, signed in or not (migration 0008), so this only
+// waits on `enabled` for Supabase being configured at all.
 export function useLeaderboard(enabled) {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(enabled);
