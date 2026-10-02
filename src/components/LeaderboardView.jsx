@@ -1,4 +1,5 @@
 import { Card } from "@heroui/react";
+import LoadingMeteor from "./LoadingMeteor.jsx";
 import { useAuth } from "../hooks/useAuth.js";
 import { useLeaderboard } from "../hooks/useLeaderboard.js";
 
@@ -36,7 +37,10 @@ export default function LeaderboardView({ onBack }) {
         {!isConfigured ? (
           <p className="p-6 text-center text-muted">Rankings aren't available yet.</p>
         ) : loading ? (
-          <p className="p-6 text-center text-muted">Loading rankings…</p>
+          <div className="flex flex-col items-center gap-3 p-6">
+            <LoadingMeteor />
+            <p className="m-0 text-center text-muted">Loading rankings…</p>
+          </div>
         ) : players.length === 0 ? (
           <p className="p-6 text-center text-muted">No ranked games played yet.</p>
         ) : (
