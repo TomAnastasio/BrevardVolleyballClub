@@ -4,6 +4,7 @@ import LandingView from "./components/LandingView.jsx";
 import PlayTodayView from "./components/PlayTodayView.jsx";
 import LeaderboardView from "./components/LeaderboardView.jsx";
 import GameTrackingShell from "./components/game/GameTrackingShell.jsx";
+import VersionBadge from "./components/VersionBadge.jsx";
 import { AuthProvider } from "./hooks/AuthContext.jsx";
 import { hasPendingRankedGame } from "./lib/pendingRankedGame.js";
 
@@ -20,6 +21,7 @@ export default function App() {
       <SplashScreen onReveal={() => setAppReady(true)} />
       {appReady && (
         <div className="flex min-h-dvh flex-col bg-background text-foreground [font-family:system-ui,-apple-system,'Segoe_UI',Roboto,sans-serif]">
+          <VersionBadge />
           {view === "landing" && (
             <LandingView
               onPlayToday={() => setView("play")}
