@@ -11,6 +11,32 @@ const NET_HEIGHT_PX = 22;
 const NET_SKEW_PX = 13; // horizontal spread between the two net posts (the angled camera view)
 const GROUND_MARGIN_PX = 16; // gap between the ground line and the bottom of the canvas
 const TOM_AVATAR_URL = "/Tom.jpg"; // always worn by the right-side figure once anyone is signed in
+const BALL_RADIUS_PX = 3;
+
+// Tunable parameters for the rare "spiked rally" sequence: a slow high set, a jump, a hard
+// spike straight at the other player, an off-the-body bounce, a dribble, and a knockdown.
+// Gated to at most once per SPECIAL_COOLDOWN_SECONDS, and even then only rolled with
+// SPECIAL_TRIGGER_CHANCE odds, so most cooldown windows pass without one firing.
+const SPECIAL_COOLDOWN_SECONDS = 30;
+const SPECIAL_TRIGGER_CHANCE = 0.25;
+const SET_DURATION_SECONDS = 2.0;
+const SET_ARC_PX = 150;
+const JUMP_DURATION_SECONDS = 0.4;
+const JUMP_HEIGHT_PX = 18;
+const SPIKE_DURATION_SECONDS = 0.28;
+const SPIKE_ARC_PX = 12;
+const IMPACT_DURATION_SECONDS = 0.22;
+const IMPACT_ARC_PX = 14;
+const IMPACT_DRIFT_PX = 10;
+const DRIBBLE_BOUNCES = [
+  { duration: 0.26, arc: 8 },
+  { duration: 0.2, arc: 3.5 },
+  { duration: 0.14, arc: 1.2 },
+];
+const KNOCKDOWN_FALL_SECONDS = 0.3; // how fast the hit player collapses once the ball connects
+const KNOCKDOWN_IDLE_MIN_SECONDS = 2;
+const KNOCKDOWN_IDLE_MAX_SECONDS = 2.8;
+const RECOVER_DURATION_SECONDS = 0.45;
 
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
@@ -24,7 +50,7 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-function drawPlayer(ctx, { x, groundY, squash, hop, avatarImg }) {
+function drawPlayer(ctx, { x, groundY, squash, hop, avatarImg, lie = 0, fallDir = 1 }) {
   const bodyW = 9;
   const bodyH = 15;
   const headW = 7;
@@ -33,34 +59,66 @@ function drawPlayer(ctx, { x, groundY, squash, hop, avatarImg }) {
   const squashedW = bodyW * (1 + squash * 0.35);
   const squashedH = bodyH * (1 - squash * 0.35);
 
-  const bodyBottom = groundY - hop;
-  const bodyTop = bodyBottom - squashedH;
-  ctx.fillRect(Math.round(x - squashedW / 2), Math.round(bodyTop), Math.round(squashedW), Math.round(squashedH));
+  const standingBodyBottom = groundY - hop;
+  const standingBodyTop = standingBodyBottom - squashedH;
+
+  const lyingWidth = bodyH * 1.2;
+  const lyingHeight = bodyW * 1.1;
+  const lyingBodyBottom = groundY;
+  const lyingBodyTop = lyingBodyBottom - lyingHeight;
+  const lyingBodyCenterX = x + (fallDir * lyingWidth) / 2;
+
+  const bodyW2 = lerp(squashedW, lyingWidth, lie);
+  const bodyH2 = lerp(squashedH, lyingHeight, lie);
+  const bodyCenterX = lerp(x, lyingBodyCenterX, lie);
+  const bodyBottom2 = lerp(standingBodyBottom, lyingBodyBottom, lie);
+  const bodyTop2 = bodyBottom2 - bodyH2;
+
+  ctx.fillRect(Math.round(bodyCenterX - bodyW2 / 2), Math.round(bodyTop2), Math.round(bodyW2), Math.round(bodyH2));
+
+  let standingHeadCenterX;
+  let standingHeadCenterY;
+  let lyingHeadCenterX;
+  let lyingHeadCenterY;
+  let headRadius = null;
+
+  if (avatarImg) {
+    headRadius = bodyH;
+    standingHeadCenterX = x;
+    standingHeadCenterY = standingBodyTop - headRadius;
+    lyingHeadCenterX = lyingBodyCenterX + fallDir * (lyingWidth / 2 + headRadius);
+    lyingHeadCenterY = lyingBodyTop + lyingHeight / 2;
+  } else {
+    standingHeadCenterX = x;
+    standingHeadCenterY = standingBodyTop - headH / 2;
+    lyingHeadCenterX = lyingBodyCenterX + fallDir * (lyingWidth / 2 + headW / 2);
+    lyingHeadCenterY = lyingBodyTop + lyingHeight / 2;
+  }
+
+  const headCenterX = lerp(standingHeadCenterX, lyingHeadCenterX, lie);
+  const headCenterY = lerp(standingHeadCenterY, lyingHeadCenterY, lie);
 
   if (avatarImg) {
     const diameter = bodyH * 2;
     const radius = diameter / 2;
-    const centerX = x;
-    const centerY = bodyTop - radius;
 
     ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.arc(headCenterX, headCenterY, radius, 0, Math.PI * 2);
     ctx.clip();
-    ctx.drawImage(avatarImg, centerX - radius, centerY - radius, diameter, diameter);
+    ctx.drawImage(avatarImg, headCenterX - radius, headCenterY - radius, diameter, diameter);
     ctx.restore();
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.arc(headCenterX, headCenterY, radius, 0, Math.PI * 2);
     ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(255,255,255,0.85)";
     ctx.stroke();
     ctx.restore();
   } else {
-    const headTop = bodyTop - headH;
-    ctx.fillRect(Math.round(x - headW / 2), Math.round(headTop), headW, headH);
+    ctx.fillRect(Math.round(headCenterX - headW / 2), Math.round(headCenterY - headH / 2), headW, headH);
   }
 }
 
@@ -118,11 +176,13 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
     const observer = new ResizeObserver(resize);
     observer.observe(wrapper);
 
+    const getGroundY = () => height - GROUND_MARGIN_PX;
     const laneCenter = (side) => (side === "left" ? width * 0.28 : width * 0.72);
 
     const positions = { left: laneCenter("left"), right: laneCenter("right") };
     const rally = {
       hitterSide: "left",
+      kind: "normal",
       receiverStartX: positions.right,
       targetX: positions.right,
       duration: randomBetween(MIN_FLIGHT_SECONDS, MAX_FLIGHT_SECONDS),
@@ -130,18 +190,80 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       elapsed: 0,
     };
 
-    const startNextFlight = () => {
+    // Drives the rare spiked-rally interruption: jump -> spike -> impact -> dribble -> idle -> recover.
+    const special = {
+      phase: null,
+      phaseElapsed: 0,
+      phaseDuration: 0,
+      jumpSide: null,
+      downSide: null,
+      impactStartTime: null,
+      restX: 0,
+      dribbleIndex: 0,
+      dribbleStartX: 0,
+      ball: { startX: 0, startY: 0, endX: 0, arc: 0 },
+    };
+    let specialReadyAt = 6; // seconds of rAF-clock time before the very first special can trigger
+
+    const startNextFlight = (kind = "normal") => {
       const receiverSide = rally.hitterSide === "left" ? "right" : "left";
-      rally.receiverStartX = positions[receiverSide];
-      rally.targetX = laneCenter(receiverSide) + randomBetween(-LANE_HALF_WIDTH_PX, LANE_HALF_WIDTH_PX);
-      rally.duration = randomBetween(MIN_FLIGHT_SECONDS, MAX_FLIGHT_SECONDS);
-      rally.arc = randomBetween(MIN_ARC_PX, MAX_ARC_PX);
+      rally.kind = kind;
+      if (kind === "spike") {
+        // Straight, flat drive aimed right at the other player — no lane jitter, no dodge.
+        rally.targetX = laneCenter(receiverSide);
+        rally.receiverStartX = rally.targetX;
+        rally.duration = SPIKE_DURATION_SECONDS;
+        rally.arc = SPIKE_ARC_PX;
+      } else if (kind === "set") {
+        rally.receiverStartX = positions[receiverSide];
+        rally.targetX = laneCenter(receiverSide) + randomBetween(-LANE_HALF_WIDTH_PX, LANE_HALF_WIDTH_PX);
+        rally.duration = SET_DURATION_SECONDS;
+        rally.arc = SET_ARC_PX;
+      } else {
+        rally.receiverStartX = positions[receiverSide];
+        rally.targetX = laneCenter(receiverSide) + randomBetween(-LANE_HALF_WIDTH_PX, LANE_HALF_WIDTH_PX);
+        rally.duration = randomBetween(MIN_FLIGHT_SECONDS, MAX_FLIGHT_SECONDS);
+        rally.arc = randomBetween(MIN_ARC_PX, MAX_ARC_PX);
+      }
       rally.elapsed = 0;
     };
 
-    const render = (t, nowSeconds) => {
-      const groundY = height - GROUND_MARGIN_PX;
-      ctx.clearRect(0, 0, width, height);
+    const beginJump = (side) => {
+      special.phase = "jump";
+      special.phaseElapsed = 0;
+      special.phaseDuration = JUMP_DURATION_SECONDS;
+      special.jumpSide = side;
+    };
+
+    const beginImpact = (side, nowSeconds) => {
+      const driftDir = side === "left" ? -1 : 1;
+      special.phase = "impact";
+      special.phaseElapsed = 0;
+      special.phaseDuration = IMPACT_DURATION_SECONDS;
+      special.downSide = side;
+      special.impactStartTime = nowSeconds;
+      special.ball.startX = rally.targetX;
+      special.ball.startY = getGroundY() - FIGURE_HEIGHT_PX * 0.6;
+      special.ball.endX = rally.targetX + driftDir * IMPACT_DRIFT_PX;
+    };
+
+    const beginDribbleBounce = () => {
+      const bounce = DRIBBLE_BOUNCES[special.dribbleIndex];
+      const driftDir = special.downSide === "left" ? -1 : 1;
+      special.phase = "dribble";
+      special.phaseElapsed = 0;
+      special.phaseDuration = bounce.duration;
+      special.ball.startX = special.dribbleStartX;
+      special.ball.endX = special.dribbleStartX + (driftDir * (IMPACT_DRIFT_PX * 0.35)) / (special.dribbleIndex + 1);
+      special.ball.arc = bounce.arc;
+    };
+
+    const drawCourt = (groundY) => {
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.beginPath();
+      ctx.moveTo(0, groundY + 0.5);
+      ctx.lineTo(width, groundY + 0.5);
+      ctx.stroke();
 
       const netCenterX = width / 2;
       const leftPostX = netCenterX - NET_SKEW_PX;
@@ -149,12 +271,6 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       const leftTopY = groundY - NET_HEIGHT_PX;
       const rightTopY = groundY - NET_HEIGHT_PX - 10;
       const rightBottomY = groundY - 4;
-
-      ctx.strokeStyle = "rgba(255,255,255,0.15)";
-      ctx.beginPath();
-      ctx.moveTo(0, groundY + 0.5);
-      ctx.lineTo(width, groundY + 0.5);
-      ctx.stroke();
 
       ctx.save();
       ctx.beginPath();
@@ -196,6 +312,12 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       ctx.fillStyle = "rgba(255,255,255,0.55)";
       ctx.fillRect(leftPostX - 1, leftTopY, 2, groundY - leftTopY);
       ctx.fillRect(rightPostX - 1, rightTopY, 2, rightBottomY - rightTopY);
+    };
+
+    const renderFlight = (t, nowSeconds) => {
+      const groundY = getGroundY();
+      ctx.clearRect(0, 0, width, height);
+      drawCourt(groundY);
 
       const receiverSide = rally.hitterSide === "left" ? "right" : "left";
       const hitterX = positions[rally.hitterSide];
@@ -206,8 +328,10 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       const ballY = ballHitY - 4 * rally.arc * t * (1 - t);
 
       // The receiver's footwork eases out (quick reaction, gentle settle) rather than
-      // tracking the ball's linear pace 1:1.
-      const receiverX = lerp(rally.receiverStartX, rally.targetX, easeOutCubic(t));
+      // tracking the ball's linear pace 1:1. A spike arrives too fast to be played, so the
+      // target just stands their ground and takes it.
+      const receiverX =
+        rally.kind === "spike" ? rally.targetX : lerp(rally.receiverStartX, rally.targetX, easeOutCubic(t));
       positions[receiverSide] = receiverX;
 
       // Bounce/squash cue right at contact (t≈0 = just hit, t≈1 = about to hit).
@@ -242,13 +366,148 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       ctx.fill();
     };
 
+    const renderSpecial = (nowSeconds, t) => {
+      const groundY = getGroundY();
+      ctx.clearRect(0, 0, width, height);
+      drawCourt(groundY);
+
+      const jumpSide = special.phase === "jump" ? special.jumpSide : null;
+      const spikerHop = jumpSide ? Math.sin(Math.PI * t) * JUMP_HEIGHT_PX : 0;
+
+      let lie = 0;
+      if (special.phase === "impact" || special.phase === "dribble" || special.phase === "idle") {
+        const fallElapsed = Math.max(0, nowSeconds - special.impactStartTime);
+        lie = Math.min(1, fallElapsed / KNOCKDOWN_FALL_SECONDS);
+      } else if (special.phase === "recover") {
+        lie = Math.max(0, 1 - t);
+      }
+
+      ctx.fillStyle = "rgba(255,255,255,0.88)";
+      const drawSide = (side) => {
+        const isJumper = side === jumpSide;
+        const isDown = side === special.downSide;
+        const hop = isJumper
+          ? spikerHop
+          : isDown
+            ? 0
+            : Math.abs(Math.sin(nowSeconds * 5 + (side === "left" ? 0 : Math.PI))) * 0.5;
+        const avatarImg = side === "left" ? avatarImageRef.current : tomAvatarImageRef.current;
+        drawPlayer(ctx, {
+          x: positions[side],
+          groundY,
+          squash: 0,
+          hop,
+          avatarImg,
+          lie: isDown ? lie : 0,
+          fallDir: side === "left" ? -1 : 1,
+        });
+      };
+      drawSide("left");
+      drawSide("right");
+
+      let ballX = null;
+      let ballY = null;
+      if (special.phase === "jump") {
+        ballX = positions[jumpSide];
+        ballY = groundY - FIGURE_HEIGHT_PX * 0.6 - spikerHop * 0.5;
+      } else if (special.phase === "impact") {
+        ballX = lerp(special.ball.startX, special.ball.endX, t);
+        const straightY = lerp(special.ball.startY, groundY - BALL_RADIUS_PX, t);
+        ballY = straightY - 4 * IMPACT_ARC_PX * t * (1 - t);
+      } else if (special.phase === "dribble") {
+        ballX = lerp(special.ball.startX, special.ball.endX, t);
+        ballY = groundY - BALL_RADIUS_PX - 4 * special.ball.arc * t * (1 - t);
+      } else if (special.phase === "idle" || special.phase === "recover") {
+        ballX = special.restX;
+        ballY = groundY - BALL_RADIUS_PX;
+      }
+
+      if (ballX != null) {
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        ctx.beginPath();
+        ctx.ellipse(ballX, groundY, 4, 1.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#facc15";
+        ctx.beginPath();
+        ctx.ellipse(ballX, ballY, BALL_RADIUS_PX, BALL_RADIUS_PX, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
     let raf = null;
     let lastTime = null;
 
     if (reducedMotion) {
-      render(0.5, 0);
+      renderFlight(0.5, 0);
       return () => observer.disconnect();
     }
+
+    const advanceSpecial = (dt, nowSeconds) => {
+      special.phaseElapsed += dt;
+      const t = special.phaseDuration > 0 ? Math.min(special.phaseElapsed / special.phaseDuration, 1) : 1;
+
+      if (special.phase === "jump") {
+        renderSpecial(nowSeconds, t);
+        if (t >= 1) startNextFlight("spike");
+        special.phase = t >= 1 ? null : special.phase;
+        return;
+      }
+
+      if (special.phase === "impact") {
+        renderSpecial(nowSeconds, t);
+        if (t >= 1) {
+          special.dribbleIndex = 0;
+          special.dribbleStartX = special.ball.endX;
+          beginDribbleBounce();
+        }
+        return;
+      }
+
+      if (special.phase === "dribble") {
+        renderSpecial(nowSeconds, t);
+        if (t >= 1) {
+          special.dribbleIndex += 1;
+          if (special.dribbleIndex < DRIBBLE_BOUNCES.length) {
+            special.dribbleStartX = special.ball.endX;
+            beginDribbleBounce();
+          } else {
+            special.restX = special.ball.endX;
+            special.phase = "idle";
+            special.phaseElapsed = 0;
+            special.phaseDuration = randomBetween(KNOCKDOWN_IDLE_MIN_SECONDS, KNOCKDOWN_IDLE_MAX_SECONDS);
+          }
+        }
+        return;
+      }
+
+      if (special.phase === "idle") {
+        renderSpecial(nowSeconds, 1);
+        if (t >= 1) {
+          special.phase = "recover";
+          special.phaseElapsed = 0;
+          special.phaseDuration = RECOVER_DURATION_SECONDS;
+        }
+        return;
+      }
+
+      if (special.phase === "recover") {
+        renderSpecial(nowSeconds, t);
+        if (t >= 1) {
+          // The knocked-down player gets back up, picks the ball up off the ground right
+          // next to them, and throws it back across — which is just the next normal flight.
+          const recoveredSide = special.downSide;
+          special.phase = null;
+          special.downSide = null;
+          special.jumpSide = null;
+          special.impactStartTime = null;
+          positions[recoveredSide] = laneCenter(recoveredSide);
+          rally.hitterSide = recoveredSide;
+          startNextFlight("normal");
+        }
+        return;
+      }
+    };
 
     const tick = (now) => {
       raf = requestAnimationFrame(tick);
@@ -259,17 +518,39 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       if (lastTime == null) lastTime = now;
       const dt = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
+      const nowSeconds = now / 1000;
+
+      if (special.phase) {
+        advanceSpecial(dt, nowSeconds);
+        return;
+      }
 
       rally.elapsed += dt;
       const t = rally.duration > 0 ? rally.elapsed / rally.duration : 1;
       if (t >= 1) {
-        render(1, now / 1000);
-        positions[rally.hitterSide === "left" ? "right" : "left"] = rally.targetX;
-        rally.hitterSide = rally.hitterSide === "left" ? "right" : "left";
-        startNextFlight();
+        renderFlight(1, nowSeconds);
+        const landedSide = rally.hitterSide === "left" ? "right" : "left";
+        positions[landedSide] = rally.targetX;
+        rally.hitterSide = landedSide;
+
+        if (rally.kind === "spike") {
+          beginImpact(landedSide, nowSeconds);
+          return;
+        }
+        if (rally.kind === "set") {
+          beginJump(landedSide);
+          return;
+        }
+
+        if (nowSeconds >= specialReadyAt && Math.random() < SPECIAL_TRIGGER_CHANCE) {
+          specialReadyAt = nowSeconds + SPECIAL_COOLDOWN_SECONDS;
+          startNextFlight("set");
+        } else {
+          startNextFlight("normal");
+        }
         return;
       }
-      render(t, now / 1000);
+      renderFlight(t, nowSeconds);
     };
     raf = requestAnimationFrame(tick);
 
