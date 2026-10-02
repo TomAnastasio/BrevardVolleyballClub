@@ -14,6 +14,15 @@ const BALL_CX = 95;
 const BALL_CY = 124;
 const BALL_R = 38;
 
+// The ball's seam pattern (everything after the trail's closing "Z") is a
+// separate set of subpaths, but the ball's own round silhouette is fused
+// into the trail subpath (the trail tapers directly into the ball's edge).
+// Rotating METEOR_PATH wholesale therefore swings the trail's spike through
+// the ball's clip circle. Rebuilding the spin layer from a true circle plus
+// just the seam subpaths keeps the silhouette perfectly round under rotation.
+const SEAMS_PATH = METEOR_PATH.slice(METEOR_PATH.indexOf("Z") + 1);
+const BALL_SPIN_PATH = `M${BALL_CX - BALL_R} ${BALL_CY}A${BALL_R} ${BALL_R} 0 1 1 ${BALL_CX + BALL_R} ${BALL_CY}A${BALL_R} ${BALL_R} 0 1 1 ${BALL_CX - BALL_R} ${BALL_CY}Z${SEAMS_PATH}`;
+
 export default function LoadingMeteor({ size = 64, className = "" }) {
   return (
     <svg
@@ -40,7 +49,7 @@ export default function LoadingMeteor({ size = 64, className = "" }) {
 
       {/* Ball: clip stays fixed in place, only the seam pattern inside spins */}
       <g clipPath="url(#meteor-ball-clip)">
-        <path d={METEOR_PATH} fill="currentColor" className="meteor-ball-spin" />
+        <path d={BALL_SPIN_PATH} fill="currentColor" className="meteor-ball-spin" />
       </g>
 
       {STARS.map((star, i) => (
