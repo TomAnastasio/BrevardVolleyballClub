@@ -32,7 +32,7 @@ export default function AddManualProfileView({ onDone }) {
   }, [previewUrl]);
 
   const trimmedName = sanitizeName(name, "");
-  const canSave = Boolean(trimmedName) && Boolean(file) && !photoError && !saving;
+  const canSave = Boolean(trimmedName) && !photoError && !saving;
 
   function handlePhotoChange(e) {
     const selected = e.target.files?.[0] || null;
@@ -71,18 +71,25 @@ export default function AddManualProfileView({ onDone }) {
     setSaving(true);
     setSaveError("");
 
-    const path = `manual/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-    const { error: uploadError } = await supabase.storage.from("profile-photos").upload(path, file);
-    if (uploadError) {
-      setSaveError("Couldn't upload photo. Please try again.");
-      setSaving(false);
-      return;
+    // Photo is optional -- a profile saved without one just has a null
+    // avatar_url, and every screen that renders a player (leaderboard,
+    // search, new-game form) already falls back to a placeholder for that,
+    // same as it does for any other profile with no photo.
+    let avatarUrl = null;
+    if (file) {
+      const path = `manual/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const { error: uploadError } = await supabase.storage.from("profile-photos").upload(path, file);
+      if (uploadError) {
+        setSaveError("Couldn't upload photo. Please try again.");
+        setSaving(false);
+        return;
+      }
+      avatarUrl = supabase.storage.from("profile-photos").getPublicUrl(path).data.publicUrl;
     }
 
-    const { data: publicUrlData } = supabase.storage.from("profile-photos").getPublicUrl(path);
     const { error: insertError } = await supabase.from("profiles").insert({
       display_name: trimmedName,
-      avatar_url: publicUrlData.publicUrl,
+      avatar_url: avatarUrl,
       is_manual: true,
     });
     if (insertError) {
@@ -127,7 +134,7 @@ export default function AddManualProfileView({ onDone }) {
             onClick={() => fileInputRef.current?.click()}
             className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
           >
-            {file ? "Choose a different photo" : "Choose photo"}
+            {file ? "Choose a different photo" : "Choose photo (optional)"}
           </button>
           {photoError && (
             <p role="alert" className="text-center text-xs font-semibold text-red-400">
