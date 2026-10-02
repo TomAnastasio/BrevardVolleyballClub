@@ -1,6 +1,6 @@
 // Animated mark built from src/assets/meteor-logo.svg (viewBox 0 0 134 161).
-// The ball spins and the trail pulses in place, like a meteor that reads as
-// moving without actually translating — meant for in-place loading states.
+// The trail pulses in place (the ball stays still) — meant for in-place
+// loading states.
 const METEOR_PATH =
   "M55.5 46L52 37L79.5 67.5L77.5 58.5L102 83.5L100 76C185.5 130 82.5 219 52 107.5L57.5 111.5L45 79.5L52 85.5L35.5 48L42 54L16 0L55.5 46ZM109.361 124.295C104.932 125.302 101.874 127.762 101.008 128.523C101.341 130.09 102.33 136.306 98.7588 142.412C96.7497 145.844 93.6623 148.598 89.5547 150.65C93.4172 152.514 97.5884 153.293 101.677 153.063C105.388 150.194 108.048 146.812 109.608 142.938C113.008 134.502 110.229 126.435 109.363 124.296L109.361 124.295ZM113.312 123.854C112.37 123.847 111.465 123.92 110.604 124.051C111.602 126.61 114.218 134.816 110.761 143.398C109.332 146.944 107.037 150.092 103.916 152.826C110.713 151.822 117.068 148.029 121.101 141.83C123.875 137.565 125.164 132.755 125.101 128.014C121.239 125.281 117.294 123.88 113.312 123.854ZM77.2588 119.128C72.9773 129.879 76.716 142.54 86.7793 149.087C87.2317 149.381 87.6905 149.655 88.1553 149.915C92.4533 147.937 95.6424 145.218 97.6572 141.784C98.1353 140.969 98.5243 140.15 98.8418 139.337C96.2913 138.938 87.7694 137.105 82.0596 129.867C79.6685 126.835 78.0712 123.242 77.2588 119.128ZM86.3516 107.811C83.7096 109.605 81.3746 111.94 79.5264 114.781C79.0365 115.534 78.5969 116.303 78.1992 117.086C78.8312 121.771 80.4471 125.797 83.0537 129.102H83.0508C88.6787 136.236 97.195 137.851 99.2705 138.146C100.614 133.807 100.011 129.928 99.7842 128.798C98.2594 128.301 92.3832 126.051 88.8828 119.905C86.9125 116.448 86.0718 112.395 86.3516 107.811ZM121.09 114.764C116.741 112.979 112.471 112.365 108.326 112.953C99.3061 114.236 93.5697 120.901 92.3223 122.486L92.3213 122.485C95.4072 125.818 99.0688 127.236 100.161 127.605C101.354 126.533 106.24 122.568 113.312 122.609C117.229 122.631 121.099 123.884 124.873 126.339C124.929 126.375 124.983 126.418 125.039 126.454C124.723 122.315 123.378 118.283 121.09 114.764ZM113.832 107.513C105.671 102.204 95.5216 102.329 87.6592 106.977C87.2225 111.688 87.9833 115.809 89.9512 119.27C90.417 120.09 90.9337 120.836 91.4766 121.515C93.204 119.356 98.981 113.012 108.136 111.709C111.934 111.169 115.818 111.581 119.758 112.924C118.13 110.863 116.152 109.022 113.832 107.513Z";
 
@@ -13,15 +13,6 @@ const STARS = [
 const BALL_CX = 95;
 const BALL_CY = 124;
 const BALL_R = 38;
-
-// The ball's seam pattern (everything after the trail's closing "Z") is a
-// separate set of subpaths, but the ball's own round silhouette is fused
-// into the trail subpath (the trail tapers directly into the ball's edge).
-// Rotating METEOR_PATH wholesale therefore swings the trail's spike through
-// the ball's clip circle. Rebuilding the spin layer from a true circle plus
-// just the seam subpaths keeps the silhouette perfectly round under rotation.
-const SEAMS_PATH = METEOR_PATH.slice(METEOR_PATH.indexOf("Z") + 1);
-const BALL_SPIN_PATH = `M${BALL_CX - BALL_R} ${BALL_CY}A${BALL_R} ${BALL_R} 0 1 1 ${BALL_CX + BALL_R} ${BALL_CY}A${BALL_R} ${BALL_R} 0 1 1 ${BALL_CX - BALL_R} ${BALL_CY}Z${SEAMS_PATH}`;
 
 export default function LoadingMeteor({ size = 64, className = "" }) {
   return (
@@ -47,9 +38,9 @@ export default function LoadingMeteor({ size = 64, className = "" }) {
         <path d={METEOR_PATH} fill="currentColor" className="meteor-trail-pulse" />
       </g>
 
-      {/* Ball: clip stays fixed in place, only the seam pattern inside spins */}
+      {/* Ball: static, clipped to its own circle so the trail's pulse never bleeds in */}
       <g clipPath="url(#meteor-ball-clip)">
-        <path d={BALL_SPIN_PATH} fill="currentColor" className="meteor-ball-spin" />
+        <path d={METEOR_PATH} fill="currentColor" />
       </g>
 
       {STARS.map((star, i) => (

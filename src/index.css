@@ -136,9 +136,9 @@ body {
   }
 }
 
-/* LoadingMeteor (bespoke, not a HeroUI component) — the ball spins in place
-   inside a fixed clip circle (see LoadingMeteor.jsx) while the trail pulses,
-   so the whole mark reads as "moving" without ever translating. */
+/* LoadingMeteor (bespoke, not a HeroUI component) — the trail pulses in
+   place while the ball stays still (see LoadingMeteor.jsx), so the mark
+   reads as "moving" without ever translating. */
 
 @keyframes meteor-pulse {
   0%,
@@ -156,21 +156,6 @@ body {
   transform-box: fill-box;
   transform-origin: center;
   animation: meteor-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes meteor-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.meteor-ball-spin {
-  transform-box: view-box;
-  transform-origin: 95px 124px;
-  animation: meteor-spin 2.2s linear infinite;
 }
 
 @keyframes meteor-twinkle {
@@ -192,7 +177,6 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .meteor-trail-pulse,
-  .meteor-ball-spin,
   .meteor-star {
     animation: none;
   }
