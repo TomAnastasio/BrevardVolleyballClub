@@ -178,6 +178,9 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
 
     const getGroundY = () => height - GROUND_MARGIN_PX;
     const laneCenter = (side) => (side === "left" ? width * 0.28 : width * 0.72);
+    // The canvas itself clips anything drawn above y=0, so no arc may lift the ball higher
+    // than the contact height — leave a small buffer so it never grazes the top edge.
+    const maxSafeArc = () => Math.max(18, getGroundY() - FIGURE_HEIGHT_PX * 0.6 - 6);
 
     const positions = { left: laneCenter("left"), right: laneCenter("right") };
     const rally = {
@@ -213,17 +216,17 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
         rally.targetX = laneCenter(receiverSide);
         rally.receiverStartX = rally.targetX;
         rally.duration = SPIKE_DURATION_SECONDS;
-        rally.arc = SPIKE_ARC_PX;
+        rally.arc = Math.min(SPIKE_ARC_PX, maxSafeArc());
       } else if (kind === "set") {
         rally.receiverStartX = positions[receiverSide];
         rally.targetX = laneCenter(receiverSide) + randomBetween(-LANE_HALF_WIDTH_PX, LANE_HALF_WIDTH_PX);
         rally.duration = SET_DURATION_SECONDS;
-        rally.arc = SET_ARC_PX;
+        rally.arc = Math.min(SET_ARC_PX, maxSafeArc());
       } else {
         rally.receiverStartX = positions[receiverSide];
         rally.targetX = laneCenter(receiverSide) + randomBetween(-LANE_HALF_WIDTH_PX, LANE_HALF_WIDTH_PX);
         rally.duration = randomBetween(MIN_FLIGHT_SECONDS, MAX_FLIGHT_SECONDS);
-        rally.arc = randomBetween(MIN_ARC_PX, MAX_ARC_PX);
+        rally.arc = Math.min(randomBetween(MIN_ARC_PX, MAX_ARC_PX), maxSafeArc());
       }
       rally.elapsed = 0;
     };
@@ -245,6 +248,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       special.ball.startX = rally.targetX;
       special.ball.startY = getGroundY() - FIGURE_HEIGHT_PX * 0.6;
       special.ball.endX = rally.targetX + driftDir * IMPACT_DRIFT_PX;
+      special.ball.arc = Math.min(IMPACT_ARC_PX, maxSafeArc());
     };
 
     const beginDribbleBounce = () => {
@@ -255,7 +259,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       special.phaseDuration = bounce.duration;
       special.ball.startX = special.dribbleStartX;
       special.ball.endX = special.dribbleStartX + (driftDir * (IMPACT_DRIFT_PX * 0.35)) / (special.dribbleIndex + 1);
-      special.ball.arc = bounce.arc;
+      special.ball.arc = Math.min(bounce.arc, maxSafeArc());
     };
 
     const drawCourt = (groundY) => {
@@ -413,7 +417,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       } else if (special.phase === "impact") {
         ballX = lerp(special.ball.startX, special.ball.endX, t);
         const straightY = lerp(special.ball.startY, groundY - BALL_RADIUS_PX, t);
-        ballY = straightY - 4 * IMPACT_ARC_PX * t * (1 - t);
+        ballY = straightY - 4 * special.ball.arc * t * (1 - t);
       } else if (special.phase === "dribble") {
         ballX = lerp(special.ball.startX, special.ball.endX, t);
         ballY = groundY - BALL_RADIUS_PX - 4 * special.ball.arc * t * (1 - t);
