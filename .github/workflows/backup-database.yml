@@ -1,0 +1,78 @@
+name: Nightly database backup
+
+# Dumps the entire live Supabase database (every table, every row) and
+# commits it as a new timestamped file into a separate, private GitHub repo
+# (BrevardVolleyballClub/bvc-database-backups) — see supabase/README.md for
+# why that repo is separate, how this works, and how to restore from one of
+# these snapshots.
+#
+# Requires two one-time repo secrets (Settings -> Secrets and variables ->
+# Actions), documented in supabase/README.md:
+#   SUPABASE_DB_URL     - the Supabase "Session pooler" connection string
+#   BACKUP_REPO_TOKEN   - a fine-grained PAT scoped ONLY to the backups repo,
+#                         with Contents: Read and write (nothing more)
+# Until both secrets are set, every run of this workflow will fail at the
+# relevant step — that's expected, not a bug, until setup is finished.
+
+on:
+  schedule:
+    - cron: "0 9 * * *" # ~4-5am US Eastern, low-traffic
+  workflow_dispatch:
+
+concurrency:
+  group: "database-backup"
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Install a Postgres client matching Supabase's server version
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y curl ca-certificates gnupg lsb-release
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/postgresql.gpg
+          echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+
+      - name: Dump the database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "::error::SUPABASE_DB_URL secret is not set yet — see supabase/README.md for setup steps."
+            exit 1
+          fi
+          pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges --format=plain > backup.sql
+          gzip backup.sql
+          ls -lh backup.sql.gz
+
+      - name: Push the snapshot to the backups repo
+        env:
+          BACKUP_REPO_TOKEN: ${{ secrets.BACKUP_REPO_TOKEN }}
+          BACKUP_REPO: BrevardVolleyballClub/bvc-database-backups
+        run: |
+          set -euo pipefail
+          if [ -z "${BACKUP_REPO_TOKEN:-}" ]; then
+            echo "::error::BACKUP_REPO_TOKEN secret is not set yet — see supabase/README.md for setup steps."
+            exit 1
+          fi
+          DATE="$(date -u +%Y-%m-%d)"
+          git clone --depth 1 "https://x-access-token:${BACKUP_REPO_TOKEN}@github.com/${BACKUP_REPO}.git" backups-repo
+          mkdir -p backups-repo/backups
+          mv backup.sql.gz "backups-repo/backups/${DATE}.sql.gz"
+          cd backups-repo
+          git config user.name "bvc-backup-bot"
+          git config user.email "noreply@brevardvolleyballclub.com"
+          git add "backups/${DATE}.sql.gz"
+          if git diff --cached --quiet; then
+            echo "No changes since last run (already backed up today) — nothing to commit."
+          else
+            git commit -m "Backup ${DATE}"
+            git push
+          fi

@@ -6,3 +6,7 @@ dist/
 TODO.md
 .env
 .env.local
+
+# Supabase CLI local cache (project linking state, not source of truth)
+supabase/.temp/
+supabase/.branches/

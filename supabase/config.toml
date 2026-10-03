@@ -1,0 +1,17 @@
+# Minimal Supabase CLI config — just enough for remote migration tracking
+# (`supabase link`, `supabase db push`, `supabase migration list`).
+#
+# Intentionally NOT the full local-dev config `supabase init` generates
+# (local Postgres/Auth/Storage/Studio emulation via Docker). This project has
+# no local Supabase stack — the only Supabase project that exists is the
+# hosted one in the cloud, so none of that applies. If a real need for local
+# emulation ever comes up, run `supabase init` fresh and merge this
+# project_id in rather than guessing at the rest by hand.
+#
+# For detailed configuration reference documentation, visit:
+# https://supabase.com/docs/guides/local-development/cli/config
+project_id = "brevard-volleyball-club"
+
+[db.migrations]
+# If disabled, migrations would be skipped during a db push.
+enabled = true
