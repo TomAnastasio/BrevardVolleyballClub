@@ -1,13 +1,15 @@
 import { useState } from "react";
 import MenuCard from "../game/MenuCard.jsx";
 import AddManualProfileView from "./AddManualProfileView.jsx";
+import RecomputeEloView from "./RecomputeEloView.jsx";
 
 const SCREEN_META = {
   menu: "Admin Panel",
   "add-profile": "Add Manual Profile",
+  "recompute-elo": "Recompute Elo Ratings",
 };
 
-const BACK_MAP = { "add-profile": "menu" };
+const BACK_MAP = { "add-profile": "menu", "recompute-elo": "menu" };
 
 export default function AdminPanelView({ onBack }) {
   const [screen, setScreen] = useState("menu");
@@ -40,9 +42,16 @@ export default function AdminPanelView({ onBack }) {
             subtitle="Create a player profile without a Google account"
             onClick={() => setScreen("add-profile")}
           />
+          <MenuCard
+            icon="♻️"
+            label="Recompute Elo Ratings"
+            subtitle="Reset and replay every ranked game's rating from scratch"
+            onClick={() => setScreen("recompute-elo")}
+          />
         </div>
       )}
       {screen === "add-profile" && <AddManualProfileView onDone={() => setScreen("menu")} />}
+      {screen === "recompute-elo" && <RecomputeEloView />}
     </main>
   );
 }

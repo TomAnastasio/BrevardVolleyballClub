@@ -26,7 +26,45 @@ function RosterAvatars({ players, align }) {
   );
 }
 
-export default function HistoryView({ history, historyLoading }) {
+function GameCardBody({ game, user, isAdmin }) {
+  return (
+    <>
+      <div className="flex items-center justify-between gap-2 font-bold">
+        <span className={`min-w-0 break-words ${game.a > game.b ? "text-success" : ""}`}>{game.nameA}</span>
+        <span className="flex-none text-lg [font-variant-numeric:tabular-nums]">
+          {game.a} – {game.b}
+        </span>
+        <span className={`min-w-0 break-words text-right ${game.b > game.a ? "text-success" : ""}`}>
+          {game.nameB}
+        </span>
+      </div>
+      {game.format === "indoor" && (
+        <div className="flex items-start justify-between gap-2">
+          <RosterAvatars players={game.teamAPlayers} />
+          <RosterAvatars players={game.teamBPlayers} align="right" />
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm text-muted">
+          {game.date} at {game.time}
+        </span>
+        <span
+          className={`flex-none rounded-full border px-2 py-0.5 text-xs font-bold ${
+            game.mode === "ranked" ? "border-accent/40 bg-accent/10 text-accent" : "border-white/10 bg-white/5 text-muted"
+          }`}
+        >
+          {game.mode === "ranked" ? "🏆 Ranked" : "🎲 Casual"}
+        </span>
+      </div>
+      {user && game.submittedByName && game.submittedByUserId !== user.id && (
+        <p className="m-0 text-xs text-muted">Submitted by {game.submittedByName}</p>
+      )}
+      {isAdmin && <p className="m-0 text-xs font-bold text-accent">✏️ Edit</p>}
+    </>
+  );
+}
+
+export default function HistoryView({ history, historyLoading, isAdmin, onEditGame }) {
   const { user, loading, isConfigured } = useAuth();
 
   return (
@@ -43,46 +81,28 @@ export default function HistoryView({ history, historyLoading }) {
         <p className="p-6 text-center text-muted">No games saved yet. Finish a game to see it here.</p>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {history.map((game) => (
-            <li key={game.id}>
-              <Card className="gap-1 p-3">
-                <div className="flex items-center justify-between gap-2 font-bold">
-                  <span className={`min-w-0 break-words ${game.a > game.b ? "text-success" : ""}`}>
-                    {game.nameA}
-                  </span>
-                  <span className="flex-none text-lg [font-variant-numeric:tabular-nums]">
-                    {game.a} – {game.b}
-                  </span>
-                  <span className={`min-w-0 break-words text-right ${game.b > game.a ? "text-success" : ""}`}>
-                    {game.nameB}
-                  </span>
-                </div>
-                {game.format === "indoor" && (
-                  <div className="flex items-start justify-between gap-2">
-                    <RosterAvatars players={game.teamAPlayers} />
-                    <RosterAvatars players={game.teamBPlayers} align="right" />
-                  </div>
-                )}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-muted">
-                    {game.date} at {game.time}
-                  </span>
-                  <span
-                    className={`flex-none rounded-full border px-2 py-0.5 text-xs font-bold ${
-                      game.mode === "ranked"
-                        ? "border-accent/40 bg-accent/10 text-accent"
-                        : "border-white/10 bg-white/5 text-muted"
-                    }`}
-                  >
-                    {game.mode === "ranked" ? "🏆 Ranked" : "🎲 Casual"}
-                  </span>
-                </div>
-                {user && game.submittedByName && game.submittedByUserId !== user.id && (
-                  <p className="m-0 text-xs text-muted">Submitted by {game.submittedByName}</p>
-                )}
-              </Card>
-            </li>
-          ))}
+          {history.map((game) =>
+            isAdmin ? (
+              <li key={game.id}>
+                <button
+                  type="button"
+                  onClick={() => onEditGame(game.id)}
+                  aria-label={`Edit game: ${game.nameA} vs ${game.nameB}, ${game.date}`}
+                  className="block w-full rounded-2xl text-left focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+                >
+                  <Card className="gap-1 p-3">
+                    <GameCardBody game={game} user={user} isAdmin />
+                  </Card>
+                </button>
+              </li>
+            ) : (
+              <li key={game.id}>
+                <Card className="gap-1 p-3">
+                  <GameCardBody game={game} user={user} />
+                </Card>
+              </li>
+            ),
+          )}
         </ul>
       )}
     </div>

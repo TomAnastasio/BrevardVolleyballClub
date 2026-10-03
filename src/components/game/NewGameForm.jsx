@@ -105,6 +105,7 @@ function SideFields({
   color,
   otherColor,
   onColorChange,
+  hideColors,
   isIndoor,
   roster,
   onAddPlayer,
@@ -204,38 +205,48 @@ function SideFields({
           </>
         )}
       </div>
-      <ColorSwatchPicker label={`${label} color`} selected={color} disabledColor={otherColor} onSelect={onColorChange} />
+      {!hideColors && (
+        <ColorSwatchPicker label={`${label} color`} selected={color} disabledColor={otherColor} onSelect={onColorChange} />
+      )}
     </div>
   );
 }
 
-export default function NewGameForm({ format, mode, onStart }) {
+export default function NewGameForm({ format, mode, onStart, editing = false, initialGame = null, onSave }) {
   const isIndoor = format === "indoor";
   const { user } = useAuth();
   // Signed-in players get the self-prefill + known-player search in both
   // ranked and casual beach games (casual still works fully anonymously if
   // not signed in — it never requires an account). Indoor is untouched.
-  const prefillSelf = !isIndoor && Boolean(user);
+  // An admin editing a past game never gets the "this is me" self-prefill —
+  // A1 is just another searchable slot, pre-filled from the game's current
+  // data instead (see initialGame below).
+  const prefillSelf = !isIndoor && !editing && Boolean(user);
   const selfName = prefillSelf ? user.user_metadata?.full_name || user.user_metadata?.name || "" : "";
   const selfAvatar = prefillSelf ? user.user_metadata?.avatar_url || user.user_metadata?.picture || null : null;
   // Indoor has no free-text fallback left — every player must come from the
   // directory, ranked or casual, signed in or not (ranked's sign-in
   // requirement is already gated a screen earlier, in GameTrackingShell).
-  const enableSearch = isIndoor || Boolean(user);
+  // Editing always searches too, regardless of format/mode — every slot an
+  // admin edit touches must resolve to a real profile (see
+  // requireLinkedPlayers below).
+  const enableSearch = isIndoor || editing || Boolean(user);
   const directory = usePlayerDirectory(enableSearch);
 
-  const [nameA1, setNameA1] = useState(selfName);
-  const [nameA2, setNameA2] = useState("");
-  const [nameB1, setNameB1] = useState("");
-  const [nameB2, setNameB2] = useState("");
-  const [avatarA2, setAvatarA2] = useState(null);
-  const [avatarB1, setAvatarB1] = useState(null);
-  const [avatarB2, setAvatarB2] = useState(null);
-  const [playerIdA2, setPlayerIdA2] = useState(null);
-  const [playerIdB1, setPlayerIdB1] = useState(null);
-  const [playerIdB2, setPlayerIdB2] = useState(null);
-  const [teamAPlayers, setTeamAPlayers] = useState([]);
-  const [teamBPlayers, setTeamBPlayers] = useState([]);
+  const [nameA1, setNameA1] = useState(editing ? initialGame?.a1?.name ?? "" : selfName);
+  const [nameA2, setNameA2] = useState(editing ? initialGame?.a2?.name ?? "" : "");
+  const [nameB1, setNameB1] = useState(editing ? initialGame?.b1?.name ?? "" : "");
+  const [nameB2, setNameB2] = useState(editing ? initialGame?.b2?.name ?? "" : "");
+  const [avatarA1, setAvatarA1] = useState(editing ? initialGame?.a1?.avatarUrl ?? null : null);
+  const [avatarA2, setAvatarA2] = useState(editing ? initialGame?.a2?.avatarUrl ?? null : null);
+  const [avatarB1, setAvatarB1] = useState(editing ? initialGame?.b1?.avatarUrl ?? null : null);
+  const [avatarB2, setAvatarB2] = useState(editing ? initialGame?.b2?.avatarUrl ?? null : null);
+  const [playerIdA1, setPlayerIdA1] = useState(editing ? initialGame?.a1?.userId ?? null : null);
+  const [playerIdA2, setPlayerIdA2] = useState(editing ? initialGame?.a2?.userId ?? null : null);
+  const [playerIdB1, setPlayerIdB1] = useState(editing ? initialGame?.b1?.userId ?? null : null);
+  const [playerIdB2, setPlayerIdB2] = useState(editing ? initialGame?.b2?.userId ?? null : null);
+  const [teamAPlayers, setTeamAPlayers] = useState(editing ? initialGame?.teamAPlayers ?? [] : []);
+  const [teamBPlayers, setTeamBPlayers] = useState(editing ? initialGame?.teamBPlayers ?? [] : []);
   const [colorA, setColorA] = useState(DEFAULT_COLOR_A);
   const [colorB, setColorB] = useState(DEFAULT_COLOR_B);
 
@@ -258,6 +269,11 @@ export default function NewGameForm({ format, mode, onStart }) {
   // Tracking the id (not just the displayed name) is what lets the other
   // fields exclude an already-picked player from their own suggestions —
   // the same profile should never end up filling more than one player slot.
+  function handleNameA1(value, avatarUrl = null, playerId = null) {
+    setNameA1(value);
+    setAvatarA1(avatarUrl);
+    setPlayerIdA1(playerId);
+  }
   function handleNameA2(value, avatarUrl = null, playerId = null) {
     setNameA2(value);
     setAvatarA2(avatarUrl);
@@ -275,6 +291,10 @@ export default function NewGameForm({ format, mode, onStart }) {
   }
 
   const selfId = user?.id ?? null;
+  // A1's "own" id for exclusion purposes: the signed-in submitter when
+  // creating a game, or whichever profile A1 is currently/newly set to when
+  // editing one (A1 is a pickable slot in edit mode, not an implicit self).
+  const a1ExcludeId = editing ? playerIdA1 : selfId;
 
   // Applies to beach only (indoor has team names, not individual players) —
   // and to every player field regardless of mode or whether its name came
@@ -287,9 +307,11 @@ export default function NewGameForm({ format, mode, onStart }) {
   // Ranked beach games require every participant to be a known profile (not
   // free-typed) so Elo has something real to attach a rating to. Casual and
   // indoor are unaffected (indoor already requires every player to come from
-  // the directory, regardless of mode).
-  const requireLinkedPlayers = !isIndoor && mode === "ranked";
-  const hasUnlinkedPlayers = requireLinkedPlayers && (!playerIdA2 || !playerIdB1 || !playerIdB2);
+  // the directory, regardless of mode). An admin edit always requires linked
+  // profiles too — the edit RPCs only accept real profile ids, no free text.
+  const requireLinkedPlayers = !isIndoor && (editing || mode === "ranked");
+  const hasUnlinkedPlayers =
+    requireLinkedPlayers && ((editing && !playerIdA1) || !playerIdA2 || !playerIdB1 || !playerIdB2);
 
   const hasUndersizedRoster =
     isIndoor && (teamAPlayers.length < MIN_ROSTER_SIZE || teamBPlayers.length < MIN_ROSTER_SIZE);
@@ -321,6 +343,16 @@ export default function NewGameForm({ format, mode, onStart }) {
     }
   }
 
+  function handleSave() {
+    if (isIndoor) {
+      if (hasUndersizedRoster) return;
+      onSave({ format: "indoor", teamAPlayers, teamBPlayers });
+    } else {
+      if (hasDuplicateNames || hasUnlinkedPlayers) return;
+      onSave({ format: "beach", a1: playerIdA1, a2: playerIdA2, b1: playerIdB1, b2: playerIdB2 });
+    }
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3">
@@ -329,30 +361,32 @@ export default function NewGameForm({ format, mode, onStart }) {
           color={colorA}
           otherColor={colorB}
           onColorChange={setColorA}
+          hideColors={editing}
           isIndoor={isIndoor}
           roster={teamAPlayers}
           onAddPlayer={addPlayerA}
           onRemovePlayer={removePlayerA}
           rosterExcludeIds={[...teamAPlayers, ...teamBPlayers].map((p) => p.id)}
           name1={nameA1}
-          onName1={setNameA1}
+          onName1={editing ? handleNameA1 : setNameA1}
           name2={nameA2}
           onName2={handleNameA2}
-          avatar1={selfAvatar}
+          avatar1={editing ? avatarA1 : selfAvatar}
           avatar2={avatarA2}
           error1={duplicateNameKeys.has("a1")}
           error2={duplicateNameKeys.has("a2")}
           name1IsSelf={prefillSelf}
           enableSearch={enableSearch}
           directory={directory}
-          excludeIds1={[selfId, playerIdB1, playerIdB2].filter(Boolean)}
-          excludeIds2={[selfId, playerIdB1, playerIdB2].filter(Boolean)}
+          excludeIds1={[playerIdA2, playerIdB1, playerIdB2].filter(Boolean)}
+          excludeIds2={[a1ExcludeId, playerIdB1, playerIdB2].filter(Boolean)}
         />
         <SideFields
           label="Second side"
           color={colorB}
           otherColor={colorA}
           onColorChange={setColorB}
+          hideColors={editing}
           isIndoor={isIndoor}
           roster={teamBPlayers}
           onAddPlayer={addPlayerB}
@@ -368,8 +402,8 @@ export default function NewGameForm({ format, mode, onStart }) {
           error2={duplicateNameKeys.has("b2")}
           enableSearch={enableSearch}
           directory={directory}
-          excludeIds1={[selfId, playerIdA2, playerIdB2].filter(Boolean)}
-          excludeIds2={[selfId, playerIdA2, playerIdB1].filter(Boolean)}
+          excludeIds1={[a1ExcludeId, playerIdA2, playerIdB2].filter(Boolean)}
+          excludeIds2={[a1ExcludeId, playerIdA2, playerIdB1].filter(Boolean)}
         />
       </div>
 
@@ -381,21 +415,23 @@ export default function NewGameForm({ format, mode, onStart }) {
         )}
         {!hasDuplicateNames && hasUnlinkedPlayers && (
           <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
-            Every player must be picked from search to start a ranked game — they need to have signed in at least once.
+            {editing
+              ? "Every player must be picked from search — they need to have signed in at least once."
+              : "Every player must be picked from search to start a ranked game — they need to have signed in at least once."}
           </p>
         )}
         {isIndoor && hasUndersizedRoster && (
           <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
-            Each side needs at least {MIN_ROSTER_SIZE} players to start.
+            Each side needs at least {MIN_ROSTER_SIZE} players{editing ? "." : " to start."}
           </p>
         )}
         <Button
           variant="primary"
-          onPress={handleStart}
+          onPress={editing ? handleSave : handleStart}
           isDisabled={hasDuplicateNames || hasUnlinkedPlayers || hasUndersizedRoster}
           className="min-h-14 w-full text-lg font-extrabold"
         >
-          Start Game
+          {editing ? "Save Changes" : "Start Game"}
         </Button>
       </div>
     </div>

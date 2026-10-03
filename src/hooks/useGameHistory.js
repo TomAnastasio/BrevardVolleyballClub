@@ -28,7 +28,7 @@ function saveHistory(history) {
   }
 }
 
-function mapTeamPlayers(gamePlayers, team) {
+export function mapTeamPlayers(gamePlayers, team) {
   return (gamePlayers || [])
     .filter((gp) => gp.team === team)
     .map((gp) => ({
@@ -73,6 +73,51 @@ export function useGameHistory() {
   // would blindly replace remoteHistory and silently drop the new game.
   const pendingInsertsRef = useRef(new Map());
 
+  // Guards against two overlapping fetches (e.g. a user?.id change racing a
+  // manual refreshHistory() call) resolving out of order — only the result
+  // of the most recently *started* fetch is ever applied.
+  const latestRequestRef = useRef(0);
+
+  // Extracted so an admin edit save can force a re-fetch immediately instead
+  // of waiting on user?.id to change (see `refreshHistory` returned below).
+  const fetchRemoteHistory = useCallback(async () => {
+    const requestId = ++latestRequestRef.current;
+    setRemoteLoading(true);
+    try {
+      // No .eq("user_id", ...) filter — `games` is publicly readable
+      // (migration 0009), a club-wide history, not a per-user one. Still
+      // fetched on `user?.id` changes below so a sign-in/out swaps in any
+      // optimistic inserts tied to the new session correctly.
+      const { data, error } = await supabase
+        .from("games")
+        .select("*, game_players(user_id, team, profiles(id, display_name, avatar_url))")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      if (requestId !== latestRequestRef.current) return;
+
+      const fetched = (data || []).map(mapRowToRecord);
+      const fetchedIds = new Set(fetched.map((g) => g.id));
+      // Carry forward any optimistic insert this fetch raced past (i.e.
+      // doesn't yet reflect) instead of letting it disappear; drop entries
+      // the fetch already confirmed so the pending set doesn't grow stale.
+      const stillPending = [];
+      for (const [id, game] of pendingInsertsRef.current) {
+        if (fetchedIds.has(id)) {
+          pendingInsertsRef.current.delete(id);
+        } else {
+          stillPending.push(game);
+        }
+      }
+      setRemoteHistory([...stillPending, ...fetched]);
+    } catch (e) {
+      console.error("Failed to fetch game history from Supabase:", e);
+      // Leave remoteHistory as null (not []) so `history` falls back to
+      // localHistory instead of appearing as a definitive "zero games".
+    } finally {
+      if (requestId === latestRequestRef.current) setRemoteLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     pendingInsertsRef.current.clear();
 
@@ -82,51 +127,8 @@ export function useGameHistory() {
       return;
     }
 
-    let active = true;
-    setRemoteLoading(true);
-
-    async function fetchRemoteHistory() {
-      try {
-        // No .eq("user_id", ...) filter — `games` is publicly readable
-        // (migration 0009), a club-wide history, not a per-user one. Still
-        // fetched on `user?.id` changes below so a sign-in/out swaps in any
-        // optimistic inserts tied to the new session correctly.
-        const { data, error } = await supabase
-          .from("games")
-          .select("*, game_players(user_id, team, profiles(id, display_name, avatar_url))")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        if (!active) return;
-
-        const fetched = (data || []).map(mapRowToRecord);
-        const fetchedIds = new Set(fetched.map((g) => g.id));
-        // Carry forward any optimistic insert this fetch raced past (i.e.
-        // doesn't yet reflect) instead of letting it disappear; drop entries
-        // the fetch already confirmed so the pending set doesn't grow stale.
-        const stillPending = [];
-        for (const [id, game] of pendingInsertsRef.current) {
-          if (fetchedIds.has(id)) {
-            pendingInsertsRef.current.delete(id);
-          } else {
-            stillPending.push(game);
-          }
-        }
-        setRemoteHistory([...stillPending, ...fetched]);
-      } catch (e) {
-        console.error("Failed to fetch game history from Supabase:", e);
-        // Leave remoteHistory as null (not []) so `history` falls back to
-        // localHistory instead of appearing as a definitive "zero games".
-      } finally {
-        if (active) setRemoteLoading(false);
-      }
-    }
-
     fetchRemoteHistory();
-
-    return () => {
-      active = false;
-    };
-  }, [user?.id]);
+  }, [user?.id, fetchRemoteHistory]);
 
   const addGame = useCallback(
     (game) => {
@@ -233,5 +235,5 @@ export function useGameHistory() {
   const history = isSupabaseConfigured && remoteHistory !== null ? remoteHistory : localHistory;
   const historyLoading = isSupabaseConfigured && remoteLoading;
 
-  return { history, addGame, historyLoading };
+  return { history, addGame, historyLoading, refreshHistory: fetchRemoteHistory };
 }

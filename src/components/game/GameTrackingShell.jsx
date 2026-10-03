@@ -10,6 +10,7 @@ import RankedSignInGate from "./RankedSignInGate.jsx";
 import NewGameForm from "./NewGameForm.jsx";
 import GameView from "./GameView.jsx";
 import HistoryView from "./HistoryView.jsx";
+import EditGameScreen from "./EditGameScreen.jsx";
 import { consumePendingRankedGame, setPendingRankedGame } from "../../lib/pendingRankedGame.js";
 
 const SCREEN_META = {
@@ -20,17 +21,37 @@ const SCREEN_META = {
   new: { title: "New Game", subtitle: null },
   active: { title: null, subtitle: null },
   history: { title: "Past Games", subtitle: null },
+  "edit-game": { title: "Edit Game", subtitle: null },
 };
 
-const BACK_MAP = { format: "menu", mode: "format", signin: "mode", new: "mode", active: "menu", history: "menu" };
+const BACK_MAP = {
+  format: "menu",
+  mode: "format",
+  signin: "mode",
+  new: "mode",
+  active: "menu",
+  history: "menu",
+  "edit-game": "history",
+};
 
 export default function GameTrackingShell({ onBack }) {
   const scoreboard = useScoreboardState();
-  const { history, addGame, historyLoading } = useGameHistory();
-  const { user, loading, isConfigured, signInWithGoogle } = useAuth();
+  const { history, addGame, historyLoading, refreshHistory } = useGameHistory();
+  const { user, loading, isConfigured, isAdmin, signInWithGoogle } = useAuth();
   const [screen, setScreen] = useState("menu");
   const [pendingFormat, setPendingFormat] = useState(null);
   const [pendingMode, setPendingMode] = useState(null);
+  const [editingGameId, setEditingGameId] = useState(null);
+
+  function handleEditGame(gameId) {
+    setEditingGameId(gameId);
+    setScreen("edit-game");
+  }
+
+  function handleGameEdited() {
+    refreshHistory();
+    setScreen("history");
+  }
 
   function handleSelectFormat(format) {
     setPendingFormat(format);
@@ -161,7 +182,15 @@ export default function GameTrackingShell({ onBack }) {
             effectiveHeight={effectiveHeight}
           />
         )}
-        {screen === "history" && <HistoryView history={history} historyLoading={historyLoading} />}
+        {screen === "history" && (
+          <HistoryView
+            history={history}
+            historyLoading={historyLoading}
+            isAdmin={isAdmin}
+            onEditGame={handleEditGame}
+          />
+        )}
+        {screen === "edit-game" && <EditGameScreen gameId={editingGameId} onSaved={handleGameEdited} />}
       </main>
     </div>
   );
