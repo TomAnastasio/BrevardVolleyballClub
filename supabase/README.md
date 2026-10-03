@@ -119,14 +119,13 @@ day going back as far as the repo exists.
    have a `backups/<today>.sql.gz` file and a `main` branch. Do this before
    step 5: a brand-new repo has zero commits and no branch yet, so there's
    nothing yet for a branch-protection rule to attach to.
-5. **Lock the backups repo down** (strongly recommended, now that `main`
-   exists): in the backups repo, Settings → look for **Branches** in the
-   left sidebar. If that's not there, look for **Rules → Rulesets** instead
-   — GitHub has been migrating this feature and different accounts may show
-   either one. Either way, add a rule targeting `main` with branch deletion
-   and force-pushes restricted/blocked. This means even your own account
-   can't erase backup history by accident — doing so would require
-   deliberately removing this rule first, as a separate, visible step.
+5. **Locking the backups repo down further is a dead end on the free
+   plan — skip it.** GitHub's Rulesets feature (Settings → Rules →
+   Rulesets) is the only branch-protection option this repo offers, and it
+   explicitly does not enforce anything on a private repo without
+   upgrading to GitHub Team (~$4/user/month). Decided 2026-10-03: not worth
+   paying for — see the next section for why the setup is still solid
+   without it.
 
 Until steps 2–3 are done, the workflow will fail every night with a clear
 error message (not silently) — that's expected, not a bug, until setup is
@@ -136,13 +135,18 @@ finished.
 
 - Deleting the Supabase project doesn't touch GitHub at all — the backups
   live somewhere entirely independent.
-- The token used to push backups can only write files to that one repo —
-  it has no power to delete the repo, rewrite its history, or touch this
-  app's repo.
-- Branch protection (step 4) means nobody — not a careless command, not a
-  compromised token, not an AI coding assistant told to "clean up old
-  backups" — can force-push or delete history on that branch without first
-  manually turning the protection off in GitHub's UI.
+- The token used to push backups (`BACKUP_REPO_TOKEN`) is scoped to only
+  "Contents: Read and write" on that one repo — it has no permission to
+  delete the repo, rewrite its settings, or touch this app's repo. This is
+  the actual load-bearing protection: it holds regardless of branch
+  protection, and it's what stops the scenario originally worried about —
+  an automated job or AI session with access to that token going rogue.
+  GitHub-level branch protection (restrict deletion/force-push) would have
+  been additional defense specifically against *your own* full-access
+  account doing something destructive by accident, but that requires
+  GitHub Team on a private repo (see step 5) — decided not worth paying for
+  just for this, so that residual, smaller risk (a mistake from your own
+  account, not automation) is knowingly accepted rather than closed.
 - No AI coding session (this one or a future one) should ever be given admin
   rights on the backups repo, and should never hold your Supabase database
   password or service-role key. See the ground rules in `CLAUDE.md` at the
