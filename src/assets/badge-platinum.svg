@@ -1,0 +1,65 @@
+<svg viewBox="0 0 220 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Platinum rank badge">
+  <defs>
+    <radialGradient id="platFace" cx="35%" cy="24%" r="85%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#d3edf9"/>
+      <stop offset="70%" stop-color="#86bdd8"/>
+      <stop offset="100%" stop-color="#3f6f8c"/>
+    </radialGradient>
+    <linearGradient id="platRing" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3fbff"/>
+      <stop offset="50%" stop-color="#a9d8ec"/>
+      <stop offset="100%" stop-color="#4c7f9e"/>
+    </linearGradient>
+    <linearGradient id="wingL" x1="1" y1="0" x2="0" y2="0.3">
+      <stop offset="0%" stop-color="#eaf6ff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#9fd1ea" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="wingR" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0%" stop-color="#eaf6ff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#9fd1ea" stop-opacity="0.1"/>
+    </linearGradient>
+    <g id="platLeaf">
+      <path d="M0 0 q-14 9 -9 25 q8 3 14 -5 q2 10 14 11 q-5 -13 2 -21 q-11 2 -21 -10 Z" fill="#bfe0f0"/>
+    </g>
+    <g id="sparkle">
+      <path d="M0 -10 L2.5 -2.5 L10 0 L2.5 2.5 L0 10 L-2.5 2.5 L-10 0 L-2.5 -2.5 Z" fill="#f3fbff"/>
+    </g>
+  </defs>
+
+  <path d="M118 108 C78 84 34 92 12 72 C32 114 66 126 108 122 Z" fill="url(#wingL)"/>
+  <path d="M102 108 C142 84 186 92 208 72 C188 114 154 126 112 122 Z" fill="url(#wingR)"/>
+
+  <path d="M86 168 L71 224 L110 203 L149 224 L134 168 Z" fill="#2b4a63"/>
+
+  <circle cx="110" cy="108" r="92" fill="url(#platRing)"/>
+  <circle cx="110" cy="108" r="92" fill="none" stroke="#f3fbff" stroke-width="2" opacity="0.65"/>
+  <circle cx="110" cy="108" r="74" fill="url(#platFace)" stroke="#4c7f9e" stroke-width="3"/>
+
+  <g opacity="0.95">
+    <use href="#platLeaf" x="22" y="78"/>
+    <use href="#platLeaf" x="12" y="104"/>
+    <use href="#platLeaf" x="16" y="130"/>
+    <use href="#platLeaf" x="28" y="152"/>
+  </g>
+  <g opacity="0.95" transform="translate(220,0) scale(-1,1)">
+    <use href="#platLeaf" x="22" y="78"/>
+    <use href="#platLeaf" x="12" y="104"/>
+    <use href="#platLeaf" x="16" y="130"/>
+    <use href="#platLeaf" x="28" y="152"/>
+  </g>
+
+  <g transform="translate(110,104)">
+    <circle r="34" fill="#eaf6ff"/>
+    <g fill="none" stroke="#4c7f9e" stroke-width="5.5" stroke-linecap="round">
+      <path d="M0,-29 Q17,0 0,25 Q-17,0 0,-29 Z"/>
+      <path d="M0,-29 Q17,0 0,25 Q-17,0 0,-29 Z" transform="rotate(120)"/>
+      <path d="M0,-29 Q17,0 0,25 Q-17,0 0,-29 Z" transform="rotate(240)"/>
+    </g>
+  </g>
+
+  <use href="#sparkle" x="42" y="46"/>
+  <use href="#sparkle" x="178" y="58" transform="scale(0.8)"/>
+  <use href="#sparkle" x="172" y="162" transform="scale(0.7)"/>
+  <use href="#sparkle" x="36" y="168" transform="scale(0.6)"/>
+</svg>

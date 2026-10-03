@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
+import RankBadge from "./RankBadge.jsx";
 import { useAuth } from "../hooks/useAuth.js";
 import { useLeaderboard } from "../hooks/useLeaderboard.js";
 
@@ -66,9 +67,12 @@ export default function LeaderboardView({ onBack }) {
                             {player.display_name}
                             {isSelf && <span className="ml-1 font-normal text-muted">(you)</span>}
                           </span>
-                          <span className="flex-none text-right [font-variant-numeric:tabular-nums]">
-                            <span className="text-lg font-extrabold">{player.elo_rating}</span>
-                            <span className="block text-xs text-muted">{player.elo_games_played} games</span>
+                          <span className="flex flex-none items-center gap-2">
+                            <span className="text-right [font-variant-numeric:tabular-nums]">
+                              <span className="block text-xs font-semibold text-muted">{player.elo_rating}</span>
+                              <span className="block text-[0.65rem] text-muted">{player.elo_games_played} games</span>
+                            </span>
+                            <RankBadge tier={player.tier} size={38} />
                           </span>
                         </div>
                       </Card>

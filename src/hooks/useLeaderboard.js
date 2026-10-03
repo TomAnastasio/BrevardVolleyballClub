@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient.js";
 
+// Percentile tier among ranked players only (players with 0 games never
+// enter the percentile math at all). Deliberately no minimum-games buffer
+// and no caching/batching — a player's very first ranked game immediately
+// slots them into a tier off that single data point, recomputed fresh every
+// time the leaderboard loads.
+function tierForRank(rank, rankedCount) {
+  const platinumCutoff = Math.ceil(rankedCount / 3);
+  const goldCutoff = Math.ceil((2 * rankedCount) / 3);
+  if (rank < platinumCutoff) return "platinum";
+  if (rank < goldCutoff) return "gold";
+  return "bronze";
+}
+
 // County-wide Elo leaderboard (TODO.md item 4), ranked games only. `profiles`
 // is readable by anyone, signed in or not (migration 0008), so this only
 // waits on `enabled` for Supabase being configured at all.
@@ -22,7 +35,15 @@ export function useLeaderboard(enabled) {
       .order("elo_rating", { ascending: false })
       .then(({ data, error }) => {
         if (cancelled) return;
-        if (!error && data) setPlayers(data.filter((p) => p.display_name && p.display_name.trim()));
+        if (!error && data) {
+          const valid = data.filter((p) => p.display_name && p.display_name.trim());
+          const ranked = valid.filter((p) => p.elo_games_played > 0);
+          const withTiers = valid.map((p) => {
+            if (!p.elo_games_played) return p;
+            return { ...p, tier: tierForRank(ranked.indexOf(p), ranked.length) };
+          });
+          setPlayers(withTiers);
+        }
         setLoading(false);
       });
 
