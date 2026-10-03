@@ -11,7 +11,7 @@ follow in an emergency without needing to ask anyone else first.
    security rules), oldest first. This is the database's "source code."
 2. **Nightly backups** — a full copy of the *actual data* (every game, every
    profile, every Elo rating), taken automatically every night and stored in
-   a separate private GitHub repo: `BrevardVolleyballClub/bvc-database-backups`.
+   a separate private GitHub repo: `TomAnastasio/bvc-database-backups`.
 
 Migrations tell you how the database is *shaped*. Backups tell you what was
 *in it* on any given day. You need both to fully recover from a bad day.

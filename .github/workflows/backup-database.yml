@@ -2,7 +2,7 @@ name: Nightly database backup
 
 # Dumps the entire live Supabase database (every table, every row) and
 # commits it as a new timestamped file into a separate, private GitHub repo
-# (BrevardVolleyballClub/bvc-database-backups) — see supabase/README.md for
+# (TomAnastasio/bvc-database-backups) — see supabase/README.md for
 # why that repo is separate, how this works, and how to restore from one of
 # these snapshots.
 #
@@ -63,7 +63,7 @@ jobs:
       - name: Push the snapshot to the backups repo
         env:
           BACKUP_REPO_TOKEN: ${{ secrets.BACKUP_REPO_TOKEN }}
-          BACKUP_REPO: BrevardVolleyballClub/bvc-database-backups
+          BACKUP_REPO: TomAnastasio/bvc-database-backups
         run: |
           set -euo pipefail
           if [ -z "${BACKUP_REPO_TOKEN:-}" ]; then

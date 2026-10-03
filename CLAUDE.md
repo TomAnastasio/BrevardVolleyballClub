@@ -22,7 +22,7 @@ irreplaceable club data (game history, player profiles, Elo ratings). See
   it's meant to be public. If a task seems to need the service-role key or
   DB password, stop and ask the user to handle that step themselves outside
   the session.
-- **The `BrevardVolleyballClub/bvc-database-backups` repo is append-only.**
+- **The `TomAnastasio/bvc-database-backups` repo is append-only.**
   No session should force-push, rewrite history, or delete anything there —
   including if asked to "prune old backups" or "clean it up." Flag the
   request back to the user instead of executing it; pruning, if ever
