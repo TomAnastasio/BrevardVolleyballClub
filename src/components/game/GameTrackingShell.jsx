@@ -36,7 +36,7 @@ const BACK_MAP = {
 
 export default function GameTrackingShell({ onBack }) {
   const scoreboard = useScoreboardState();
-  const { history, addGame, historyLoading, refreshHistory } = useGameHistory();
+  const { history, addGame, historyLoading, refreshHistory, saveError, dismissSaveError } = useGameHistory();
   const { user, loading, isConfigured, isAdmin, signInWithGoogle } = useAuth();
   const [screen, setScreen] = useState("menu");
   const [pendingFormat, setPendingFormat] = useState(null);
@@ -157,6 +157,23 @@ export default function GameTrackingShell({ onBack }) {
           )}
         </div>
       </header>
+
+      {saveError && (
+        <p
+          role="alert"
+          className="mx-2 mb-1 flex items-start justify-between gap-2 rounded-lg border border-red-500 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400"
+        >
+          <span>{saveError}</span>
+          <button
+            type="button"
+            onClick={dismissSaveError}
+            aria-label="Dismiss"
+            className="shrink-0 font-bold leading-none focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+          >
+            &times;
+          </button>
+        </p>
+      )}
 
       <main className="flex min-h-0 flex-1 flex-col">
         {screen === "menu" && (

@@ -67,6 +67,10 @@ export function useGameHistory() {
   // localHistory (which may be stale/pre-signin) and then replacing it with
   // the real remote list a moment later.
   const [remoteLoading, setRemoteLoading] = useState(false);
+  // Set when a background Supabase write in addGame() fails, so the UI can
+  // surface it instead of only logging to console (the pre-0007 outage went
+  // unnoticed for exactly this reason — see TODO.md item 1).
+  const [saveError, setSaveError] = useState(null);
   // Games inserted via addGame() while a fetch is still in flight, keyed by
   // id. A fetch that was already in flight when the insert happened can read
   // a pre-insert snapshot and resolve afterward; without this, its result
@@ -158,6 +162,7 @@ export function useGameHistory() {
       });
 
       if (isSupabaseConfigured && user) {
+        setSaveError(null);
         (async () => {
           try {
             const submittedByName =
@@ -206,6 +211,9 @@ export function useGameHistory() {
                 insertedPlayers = linkData;
               } catch (linkErr) {
                 console.error("Failed to link game participants in Supabase:", linkErr);
+                setSaveError(
+                  "This game saved, but one or more players couldn't be linked — their stats may not update.",
+                );
               }
             }
 
@@ -225,6 +233,9 @@ export function useGameHistory() {
             });
           } catch (e) {
             console.error("Failed to save game to Supabase:", e);
+            setSaveError(
+              "This game didn't sync to the server — it's only saved on this device for now. Check your connection and try again.",
+            );
           }
         })();
       }
@@ -234,6 +245,14 @@ export function useGameHistory() {
 
   const history = isSupabaseConfigured && remoteHistory !== null ? remoteHistory : localHistory;
   const historyLoading = isSupabaseConfigured && remoteLoading;
+  const dismissSaveError = useCallback(() => setSaveError(null), []);
 
-  return { history, addGame, historyLoading, refreshHistory: fetchRemoteHistory };
+  return {
+    history,
+    addGame,
+    historyLoading,
+    refreshHistory: fetchRemoteHistory,
+    saveError,
+    dismissSaveError,
+  };
 }
