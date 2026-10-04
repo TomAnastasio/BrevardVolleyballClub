@@ -1,7 +1,15 @@
 import { AlertDialog, Button } from "@heroui/react";
 import MenuCard, { MenuCardContent, cardClass, interactiveClass } from "./MenuCard.jsx";
 
-export default function GameMenu({ hasActiveGame, onNewGame, onEraseAndStartNew, onResumeGame, onPastGames }) {
+export default function GameMenu({
+  hasActiveGame,
+  onNewGame,
+  onEraseAndStartNew,
+  onResumeGame,
+  onPastGames,
+  onLogPastGame,
+  isAdmin,
+}) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
       <div className="flex w-full max-w-96 flex-col gap-3">
@@ -47,6 +55,15 @@ export default function GameMenu({ hasActiveGame, onNewGame, onEraseAndStartNew,
         />
 
         <MenuCard icon="🕘" label="Past Games" subtitle="Review completed matches" onClick={onPastGames} />
+
+        {isAdmin && (
+          <MenuCard
+            icon="📅"
+            label="Log Past Game"
+            subtitle="Add a game that already happened"
+            onClick={onLogPastGame}
+          />
+        )}
       </div>
     </div>
   );

@@ -315,6 +315,82 @@ export function useGameHistory() {
     [user],
   );
 
+  // Admin-only: insert a game that already happened, with a caller-chosen
+  // played_date instead of "now". Indoor is a plain insert (its rosters have
+  // no implicit submitter-as-player slot, so Elo already keys off
+  // game_players alone — see migration 20261002204815). Beach is trickier:
+  // games.user_id doubles as A1's identity for both display and the ranked
+  // Elo trigger, and the admin logging this almost certainly isn't A1
+  // themself. So beach inserts as normal (submitter = admin), then
+  // immediately reuses admin_update_beach_game_players (migration
+  // 20261003120000, the same RPC the "Edit Game" admin flow calls) to
+  // reassign user_id to the real A1 and replay Elo correctly — no new
+  // migration needed. That RPC also re-enforces is_admin server-side, so
+  // this is safe even if ever reachable by a non-admin.
+  const logPastGame = useCallback(
+    async (game) => {
+      if (!isSupabaseConfigured || !user) {
+        return { error: "You must be signed in to log a past game." };
+      }
+      const mode = normalizeMode(game.mode);
+      const format = game.format === "indoor" ? "indoor" : "beach";
+      const nameA =
+        format === "indoor" ? game.teamAPlayers.map((p) => p.name).join(", ") : `${game.nameA1} & ${game.nameA2}`;
+      const nameB =
+        format === "indoor" ? game.teamBPlayers.map((p) => p.name).join(", ") : `${game.nameB1} & ${game.nameB2}`;
+
+      try {
+        const submittedByName =
+          user.user_metadata?.full_name || user.user_metadata?.name || user.email || "A player";
+
+        const { data, error } = await supabase
+          .from("games")
+          .insert({
+            name_a: nameA,
+            name_b: nameB,
+            score_a: game.a,
+            score_b: game.b,
+            mode,
+            played_date: game.playedDate,
+            played_time: "12:00",
+            user_id: user.id,
+            submitted_by_name: submittedByName,
+            format,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+
+        if (format === "indoor") {
+          const rows = [
+            ...game.teamAPlayers.map((p) => ({ game_id: data.id, user_id: p.id, team: "a" })),
+            ...game.teamBPlayers.map((p) => ({ game_id: data.id, user_id: p.id, team: "b" })),
+          ];
+          if (rows.length) {
+            const { error: linkError } = await supabase.from("game_players").insert(rows);
+            if (linkError) throw linkError;
+          }
+        } else {
+          const { error: rpcError } = await supabase.rpc("admin_update_beach_game_players", {
+            p_game_id: data.id,
+            p_a1_user_id: game.a1,
+            p_a2_user_id: game.a2,
+            p_b1_user_id: game.b1,
+            p_b2_user_id: game.b2,
+          });
+          if (rpcError) throw rpcError;
+        }
+
+        await fetchRemoteHistory();
+        return { error: null };
+      } catch (e) {
+        console.error("Failed to log past game:", e);
+        return { error: "Couldn't save this game. Please try again." };
+      }
+    },
+    [user, fetchRemoteHistory],
+  );
+
   // Local games saved while signed out never reach `games` (its insert
   // policy requires auth.uid() = user_id), so they'd otherwise vanish from
   // Past Games the moment remoteHistory loads. Merge them back in, sorted
@@ -331,6 +407,7 @@ export function useGameHistory() {
   return {
     history,
     addGame,
+    logPastGame,
     historyLoading,
     refreshHistory: fetchRemoteHistory,
     saveError,

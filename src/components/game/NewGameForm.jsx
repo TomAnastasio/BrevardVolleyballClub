@@ -212,25 +212,38 @@ function SideFields({
   );
 }
 
-export default function NewGameForm({ format, mode, onStart, editing = false, initialGame = null, onSave }) {
+export default function NewGameForm({
+  format,
+  mode,
+  onStart,
+  editing = false,
+  initialGame = null,
+  onSave,
+  loggingPast = false,
+}) {
   const isIndoor = format === "indoor";
   const { user } = useAuth();
+  // Logging a past game reuses editing's "A1 is just another searchable
+  // slot, not an implicit self" treatment — the admin doing the logging is
+  // almost never one of the 4 actual players, so A1 can't be prefilled/
+  // locked to them the way a live new game prefills the submitter.
+  const isPastOrEdit = editing || loggingPast;
   // Signed-in players get the self-prefill + known-player search in both
   // ranked and casual beach games (casual still works fully anonymously if
   // not signed in — it never requires an account). Indoor is untouched.
   // An admin editing a past game never gets the "this is me" self-prefill —
   // A1 is just another searchable slot, pre-filled from the game's current
   // data instead (see initialGame below).
-  const prefillSelf = !isIndoor && !editing && Boolean(user);
+  const prefillSelf = !isIndoor && !isPastOrEdit && Boolean(user);
   const selfName = prefillSelf ? user.user_metadata?.full_name || user.user_metadata?.name || "" : "";
   const selfAvatar = prefillSelf ? user.user_metadata?.avatar_url || user.user_metadata?.picture || null : null;
   // Indoor has no free-text fallback left — every player must come from the
   // directory, ranked or casual, signed in or not (ranked's sign-in
   // requirement is already gated a screen earlier, in GameTrackingShell).
-  // Editing always searches too, regardless of format/mode — every slot an
-  // admin edit touches must resolve to a real profile (see
-  // requireLinkedPlayers below).
-  const enableSearch = isIndoor || editing || Boolean(user);
+  // Editing (and logging a past game) always searches too, regardless of
+  // format/mode — every slot either one touches must resolve to a real
+  // profile (see requireLinkedPlayers below).
+  const enableSearch = isIndoor || isPastOrEdit || Boolean(user);
   const directory = usePlayerDirectory(enableSearch);
 
   const [nameA1, setNameA1] = useState(editing ? initialGame?.a1?.name ?? "" : selfName);
@@ -293,8 +306,9 @@ export default function NewGameForm({ format, mode, onStart, editing = false, in
   const selfId = user?.id ?? null;
   // A1's "own" id for exclusion purposes: the signed-in submitter when
   // creating a game, or whichever profile A1 is currently/newly set to when
-  // editing one (A1 is a pickable slot in edit mode, not an implicit self).
-  const a1ExcludeId = editing ? playerIdA1 : selfId;
+  // editing one or logging a past one (A1 is a pickable slot in both, not an
+  // implicit self).
+  const a1ExcludeId = isPastOrEdit ? playerIdA1 : selfId;
 
   // Applies to beach only (indoor has team names, not individual players) —
   // and to every player field regardless of mode or whether its name came
@@ -307,11 +321,13 @@ export default function NewGameForm({ format, mode, onStart, editing = false, in
   // Ranked beach games require every participant to be a known profile (not
   // free-typed) so Elo has something real to attach a rating to. Casual and
   // indoor are unaffected (indoor already requires every player to come from
-  // the directory, regardless of mode). An admin edit always requires linked
-  // profiles too — the edit RPCs only accept real profile ids, no free text.
-  const requireLinkedPlayers = !isIndoor && (editing || mode === "ranked");
+  // the directory, regardless of mode). An admin edit — and logging a past
+  // beach game — always requires linked profiles too: the edit RPC (reused
+  // to fix up A1 after a past game is inserted) only accepts real profile
+  // ids, no free text.
+  const requireLinkedPlayers = !isIndoor && (isPastOrEdit || mode === "ranked");
   const hasUnlinkedPlayers =
-    requireLinkedPlayers && ((editing && !playerIdA1) || !playerIdA2 || !playerIdB1 || !playerIdB2);
+    requireLinkedPlayers && ((isPastOrEdit && !playerIdA1) || !playerIdA2 || !playerIdB1 || !playerIdB2);
 
   const hasUndersizedRoster =
     isIndoor && (teamAPlayers.length < MIN_ROSTER_SIZE || teamBPlayers.length < MIN_ROSTER_SIZE);
@@ -334,6 +350,7 @@ export default function NewGameForm({ format, mode, onStart, editing = false, in
         nameA2: sanitizeName(nameA2, "Player 2"),
         nameB1: sanitizeName(nameB1, "Player 1"),
         nameB2: sanitizeName(nameB2, "Player 2"),
+        playerIdA1,
         playerIdA2,
         playerIdB1,
         playerIdB2,
@@ -361,14 +378,14 @@ export default function NewGameForm({ format, mode, onStart, editing = false, in
           color={colorA}
           otherColor={colorB}
           onColorChange={setColorA}
-          hideColors={editing}
+          hideColors={isPastOrEdit}
           isIndoor={isIndoor}
           roster={teamAPlayers}
           onAddPlayer={addPlayerA}
           onRemovePlayer={removePlayerA}
           rosterExcludeIds={[...teamAPlayers, ...teamBPlayers].map((p) => p.id)}
           name1={nameA1}
-          onName1={editing ? handleNameA1 : setNameA1}
+          onName1={isPastOrEdit ? handleNameA1 : setNameA1}
           name2={nameA2}
           onName2={handleNameA2}
           avatar1={editing ? avatarA1 : selfAvatar}
@@ -386,7 +403,7 @@ export default function NewGameForm({ format, mode, onStart, editing = false, in
           color={colorB}
           otherColor={colorA}
           onColorChange={setColorB}
-          hideColors={editing}
+          hideColors={isPastOrEdit}
           isIndoor={isIndoor}
           roster={teamBPlayers}
           onAddPlayer={addPlayerB}
@@ -415,14 +432,14 @@ export default function NewGameForm({ format, mode, onStart, editing = false, in
         )}
         {!hasDuplicateNames && hasUnlinkedPlayers && (
           <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
-            {editing
+            {isPastOrEdit
               ? "Every player must be picked from search — they need to have signed in at least once."
               : "Every player must be picked from search to start a ranked game — they need to have signed in at least once."}
           </p>
         )}
         {isIndoor && hasUndersizedRoster && (
           <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
-            Each side needs at least {MIN_ROSTER_SIZE} players{editing ? "." : " to start."}
+            Each side needs at least {MIN_ROSTER_SIZE} players{isPastOrEdit ? "." : " to start."}
           </p>
         )}
         <Button
@@ -431,7 +448,7 @@ export default function NewGameForm({ format, mode, onStart, editing = false, in
           isDisabled={hasDuplicateNames || hasUnlinkedPlayers || hasUndersizedRoster}
           className="min-h-14 w-full text-lg font-extrabold"
         >
-          {editing ? "Save Changes" : "Start Game"}
+          {editing ? "Save Changes" : loggingPast ? "Add Score" : "Start Game"}
         </Button>
       </div>
     </div>

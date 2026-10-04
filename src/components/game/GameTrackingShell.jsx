@@ -11,6 +11,7 @@ import NewGameForm from "./NewGameForm.jsx";
 import GameView from "./GameView.jsx";
 import HistoryView from "./HistoryView.jsx";
 import EditGameScreen from "./EditGameScreen.jsx";
+import LogPastGameScoreScreen from "./LogPastGameScoreScreen.jsx";
 import { consumePendingRankedGame, setPendingRankedGame } from "../../lib/pendingRankedGame.js";
 
 const SCREEN_META = {
@@ -22,6 +23,7 @@ const SCREEN_META = {
   active: { title: null, subtitle: null },
   history: { title: "Past Games", subtitle: null },
   "edit-game": { title: "Edit Game", subtitle: null },
+  "past-score": { title: "Add Score", subtitle: null },
 };
 
 const BACK_MAP = {
@@ -32,16 +34,22 @@ const BACK_MAP = {
   active: "menu",
   history: "menu",
   "edit-game": "history",
+  "past-score": "new",
 };
 
 export default function GameTrackingShell({ onBack }) {
   const scoreboard = useScoreboardState();
-  const { history, addGame, historyLoading, refreshHistory, saveError, dismissSaveError } = useGameHistory();
+  const { history, addGame, logPastGame, historyLoading, refreshHistory, saveError, dismissSaveError } =
+    useGameHistory();
   const { user, loading, isConfigured, isAdmin, signInWithGoogle } = useAuth();
   const [screen, setScreen] = useState("menu");
   const [pendingFormat, setPendingFormat] = useState(null);
   const [pendingMode, setPendingMode] = useState(null);
   const [editingGameId, setEditingGameId] = useState(null);
+  const [isLoggingPast, setIsLoggingPast] = useState(false);
+  const [pastGameDraft, setPastGameDraft] = useState(null);
+  const [pastGameSubmitting, setPastGameSubmitting] = useState(false);
+  const [pastGameError, setPastGameError] = useState("");
 
   function handleEditGame(gameId) {
     setEditingGameId(gameId);
@@ -99,13 +107,66 @@ export default function GameTrackingShell({ onBack }) {
   }
 
   function handleStartGame(payload) {
+    if (isLoggingPast) {
+      setPastGameDraft(payload);
+      setPastGameError("");
+      setScreen("past-score");
+      return;
+    }
     scoreboard.startGame({ ...payload, mode: pendingMode });
     setScreen("active");
   }
 
   function handleEraseAndStartNew() {
+    setIsLoggingPast(false);
     scoreboard.clearActiveGame();
     setScreen("format");
+  }
+
+  function handleLogPastGame() {
+    setIsLoggingPast(true);
+    setScreen("format");
+  }
+
+  async function handlePastGameSubmit({ a, b, date }) {
+    if (!pastGameDraft) return;
+    setPastGameSubmitting(true);
+    setPastGameError("");
+    const payload =
+      pastGameDraft.format === "indoor"
+        ? {
+            format: "indoor",
+            mode: pendingMode,
+            a,
+            b,
+            playedDate: date,
+            teamAPlayers: pastGameDraft.teamAPlayers,
+            teamBPlayers: pastGameDraft.teamBPlayers,
+          }
+        : {
+            format: "beach",
+            mode: pendingMode,
+            a,
+            b,
+            playedDate: date,
+            nameA1: pastGameDraft.nameA1,
+            nameA2: pastGameDraft.nameA2,
+            nameB1: pastGameDraft.nameB1,
+            nameB2: pastGameDraft.nameB2,
+            a1: pastGameDraft.playerIdA1,
+            a2: pastGameDraft.playerIdA2,
+            b1: pastGameDraft.playerIdB1,
+            b2: pastGameDraft.playerIdB2,
+          };
+    const { error } = await logPastGame(payload);
+    setPastGameSubmitting(false);
+    if (error) {
+      setPastGameError(error);
+      return;
+    }
+    setIsLoggingPast(false);
+    setPastGameDraft(null);
+    setScreen("history");
   }
 
   function handleSaveGame() {
@@ -125,7 +186,7 @@ export default function GameTrackingShell({ onBack }) {
     setScreen("menu");
   }
 
-  const meta = SCREEN_META[screen];
+  const meta = screen === "new" && isLoggingPast ? { title: "Log Past Game", subtitle: null } : SCREEN_META[screen];
   const isMenu = screen === "menu";
   const { forced, width: effectiveWidth, height: effectiveHeight } = useForcedLandscape(screen === "active");
   const isPhoneLandscape = effectiveHeight <= 520;
@@ -179,10 +240,15 @@ export default function GameTrackingShell({ onBack }) {
         {screen === "menu" && (
           <GameMenu
             hasActiveGame={scoreboard.hasActiveGame}
-            onNewGame={() => setScreen("format")}
+            onNewGame={() => {
+              setIsLoggingPast(false);
+              setScreen("format");
+            }}
             onEraseAndStartNew={handleEraseAndStartNew}
             onResumeGame={() => setScreen("active")}
             onPastGames={() => setScreen("history")}
+            onLogPastGame={handleLogPastGame}
+            isAdmin={isAdmin}
           />
         )}
         {screen === "format" && <GameFormatMenu onSelectFormat={handleSelectFormat} />}
@@ -190,7 +256,27 @@ export default function GameTrackingShell({ onBack }) {
           <GameModeMenu onSelectMode={handleSelectMode} isSupabaseConfigured={isConfigured} authLoading={loading} />
         )}
         {screen === "signin" && <RankedSignInGate onSignIn={handleRankedSignIn} loading={loading} />}
-        {screen === "new" && <NewGameForm format={pendingFormat} mode={pendingMode} onStart={handleStartGame} />}
+        {screen === "new" && (
+          <NewGameForm format={pendingFormat} mode={pendingMode} loggingPast={isLoggingPast} onStart={handleStartGame} />
+        )}
+        {screen === "past-score" && pastGameDraft && (
+          <LogPastGameScoreScreen
+            format={pastGameDraft.format}
+            teamAName={
+              pastGameDraft.format === "indoor"
+                ? pastGameDraft.teamAPlayers.map((p) => p.name).join(", ")
+                : `${pastGameDraft.nameA1} & ${pastGameDraft.nameA2}`
+            }
+            teamBName={
+              pastGameDraft.format === "indoor"
+                ? pastGameDraft.teamBPlayers.map((p) => p.name).join(", ")
+                : `${pastGameDraft.nameB1} & ${pastGameDraft.nameB2}`
+            }
+            onSubmit={handlePastGameSubmit}
+            submitting={pastGameSubmitting}
+            error={pastGameError}
+          />
+        )}
         {screen === "active" && scoreboard.state && (
           <GameView
             scoreboard={scoreboard}
