@@ -31,21 +31,28 @@ function GameCardBody({ game, user, isAdmin }) {
   const hasRosterPhotos = game.teamAPlayers?.length > 0 || game.teamBPlayers?.length > 0;
   return (
     <>
+      <div className="relative flex items-center justify-center">
+        <span
+          className={`text-[0.62rem] font-bold uppercase tracking-wide ${
+            isIndoor ? "text-sky-400" : "text-amber-400"
+          }`}
+        >
+          {isIndoor ? "🏐 Indoor" : "🏖️ Beach"}
+        </span>
+        <span
+          className={`absolute right-0 flex-none rounded-full border px-2 py-0.5 text-xs font-bold ${
+            game.mode === "ranked" ? "border-accent/40 bg-accent/10 text-accent" : "border-white/10 bg-white/5 text-muted"
+          }`}
+        >
+          {game.mode === "ranked" ? "🏆 Ranked" : "🎲 Casual"}
+        </span>
+      </div>
       <div className="flex items-center justify-between gap-2 font-bold">
         <span className={`min-w-0 flex-1 break-words ${game.a > game.b ? "text-success" : ""}`}>
           {!isIndoor && game.nameA}
         </span>
-        <span className="flex flex-none flex-col items-center justify-center self-center text-center">
-          <span
-            className={`text-[0.62rem] font-bold uppercase tracking-wide ${
-              isIndoor ? "text-sky-400" : "text-amber-400"
-            }`}
-          >
-            {isIndoor ? "🏐 Indoor" : "🏖️ Beach"}
-          </span>
-          <span className="text-lg [font-variant-numeric:tabular-nums]">
-            {game.a} – {game.b}
-          </span>
+        <span className="flex-none text-lg [font-variant-numeric:tabular-nums]">
+          {game.a} – {game.b}
         </span>
         <span className={`min-w-0 flex-1 break-words text-right ${game.b > game.a ? "text-success" : ""}`}>
           {!isIndoor && game.nameB}
@@ -60,13 +67,6 @@ function GameCardBody({ game, user, isAdmin }) {
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm text-muted">
           {game.date} at {game.time}
-        </span>
-        <span
-          className={`flex-none rounded-full border px-2 py-0.5 text-xs font-bold ${
-            game.mode === "ranked" ? "border-accent/40 bg-accent/10 text-accent" : "border-white/10 bg-white/5 text-muted"
-          }`}
-        >
-          {game.mode === "ranked" ? "🏆 Ranked" : "🎲 Casual"}
         </span>
       </div>
       {user && game.submittedByName && game.submittedByUserId !== user.id && (
