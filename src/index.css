@@ -224,3 +224,48 @@ body {
     animation: none;
   }
 }
+
+/* Last-place rank badge: same shimmer sweep + glow as top3, platinum-toned
+   (bespoke, not a HeroUI component). See RankBadge.jsx. */
+
+.rank-badge-lastplace img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  animation: rank-badge-glow 3.2s ease-in-out infinite;
+  --rank-badge-glow-a: #ffffff;
+  --rank-badge-glow-b: #9aa0a6;
+}
+
+.rank-badge-lastplace::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  -webkit-mask-image: var(--rank-badge-mask);
+  mask-image: var(--rank-badge-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.9) 48%,
+    rgba(255, 255, 255, 0.9) 52%,
+    transparent 65%
+  );
+  background-size: 320% 320%;
+  mix-blend-mode: screen;
+  animation: rank-badge-sweep 2.9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rank-badge-lastplace img,
+  .rank-badge-lastplace::after {
+    animation: none;
+  }
+}

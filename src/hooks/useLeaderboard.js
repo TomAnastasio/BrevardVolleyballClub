@@ -8,10 +8,13 @@ import { supabase } from "../lib/supabaseClient.js";
 // time the leaderboard loads.
 //
 // The literal #1/#2/#3 ranked players always get the "top3" tier, regardless
-// of what percentile that'd otherwise land them in. Bronze/Gold/Diamond
-// (bottom 40% / next 50% / top 10%) are then computed over everyone else.
-// Within whichever tier a player lands in, a 1/2/3 "division" sub-badge
-// marks their position within that tier's own bottom-30%/middle-40%/top-30%.
+// of what percentile that'd otherwise land them in. The single lowest-Elo
+// ranked player (excluding anyone already claimed by top3, so a tiny pool
+// never double-assigns the same person) gets "lastplace" — no division,
+// just the one badge. Bronze/Gold/Diamond (bottom 40% / next 50% / top 10%)
+// are then computed over everyone left. Within whichever tier a player lands
+// in, a 1/2/3 "division" sub-badge marks their position within that tier's
+// own bottom-30%/middle-40%/top-30%.
 export function divisionForIndex(index, groupSize) {
   // Symmetric 30%-from-each-end split. Using the same rounded count from
   // both ends (rather than independent ceil'd cutoffs) guarantees the three
@@ -26,10 +29,15 @@ export function divisionForIndex(index, groupSize) {
 
 export function assignTiers(ranked) {
   const top3 = ranked.slice(0, 3);
-  const rest = ranked.slice(3);
+  let rest = ranked.slice(3);
 
   const tiers = new Map();
   top3.forEach((p, i) => tiers.set(p, { tier: "top3", division: divisionForIndex(i, top3.length) }));
+
+  if (rest.length > 0) {
+    tiers.set(rest[rest.length - 1], { tier: "lastplace" });
+    rest = rest.slice(0, -1);
+  }
 
   const diamondCutoff = Math.ceil(rest.length * 0.1);
   const goldCutoff = Math.ceil(rest.length * 0.6);

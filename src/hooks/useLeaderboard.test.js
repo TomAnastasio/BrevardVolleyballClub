@@ -35,12 +35,20 @@ describe("assignTiers", () => {
   it("splits the remaining players into diamond/gold/bronze with no overlap", () => {
     const players = Array.from({ length: 20 }, (_, i) => ({ id: i }));
     const tiers = assignTiers(players);
-    const counts = { diamond: 0, gold: 0, bronze: 0, top3: 0 };
+    const counts = { diamond: 0, gold: 0, bronze: 0, top3: 0, lastplace: 0 };
     for (const p of players) counts[tiers.get(p).tier]++;
     expect(counts.top3).toBe(3);
-    expect(counts.diamond + counts.gold + counts.bronze).toBe(17);
+    expect(counts.lastplace).toBe(1);
+    expect(counts.diamond + counts.gold + counts.bronze).toBe(16);
     expect(counts.diamond).toBeGreaterThan(0);
     expect(counts.bronze).toBeGreaterThan(0);
+  });
+
+  it("gives the single lowest-Elo non-top3 player the lastplace tier", () => {
+    const players = Array.from({ length: 20 }, (_, i) => ({ id: i }));
+    const tiers = assignTiers(players);
+    expect(tiers.get(players[19]).tier).toBe("lastplace");
+    expect(tiers.get(players[19]).division).toBeUndefined();
   });
 
   it("does not crash on fewer than 3 ranked players", () => {
@@ -48,6 +56,20 @@ describe("assignTiers", () => {
     const tiers = assignTiers(players);
     expect(tiers.size).toBe(2);
     expect(tiers.get(players[0]).tier).toBe("top3");
+  });
+
+  it("never assigns lastplace when it would collide with top3", () => {
+    for (let groupSize = 0; groupSize <= 3; groupSize++) {
+      const players = Array.from({ length: groupSize }, (_, i) => ({ id: i }));
+      const tiers = assignTiers(players);
+      for (const p of players) expect(tiers.get(p).tier).not.toBe("lastplace");
+    }
+  });
+
+  it("assigns exactly one lastplace once a 4th player exists", () => {
+    const players = Array.from({ length: 4 }, (_, i) => ({ id: i }));
+    const tiers = assignTiers(players);
+    expect(tiers.get(players[3]).tier).toBe("lastplace");
   });
 
   it("does not crash on zero ranked players", () => {
