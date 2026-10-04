@@ -6,19 +6,18 @@ import { useAuth } from "../../hooks/useAuth.js";
 import GameMenu from "./GameMenu.jsx";
 import GameFormatMenu from "./GameFormatMenu.jsx";
 import GameModeMenu from "./GameModeMenu.jsx";
-import RankedSignInGate from "./RankedSignInGate.jsx";
+import GameTrackingSignInGate from "./GameTrackingSignInGate.jsx";
 import NewGameForm from "./NewGameForm.jsx";
 import GameView from "./GameView.jsx";
 import HistoryView from "./HistoryView.jsx";
 import EditGameScreen from "./EditGameScreen.jsx";
 import LogPastGameScoreScreen from "./LogPastGameScoreScreen.jsx";
-import { consumePendingRankedGame, setPendingRankedGame } from "../../lib/pendingRankedGame.js";
+import { consumePendingGameTracking, setPendingGameTracking } from "../../lib/pendingGameTracking.js";
 
 const SCREEN_META = {
   menu: { title: "Beach Volleyball Scoreboard", subtitle: "Brevard Volleyball Club" },
   format: { title: "Select Game Type", subtitle: null },
   mode: { title: "Ranked or Casual?", subtitle: null },
-  signin: { title: "Sign In Required", subtitle: null },
   new: { title: "New Game", subtitle: null },
   active: { title: null, subtitle: null },
   history: { title: "Past Games", subtitle: null },
@@ -29,7 +28,6 @@ const SCREEN_META = {
 const BACK_MAP = {
   format: "menu",
   mode: "format",
-  signin: "mode",
   new: "mode",
   active: "menu",
   history: "menu",
@@ -68,41 +66,23 @@ export default function GameTrackingShell({ onBack }) {
 
   function handleSelectMode(mode) {
     setPendingMode(mode);
-    if (mode === "ranked" && !user) {
-      setScreen("signin");
-    } else {
-      setScreen("new");
-    }
+    setScreen("new");
   }
 
-  useEffect(() => {
-    if (screen === "signin" && user) {
-      setScreen("new");
-    }
-  }, [screen, user]);
-
   // Handles the full-page OAuth redirect round trip: the React tree remounts
-  // from scratch when the browser returns from Google, so any in-progress
-  // pendingFormat/pendingMode/screen state set before the redirect is gone.
-  // This reads back a short-lived sessionStorage breadcrumb (written right
-  // before signInWithGoogle() was called) and resumes straight into the
-  // "new" game screen for a signed-in user, skipping format/mode re-selection.
+  // from scratch when the browser returns from Google. There's nothing to
+  // resume into (sign-in now happens before format/mode/player selection, so
+  // nothing was in progress yet) — this just clears the short-lived
+  // sessionStorage breadcrumb (written right before signInWithGoogle() was
+  // called) so it can't linger and wrongly redirect a later, unrelated visit
+  // within its TTL. App.jsx already used it (non-destructively) at boot to
+  // decide to land back on this screen instead of the landing page.
   useEffect(() => {
-    // Wait for the initial getSession() round trip to resolve; consuming
-    // (and thus deleting) the breadcrumb while `user` is still its default
-    // null would discard it before we actually know whether sign-in worked.
-    if (loading) return;
+    consumePendingGameTracking();
+  }, []);
 
-    const pending = consumePendingRankedGame();
-    if (!pending || !user) return;
-
-    setPendingFormat(pending.format);
-    setPendingMode("ranked");
-    setScreen("new");
-  }, [loading, user]);
-
-  function handleRankedSignIn() {
-    setPendingRankedGame(pendingFormat);
+  function handleSignIn() {
+    setPendingGameTracking();
     signInWithGoogle();
   }
 
@@ -186,8 +166,22 @@ export default function GameTrackingShell({ onBack }) {
     setScreen("menu");
   }
 
-  const meta = screen === "new" && isLoggingPast ? { title: "Log Past Game", subtitle: null } : SCREEN_META[screen];
-  const isMenu = screen === "menu";
+  // Recording (and even just viewing) anything in Game Tracking requires a
+  // signed-in account now, checked before the menu is ever shown — not just
+  // when picking "Ranked" partway through the old flow. Skipped entirely
+  // when Supabase isn't configured at all, so local-only/offline mode keeps
+  // working exactly as before.
+  const isLoadingAuth = isConfigured && loading;
+  const needsSignIn = isConfigured && !loading && !user;
+  const isTopLevel = needsSignIn || isLoadingAuth || screen === "menu";
+
+  const meta = needsSignIn
+    ? { title: "Sign In Required", subtitle: null }
+    : isLoadingAuth
+      ? { title: null, subtitle: null }
+      : screen === "new" && isLoggingPast
+        ? { title: "Log Past Game", subtitle: null }
+        : SCREEN_META[screen];
   const { forced, width: effectiveWidth, height: effectiveHeight } = useForcedLandscape(screen === "active");
   const isPhoneLandscape = effectiveHeight <= 520;
 
@@ -203,11 +197,11 @@ export default function GameTrackingShell({ onBack }) {
       >
         <button
           type="button"
-          onClick={() => (isMenu ? onBack() : setScreen(BACK_MAP[screen] || "menu"))}
-          aria-label={isMenu ? "Back to main menu" : "Back to game tracking menu"}
+          onClick={() => (isTopLevel ? onBack() : setScreen(BACK_MAP[screen] || "menu"))}
+          aria-label={isTopLevel ? "Back to main menu" : "Back to game tracking menu"}
           className="rounded-lg px-2 py-2 font-bold phone-landscape:px-1.5 phone-landscape:py-1 phone-landscape:text-sm focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
         >
-          &lsaquo; {isMenu ? "Menu" : "Back"}
+          &lsaquo; {isTopLevel ? "Menu" : "Back"}
         </button>
         <div className="flex-1 pr-12 text-center phone-landscape:pr-9">
           {meta.title && (
@@ -237,63 +231,70 @@ export default function GameTrackingShell({ onBack }) {
       )}
 
       <main className="flex min-h-0 flex-1 flex-col">
-        {screen === "menu" && (
-          <GameMenu
-            hasActiveGame={scoreboard.hasActiveGame}
-            onNewGame={() => {
-              setIsLoggingPast(false);
-              setScreen("format");
-            }}
-            onEraseAndStartNew={handleEraseAndStartNew}
-            onResumeGame={() => setScreen("active")}
-            onPastGames={() => setScreen("history")}
-            onLogPastGame={handleLogPastGame}
-            isAdmin={isAdmin}
-          />
+        {isLoadingAuth ? (
+          <p className="p-6 text-center text-muted">Loading…</p>
+        ) : needsSignIn ? (
+          <GameTrackingSignInGate onSignIn={handleSignIn} loading={loading} />
+        ) : (
+          <>
+            {screen === "menu" && (
+              <GameMenu
+                hasActiveGame={scoreboard.hasActiveGame}
+                onNewGame={() => {
+                  setIsLoggingPast(false);
+                  setScreen("format");
+                }}
+                onEraseAndStartNew={handleEraseAndStartNew}
+                onResumeGame={() => setScreen("active")}
+                onPastGames={() => setScreen("history")}
+                onLogPastGame={handleLogPastGame}
+                isAdmin={isAdmin}
+              />
+            )}
+            {screen === "format" && <GameFormatMenu onSelectFormat={handleSelectFormat} />}
+            {screen === "mode" && (
+              <GameModeMenu onSelectMode={handleSelectMode} isSupabaseConfigured={isConfigured} />
+            )}
+            {screen === "new" && (
+              <NewGameForm format={pendingFormat} loggingPast={isLoggingPast} onStart={handleStartGame} />
+            )}
+            {screen === "past-score" && pastGameDraft && (
+              <LogPastGameScoreScreen
+                format={pastGameDraft.format}
+                teamAName={
+                  pastGameDraft.format === "indoor"
+                    ? pastGameDraft.teamAPlayers.map((p) => p.name).join(", ")
+                    : `${pastGameDraft.nameA1} & ${pastGameDraft.nameA2}`
+                }
+                teamBName={
+                  pastGameDraft.format === "indoor"
+                    ? pastGameDraft.teamBPlayers.map((p) => p.name).join(", ")
+                    : `${pastGameDraft.nameB1} & ${pastGameDraft.nameB2}`
+                }
+                onSubmit={handlePastGameSubmit}
+                submitting={pastGameSubmitting}
+                error={pastGameError}
+              />
+            )}
+            {screen === "active" && scoreboard.state && (
+              <GameView
+                scoreboard={scoreboard}
+                onSaveGame={handleSaveGame}
+                effectiveWidth={effectiveWidth}
+                effectiveHeight={effectiveHeight}
+              />
+            )}
+            {screen === "history" && (
+              <HistoryView
+                history={history}
+                historyLoading={historyLoading}
+                isAdmin={isAdmin}
+                onEditGame={handleEditGame}
+              />
+            )}
+            {screen === "edit-game" && <EditGameScreen gameId={editingGameId} onSaved={handleGameEdited} />}
+          </>
         )}
-        {screen === "format" && <GameFormatMenu onSelectFormat={handleSelectFormat} />}
-        {screen === "mode" && (
-          <GameModeMenu onSelectMode={handleSelectMode} isSupabaseConfigured={isConfigured} authLoading={loading} />
-        )}
-        {screen === "signin" && <RankedSignInGate onSignIn={handleRankedSignIn} loading={loading} />}
-        {screen === "new" && (
-          <NewGameForm format={pendingFormat} loggingPast={isLoggingPast} onStart={handleStartGame} />
-        )}
-        {screen === "past-score" && pastGameDraft && (
-          <LogPastGameScoreScreen
-            format={pastGameDraft.format}
-            teamAName={
-              pastGameDraft.format === "indoor"
-                ? pastGameDraft.teamAPlayers.map((p) => p.name).join(", ")
-                : `${pastGameDraft.nameA1} & ${pastGameDraft.nameA2}`
-            }
-            teamBName={
-              pastGameDraft.format === "indoor"
-                ? pastGameDraft.teamBPlayers.map((p) => p.name).join(", ")
-                : `${pastGameDraft.nameB1} & ${pastGameDraft.nameB2}`
-            }
-            onSubmit={handlePastGameSubmit}
-            submitting={pastGameSubmitting}
-            error={pastGameError}
-          />
-        )}
-        {screen === "active" && scoreboard.state && (
-          <GameView
-            scoreboard={scoreboard}
-            onSaveGame={handleSaveGame}
-            effectiveWidth={effectiveWidth}
-            effectiveHeight={effectiveHeight}
-          />
-        )}
-        {screen === "history" && (
-          <HistoryView
-            history={history}
-            historyLoading={historyLoading}
-            isAdmin={isAdmin}
-            onEditGame={handleEditGame}
-          />
-        )}
-        {screen === "edit-game" && <EditGameScreen gameId={editingGameId} onSaved={handleGameEdited} />}
       </main>
     </div>
   );

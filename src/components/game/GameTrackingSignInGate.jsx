@@ -1,14 +1,14 @@
 import { Button } from "@heroui/react";
 
-export default function RankedSignInGate({ onSignIn, loading }) {
+export default function GameTrackingSignInGate({ onSignIn, loading }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
       <span aria-hidden="true" className="text-4xl">
-        🏆
+        🏐
       </span>
-      <h2 className="m-0 text-lg font-bold">Sign in to play ranked</h2>
+      <h2 className="m-0 text-lg font-bold">Sign in to track games</h2>
       <p className="m-0 max-w-80 text-sm text-muted">
-        Ranked games require a free account so your rating can follow you across devices.
+        A free account lets your games and rating follow you across devices.
       </p>
       <div className="w-full max-w-80">
         <Button

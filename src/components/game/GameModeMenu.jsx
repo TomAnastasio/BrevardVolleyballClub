@@ -1,6 +1,6 @@
 import MenuCard from "./MenuCard.jsx";
 
-export default function GameModeMenu({ onSelectMode, isSupabaseConfigured, authLoading }) {
+export default function GameModeMenu({ onSelectMode, isSupabaseConfigured }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
       <div className="flex w-full max-w-96 flex-col gap-3">
@@ -13,14 +13,9 @@ export default function GameModeMenu({ onSelectMode, isSupabaseConfigured, authL
               : "Coming soon — sign-in isn't set up yet"
           }
           onClick={() => onSelectMode("ranked")}
-          disabled={!isSupabaseConfigured || authLoading}
+          disabled={!isSupabaseConfigured}
         />
-        <MenuCard
-          icon="🎲"
-          label="Casual"
-          subtitle="Just for fun, no account needed"
-          onClick={() => onSelectMode("casual")}
-        />
+        <MenuCard icon="🎲" label="Casual" subtitle="Just for fun, doesn't affect your rating" onClick={() => onSelectMode("casual")} />
       </div>
     </div>
   );
