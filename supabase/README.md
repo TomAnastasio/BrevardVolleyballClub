@@ -59,6 +59,11 @@ committed.
 
 ### One-time setup: tell the CLI what's already applied
 
+**✅ Done (2026-10-03) — kept below for historical reference only.** Every
+migration pushed since (including `20261003120000`, the one still pending
+when this section was first written) has applied automatically via CI with
+no further manual steps needed. Nothing here needs to be re-run.
+
 Every migration file that was already pasted by hand into the SQL Editor
 before this automation existed needs to be marked as applied in the CLI's
 remote tracking table *without re-running it* — otherwise the first
@@ -74,14 +79,12 @@ npx supabase migration repair --db-url "<your SUPABASE_DB_URL>" --status applied
   20261002151652 20261002171849 20261002204815
 ```
 
-(That's every migration timestamp as of 2026-10-03 **except**
-`20261003120000_admin_edit_game_participants.sql`, which — per TODO.md item
-13 — genuinely has **not** been applied to the database yet. Don't include
-it: marking an unapplied migration as "applied" would permanently hide it
-from the CLI, and its tables/functions would never get created. Once this
-baseline is in place, that one real pending migration is actually a good
-first live test of the new automated workflow — or it can still be
-hand-pasted per item 13's existing steps; either is fine.)
+(That was every migration timestamp as of 2026-10-03 **except**
+`20261003120000_admin_edit_game_participants.sql`, which was still pending
+at the time this list was written — deliberately left out, since marking an
+unapplied migration as "applied" would have permanently hidden it from the
+CLI. It applied automatically via CI shortly after, along with every
+migration since.)
 
 If a *future* session ever adds another migration file before this baseline
 step has been done, don't let it push automatically yet — run this repair
