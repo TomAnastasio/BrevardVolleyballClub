@@ -58,7 +58,7 @@ export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard
           <LandingCard
             icon="🏐"
             label="Game tracking"
-            subtitle="Score and track live matches"
+            subtitle="Log your games and review past matches"
             onClick={onGameTracking}
             delay="160ms"
           />
