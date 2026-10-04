@@ -72,7 +72,7 @@ export default function LeaderboardView({ onBack }) {
                               <span className="block text-xs font-semibold text-muted">{player.elo_rating}</span>
                               <span className="block text-[0.65rem] text-muted">{player.elo_games_played} games</span>
                             </span>
-                            <RankBadge tier={player.tier} size={38} />
+                            <RankBadge tier={player.tier} division={player.division} size={38} />
                           </span>
                         </div>
                       </Card>
@@ -110,7 +110,10 @@ export default function LeaderboardView({ onBack }) {
                                 {player.display_name}
                                 {isSelf && <span className="ml-1 font-normal text-muted">(you)</span>}
                               </span>
-                              <span className="flex-none text-right text-xs text-muted">No games yet</span>
+                              <span className="flex flex-none items-center gap-2">
+                                <span className="text-xs text-muted">No games yet</span>
+                                <RankBadge tier="unranked" size={38} />
+                              </span>
                             </div>
                           </Card>
                         </li>
