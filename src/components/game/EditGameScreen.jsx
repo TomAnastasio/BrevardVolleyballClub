@@ -30,14 +30,14 @@ export default function EditGameScreen({ gameId, onSaved }) {
       try {
         const { data: row, error } = await supabase
           .from("games")
-          .select("id, user_id, format, mode, game_players(user_id, slot, team, profiles(id, display_name, avatar_url))")
+          .select("id, user_id, format, game_players(user_id, slot, team, profiles(id, display_name, avatar_url))")
           .eq("id", gameId)
           .single();
         if (error) throw error;
         if (!active) return;
 
         if (row.format === "indoor") {
-          setGame({ format: "indoor", mode: row.mode });
+          setGame({ format: "indoor" });
           setInitialGame({
             teamAPlayers: mapTeamPlayers(row.game_players, "a"),
             teamBPlayers: mapTeamPlayers(row.game_players, "b"),
@@ -61,7 +61,7 @@ export default function EditGameScreen({ gameId, onSaved }) {
             };
           };
 
-          setGame({ format: "beach", mode: row.mode });
+          setGame({ format: "beach" });
           setInitialGame({
             a1: { userId: a1Profile.id, name: a1Profile.display_name, avatarUrl: a1Profile.avatar_url },
             a2: bySlot("a2"),
@@ -130,7 +130,7 @@ export default function EditGameScreen({ gameId, onSaved }) {
         </p>
       )}
       {saving && <p className="flex-none px-3 pt-2 text-center text-sm text-muted">Saving…</p>}
-      <NewGameForm format={game.format} mode={game.mode} editing initialGame={initialGame} onSave={handleSave} />
+      <NewGameForm format={game.format} editing initialGame={initialGame} onSave={handleSave} />
     </div>
   );
 }

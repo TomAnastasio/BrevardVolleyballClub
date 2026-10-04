@@ -257,7 +257,7 @@ export default function GameTrackingShell({ onBack }) {
         )}
         {screen === "signin" && <RankedSignInGate onSignIn={handleRankedSignIn} loading={loading} />}
         {screen === "new" && (
-          <NewGameForm format={pendingFormat} mode={pendingMode} loggingPast={isLoggingPast} onStart={handleStartGame} />
+          <NewGameForm format={pendingFormat} loggingPast={isLoggingPast} onStart={handleStartGame} />
         )}
         {screen === "past-score" && pastGameDraft && (
           <LogPastGameScoreScreen

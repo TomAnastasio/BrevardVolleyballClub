@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@heroui/react";
 import { sanitizeName } from "../../lib/sanitizeName.js";
 import { TEAM_COLORS, DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../../lib/teamColors.js";
-import { useAuth } from "../../hooks/useAuth.js";
 import { usePlayerDirectory } from "../../hooks/usePlayerDirectory.js";
 import PlayerSearchField from "./PlayerSearchField.jsx";
 import TeamRosterPicker from "./TeamRosterPicker.jsx";
@@ -48,9 +47,10 @@ function normalizeName(text) {
 }
 
 // Any two (or more) of the 4 beach player-name fields that are non-empty and
-// equal (case/whitespace-insensitive) are flagged — whether the match came
-// from picking the same known player's name or just typing the same text by
-// hand, in ranked or casual games alike.
+// equal (case/whitespace-insensitive) are flagged — e.g. two different
+// profiles that happen to share a display name, in ranked or casual games
+// alike. Picking the same profile twice is already prevented by each
+// field's excludeIds.
 function findDuplicateNameKeys(names) {
   const byNormalized = new Map();
   for (const [key, value] of Object.entries(names)) {
@@ -69,10 +69,8 @@ function findDuplicateNameKeys(names) {
 
 // Reserves the same fixed-width slot whether a player is picked yet or not,
 // so the name field next to it never shifts width/position: an actual photo
-// once a known player is selected, otherwise a bold "?" placeholder (when
-// this field is part of the ranked player search) or nothing at all
-// (casual/indoor, which have no search/avatars to show).
-function PlayerAvatar({ src, showPlaceholder }) {
+// once a known player is selected, otherwise a bold "?" placeholder.
+function PlayerAvatar({ src }) {
   const [broken, setBroken] = useState(false);
   useEffect(() => setBroken(false), [src]);
 
@@ -87,17 +85,14 @@ function PlayerAvatar({ src, showPlaceholder }) {
       />
     );
   }
-  if (showPlaceholder) {
-    return (
-      <span
-        aria-hidden="true"
-        className="flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/10 bg-black text-base font-extrabold text-accent"
-      >
-        ?
-      </span>
-    );
-  }
-  return null;
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/10 bg-black text-base font-extrabold text-accent"
+    >
+      ?
+    </span>
+  );
 }
 
 function SideFields({
@@ -119,8 +114,6 @@ function SideFields({
   avatar2,
   error1,
   error2,
-  name1IsSelf,
-  enableSearch,
   directory,
   excludeIds1,
   excludeIds2,
@@ -142,28 +135,16 @@ function SideFields({
           <>
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <PlayerAvatar src={avatar1} showPlaceholder={enableSearch} />
-                {enableSearch && !name1IsSelf ? (
-                  <PlayerSearchField
-                    value={name1}
-                    onChange={onName1}
-                    placeholder="Player 1 name"
-                    ariaLabel={`${label}, player 1 name`}
-                    directory={directory}
-                    excludeIds={excludeIds1}
-                    inputClassName={nameInputClass(error1)}
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={name1}
-                    maxLength={24}
-                    placeholder="Player 1 name"
-                    aria-label={`${label}, player 1 name`}
-                    onChange={(e) => onName1(e.target.value)}
-                    className={nameInputClass(error1)}
-                  />
-                )}
+                <PlayerAvatar src={avatar1} />
+                <PlayerSearchField
+                  value={name1}
+                  onChange={onName1}
+                  placeholder="Player 1 name"
+                  ariaLabel={`${label}, player 1 name`}
+                  directory={directory}
+                  excludeIds={excludeIds1}
+                  inputClassName={nameInputClass(error1)}
+                />
               </div>
               {error1 && (
                 <p role="alert" className="text-center text-xs font-semibold text-red-400">
@@ -173,28 +154,16 @@ function SideFields({
             </div>
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <PlayerAvatar src={avatar2} showPlaceholder={enableSearch} />
-                {enableSearch ? (
-                  <PlayerSearchField
-                    value={name2}
-                    onChange={onName2}
-                    placeholder="Player 2 name"
-                    ariaLabel={`${label}, player 2 name`}
-                    directory={directory}
-                    excludeIds={excludeIds2}
-                    inputClassName={nameInputClass(error2)}
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={name2}
-                    maxLength={24}
-                    placeholder="Player 2 name"
-                    aria-label={`${label}, player 2 name`}
-                    onChange={(e) => onName2(e.target.value)}
-                    className={nameInputClass(error2)}
-                  />
-                )}
+                <PlayerAvatar src={avatar2} />
+                <PlayerSearchField
+                  value={name2}
+                  onChange={onName2}
+                  placeholder="Player 2 name"
+                  ariaLabel={`${label}, player 2 name`}
+                  directory={directory}
+                  excludeIds={excludeIds2}
+                  inputClassName={nameInputClass(error2)}
+                />
               </div>
               {error2 && (
                 <p role="alert" className="text-center text-xs font-semibold text-red-400">
@@ -212,41 +181,17 @@ function SideFields({
   );
 }
 
-export default function NewGameForm({
-  format,
-  mode,
-  onStart,
-  editing = false,
-  initialGame = null,
-  onSave,
-  loggingPast = false,
-}) {
+export default function NewGameForm({ format, onStart, editing = false, initialGame = null, onSave, loggingPast = false }) {
   const isIndoor = format === "indoor";
-  const { user } = useAuth();
-  // Logging a past game reuses editing's "A1 is just another searchable
-  // slot, not an implicit self" treatment — the admin doing the logging is
-  // almost never one of the 4 actual players, so A1 can't be prefilled/
-  // locked to them the way a live new game prefills the submitter.
+  // Beach now matches indoor: every player, on both sides, ranked or
+  // casual, always comes from the real player directory — no free-typed
+  // guest names and no self-prefill of the submitter into A1. "editing" and
+  // "loggingPast" only still matter for things unrelated to player
+  // selection (hiding colors, which button/callback to use).
   const isPastOrEdit = editing || loggingPast;
-  // Signed-in players get the self-prefill + known-player search in both
-  // ranked and casual beach games (casual still works fully anonymously if
-  // not signed in — it never requires an account). Indoor is untouched.
-  // An admin editing a past game never gets the "this is me" self-prefill —
-  // A1 is just another searchable slot, pre-filled from the game's current
-  // data instead (see initialGame below).
-  const prefillSelf = !isIndoor && !isPastOrEdit && Boolean(user);
-  const selfName = prefillSelf ? user.user_metadata?.full_name || user.user_metadata?.name || "" : "";
-  const selfAvatar = prefillSelf ? user.user_metadata?.avatar_url || user.user_metadata?.picture || null : null;
-  // Indoor has no free-text fallback left — every player must come from the
-  // directory, ranked or casual, signed in or not (ranked's sign-in
-  // requirement is already gated a screen earlier, in GameTrackingShell).
-  // Editing (and logging a past game) always searches too, regardless of
-  // format/mode — every slot either one touches must resolve to a real
-  // profile (see requireLinkedPlayers below).
-  const enableSearch = isIndoor || isPastOrEdit || Boolean(user);
-  const directory = usePlayerDirectory(enableSearch);
+  const directory = usePlayerDirectory(true);
 
-  const [nameA1, setNameA1] = useState(editing ? initialGame?.a1?.name ?? "" : selfName);
+  const [nameA1, setNameA1] = useState(editing ? initialGame?.a1?.name ?? "" : "");
   const [nameA2, setNameA2] = useState(editing ? initialGame?.a2?.name ?? "" : "");
   const [nameB1, setNameB1] = useState(editing ? initialGame?.b1?.name ?? "" : "");
   const [nameB2, setNameB2] = useState(editing ? initialGame?.b2?.name ?? "" : "");
@@ -303,13 +248,6 @@ export default function NewGameForm({
     setPlayerIdB2(playerId);
   }
 
-  const selfId = user?.id ?? null;
-  // A1's "own" id for exclusion purposes: the signed-in submitter when
-  // creating a game, or whichever profile A1 is currently/newly set to when
-  // editing one or logging a past one (A1 is a pickable slot in both, not an
-  // implicit self).
-  const a1ExcludeId = isPastOrEdit ? playerIdA1 : selfId;
-
   // Applies to beach only (indoor has team names, not individual players) —
   // and to every player field regardless of mode or whether its name came
   // from a profile pick or was just typed, per the user's ask.
@@ -318,16 +256,14 @@ export default function NewGameForm({
     : findDuplicateNameKeys({ a1: nameA1, a2: nameA2, b1: nameB1, b2: nameB2 });
   const hasDuplicateNames = duplicateNameKeys.size > 0;
 
-  // Ranked beach games require every participant to be a known profile (not
-  // free-typed) so Elo has something real to attach a rating to. Casual and
-  // indoor are unaffected (indoor already requires every player to come from
-  // the directory, regardless of mode). An admin edit — and logging a past
-  // beach game — always requires linked profiles too: the edit RPC (reused
-  // to fix up A1 after a past game is inserted) only accepts real profile
-  // ids, no free text.
-  const requireLinkedPlayers = !isIndoor && (isPastOrEdit || mode === "ranked");
+  // Every beach player — all 4 slots, ranked or casual, live or
+  // editing/logging-past — must be a known profile, not free-typed: Elo
+  // needs something real to attach a rating to, and the admin RPCs (edit,
+  // and the past-game-logging insert's A1 fixup) only accept real profile
+  // ids anyway.
+  const requireLinkedPlayers = !isIndoor;
   const hasUnlinkedPlayers =
-    requireLinkedPlayers && ((isPastOrEdit && !playerIdA1) || !playerIdA2 || !playerIdB1 || !playerIdB2);
+    requireLinkedPlayers && (!playerIdA1 || !playerIdA2 || !playerIdB1 || !playerIdB2);
 
   const hasUndersizedRoster =
     isIndoor && (teamAPlayers.length < MIN_ROSTER_SIZE || teamBPlayers.length < MIN_ROSTER_SIZE);
@@ -385,18 +321,16 @@ export default function NewGameForm({
           onRemovePlayer={removePlayerA}
           rosterExcludeIds={[...teamAPlayers, ...teamBPlayers].map((p) => p.id)}
           name1={nameA1}
-          onName1={isPastOrEdit ? handleNameA1 : setNameA1}
+          onName1={handleNameA1}
           name2={nameA2}
           onName2={handleNameA2}
-          avatar1={editing ? avatarA1 : selfAvatar}
+          avatar1={avatarA1}
           avatar2={avatarA2}
           error1={duplicateNameKeys.has("a1")}
           error2={duplicateNameKeys.has("a2")}
-          name1IsSelf={prefillSelf}
-          enableSearch={enableSearch}
           directory={directory}
           excludeIds1={[playerIdA2, playerIdB1, playerIdB2].filter(Boolean)}
-          excludeIds2={[a1ExcludeId, playerIdB1, playerIdB2].filter(Boolean)}
+          excludeIds2={[playerIdA1, playerIdB1, playerIdB2].filter(Boolean)}
         />
         <SideFields
           label="Second side"
@@ -417,10 +351,9 @@ export default function NewGameForm({
           avatar2={avatarB2}
           error1={duplicateNameKeys.has("b1")}
           error2={duplicateNameKeys.has("b2")}
-          enableSearch={enableSearch}
           directory={directory}
-          excludeIds1={[a1ExcludeId, playerIdA2, playerIdB2].filter(Boolean)}
-          excludeIds2={[a1ExcludeId, playerIdA2, playerIdB1].filter(Boolean)}
+          excludeIds1={[playerIdA1, playerIdA2, playerIdB2].filter(Boolean)}
+          excludeIds2={[playerIdA1, playerIdA2, playerIdB1].filter(Boolean)}
         />
       </div>
 
@@ -432,9 +365,7 @@ export default function NewGameForm({
         )}
         {!hasDuplicateNames && hasUnlinkedPlayers && (
           <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
-            {isPastOrEdit
-              ? "Every player must be picked from search — they need to have signed in at least once."
-              : "Every player must be picked from search to start a ranked game — they need to have signed in at least once."}
+            Every player must be picked from search — they need to have signed in at least once.
           </p>
         )}
         {isIndoor && hasUndersizedRoster && (
