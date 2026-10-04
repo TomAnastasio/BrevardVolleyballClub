@@ -16,6 +16,7 @@ import { consumePendingGameTracking, setPendingGameTracking } from "../../lib/pe
 
 const SCREEN_META = {
   menu: { title: "Beach Volleyball Scoreboard", subtitle: "Brevard Volleyball Club" },
+  signin: { title: "Sign In Required", subtitle: null },
   format: { title: "Select Game Type", subtitle: null },
   mode: { title: "Ranked or Casual?", subtitle: null },
   new: { title: "New Game", subtitle: null },
@@ -26,6 +27,7 @@ const SCREEN_META = {
 };
 
 const BACK_MAP = {
+  signin: "menu",
   format: "menu",
   mode: "format",
   new: "mode",
@@ -69,14 +71,32 @@ export default function GameTrackingShell({ onBack }) {
     setScreen("new");
   }
 
+  // Anyone can browse the menu and Past Games, but recording a game still
+  // needs a signed-in account — checked right when "New Game" is pressed,
+  // not buried after format/mode selection. ("Log Past Game" needs no
+  // separate check here: it only ever renders for an admin, and isAdmin is
+  // never true without a signed-in user already.)
+  function needsSignInFirst() {
+    return isConfigured && !user;
+  }
+
+  // Once sign-in completes (including after the OAuth redirect round trip
+  // below), carry on into format selection automatically instead of
+  // stranding the user on the sign-in screen.
+  useEffect(() => {
+    if (screen === "signin" && user) {
+      setScreen("format");
+    }
+  }, [screen, user]);
+
   // Handles the full-page OAuth redirect round trip: the React tree remounts
-  // from scratch when the browser returns from Google. There's nothing to
-  // resume into (sign-in now happens before format/mode/player selection, so
-  // nothing was in progress yet) — this just clears the short-lived
-  // sessionStorage breadcrumb (written right before signInWithGoogle() was
-  // called) so it can't linger and wrongly redirect a later, unrelated visit
-  // within its TTL. App.jsx already used it (non-destructively) at boot to
-  // decide to land back on this screen instead of the landing page.
+  // from scratch when the browser returns from Google. Nothing was in
+  // progress yet (format/mode/players are all chosen after sign-in), so this
+  // just clears the short-lived sessionStorage breadcrumb (written right
+  // before signInWithGoogle() was called) so it can't linger and wrongly
+  // redirect a later, unrelated visit within its TTL. App.jsx already used it
+  // (non-destructively) at boot to decide to land back on this screen
+  // instead of the landing page.
   useEffect(() => {
     consumePendingGameTracking();
   }, []);
@@ -100,7 +120,7 @@ export default function GameTrackingShell({ onBack }) {
   function handleEraseAndStartNew() {
     setIsLoggingPast(false);
     scoreboard.clearActiveGame();
-    setScreen("format");
+    setScreen(needsSignInFirst() ? "signin" : "format");
   }
 
   function handleLogPastGame() {
@@ -166,22 +186,8 @@ export default function GameTrackingShell({ onBack }) {
     setScreen("menu");
   }
 
-  // Recording (and even just viewing) anything in Game Tracking requires a
-  // signed-in account now, checked before the menu is ever shown — not just
-  // when picking "Ranked" partway through the old flow. Skipped entirely
-  // when Supabase isn't configured at all, so local-only/offline mode keeps
-  // working exactly as before.
-  const isLoadingAuth = isConfigured && loading;
-  const needsSignIn = isConfigured && !loading && !user;
-  const isTopLevel = needsSignIn || isLoadingAuth || screen === "menu";
-
-  const meta = needsSignIn
-    ? { title: "Sign In Required", subtitle: null }
-    : isLoadingAuth
-      ? { title: null, subtitle: null }
-      : screen === "new" && isLoggingPast
-        ? { title: "Log Past Game", subtitle: null }
-        : SCREEN_META[screen];
+  const meta = screen === "new" && isLoggingPast ? { title: "Log Past Game", subtitle: null } : SCREEN_META[screen];
+  const isMenu = screen === "menu";
   const { forced, width: effectiveWidth, height: effectiveHeight } = useForcedLandscape(screen === "active");
   const isPhoneLandscape = effectiveHeight <= 520;
 
@@ -197,11 +203,11 @@ export default function GameTrackingShell({ onBack }) {
       >
         <button
           type="button"
-          onClick={() => (isTopLevel ? onBack() : setScreen(BACK_MAP[screen] || "menu"))}
-          aria-label={isTopLevel ? "Back to main menu" : "Back to game tracking menu"}
+          onClick={() => (isMenu ? onBack() : setScreen(BACK_MAP[screen] || "menu"))}
+          aria-label={isMenu ? "Back to main menu" : "Back to game tracking menu"}
           className="rounded-lg px-2 py-2 font-bold phone-landscape:px-1.5 phone-landscape:py-1 phone-landscape:text-sm focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
         >
-          &lsaquo; {isTopLevel ? "Menu" : "Back"}
+          &lsaquo; {isMenu ? "Menu" : "Back"}
         </button>
         <div className="flex-1 pr-12 text-center phone-landscape:pr-9">
           {meta.title && (
@@ -231,70 +237,61 @@ export default function GameTrackingShell({ onBack }) {
       )}
 
       <main className="flex min-h-0 flex-1 flex-col">
-        {isLoadingAuth ? (
-          <p className="p-6 text-center text-muted">Loading…</p>
-        ) : needsSignIn ? (
-          <GameTrackingSignInGate onSignIn={handleSignIn} loading={loading} />
-        ) : (
-          <>
-            {screen === "menu" && (
-              <GameMenu
-                hasActiveGame={scoreboard.hasActiveGame}
-                onNewGame={() => {
-                  setIsLoggingPast(false);
-                  setScreen("format");
-                }}
-                onEraseAndStartNew={handleEraseAndStartNew}
-                onResumeGame={() => setScreen("active")}
-                onPastGames={() => setScreen("history")}
-                onLogPastGame={handleLogPastGame}
-                isAdmin={isAdmin}
-              />
-            )}
-            {screen === "format" && <GameFormatMenu onSelectFormat={handleSelectFormat} />}
-            {screen === "mode" && (
-              <GameModeMenu onSelectMode={handleSelectMode} isSupabaseConfigured={isConfigured} />
-            )}
-            {screen === "new" && (
-              <NewGameForm format={pendingFormat} loggingPast={isLoggingPast} onStart={handleStartGame} />
-            )}
-            {screen === "past-score" && pastGameDraft && (
-              <LogPastGameScoreScreen
-                format={pastGameDraft.format}
-                teamAName={
-                  pastGameDraft.format === "indoor"
-                    ? pastGameDraft.teamAPlayers.map((p) => p.name).join(", ")
-                    : `${pastGameDraft.nameA1} & ${pastGameDraft.nameA2}`
-                }
-                teamBName={
-                  pastGameDraft.format === "indoor"
-                    ? pastGameDraft.teamBPlayers.map((p) => p.name).join(", ")
-                    : `${pastGameDraft.nameB1} & ${pastGameDraft.nameB2}`
-                }
-                onSubmit={handlePastGameSubmit}
-                submitting={pastGameSubmitting}
-                error={pastGameError}
-              />
-            )}
-            {screen === "active" && scoreboard.state && (
-              <GameView
-                scoreboard={scoreboard}
-                onSaveGame={handleSaveGame}
-                effectiveWidth={effectiveWidth}
-                effectiveHeight={effectiveHeight}
-              />
-            )}
-            {screen === "history" && (
-              <HistoryView
-                history={history}
-                historyLoading={historyLoading}
-                isAdmin={isAdmin}
-                onEditGame={handleEditGame}
-              />
-            )}
-            {screen === "edit-game" && <EditGameScreen gameId={editingGameId} onSaved={handleGameEdited} />}
-          </>
+        {screen === "menu" && (
+          <GameMenu
+            hasActiveGame={scoreboard.hasActiveGame}
+            onNewGame={() => {
+              setIsLoggingPast(false);
+              setScreen(needsSignInFirst() ? "signin" : "format");
+            }}
+            onEraseAndStartNew={handleEraseAndStartNew}
+            onResumeGame={() => setScreen("active")}
+            onPastGames={() => setScreen("history")}
+            onLogPastGame={handleLogPastGame}
+            isAdmin={isAdmin}
+          />
         )}
+        {screen === "signin" && <GameTrackingSignInGate onSignIn={handleSignIn} loading={loading} />}
+        {screen === "format" && <GameFormatMenu onSelectFormat={handleSelectFormat} />}
+        {screen === "mode" && <GameModeMenu onSelectMode={handleSelectMode} isSupabaseConfigured={isConfigured} />}
+        {screen === "new" && (
+          <NewGameForm format={pendingFormat} loggingPast={isLoggingPast} onStart={handleStartGame} />
+        )}
+        {screen === "past-score" && pastGameDraft && (
+          <LogPastGameScoreScreen
+            format={pastGameDraft.format}
+            teamAName={
+              pastGameDraft.format === "indoor"
+                ? pastGameDraft.teamAPlayers.map((p) => p.name).join(", ")
+                : `${pastGameDraft.nameA1} & ${pastGameDraft.nameA2}`
+            }
+            teamBName={
+              pastGameDraft.format === "indoor"
+                ? pastGameDraft.teamBPlayers.map((p) => p.name).join(", ")
+                : `${pastGameDraft.nameB1} & ${pastGameDraft.nameB2}`
+            }
+            onSubmit={handlePastGameSubmit}
+            submitting={pastGameSubmitting}
+            error={pastGameError}
+          />
+        )}
+        {screen === "active" && scoreboard.state && (
+          <GameView
+            scoreboard={scoreboard}
+            onSaveGame={handleSaveGame}
+            effectiveWidth={effectiveWidth}
+            effectiveHeight={effectiveHeight}
+          />
+        )}
+        {screen === "history" && (
+          <HistoryView
+            history={history}
+            historyLoading={historyLoading}
+            isAdmin={isAdmin}
+            onEditGame={handleEditGame}
+          />
+        )}
+        {screen === "edit-game" && <EditGameScreen gameId={editingGameId} onSaved={handleGameEdited} />}
       </main>
     </div>
   );
