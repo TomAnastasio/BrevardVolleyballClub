@@ -11,10 +11,10 @@ import top3_1 from "../assets/badges/top3-1.png";
 import top3_2 from "../assets/badges/top3-2.png";
 import top3_3 from "../assets/badges/top3-3.png";
 
-// Badge artwork (not Riot's) at 200x280, one PNG per tier/division. Bronze,
-// Gold, and Diamond divisions mark a player's bottom-30%/middle-40%/top-30%
-// position within their tier; top3 is reserved for the literal #1/#2/#3
-// ranked players. See useLeaderboard.js for the percentile math.
+// Badge artwork (not Riot's), one PNG per tier/division. Bronze, Gold, and
+// Diamond divisions mark a player's bottom-30%/middle-40%/top-30% position
+// within their tier; top3 is reserved for the literal #1/#2/#3 ranked
+// players. See useLeaderboard.js for the percentile math.
 const BADGES = {
   bronze: { 1: bronze1, 2: bronze2, 3: bronze3 },
   gold: { 1: gold1, 2: gold2, 3: gold3 },
@@ -27,6 +27,14 @@ const LABELS = {
   gold: "Gold",
   diamond: "Diamond",
   top3: "Top 3",
+};
+
+// Bronze/Gold/Diamond art is a tall 200x280 diamond; top3 art is square.
+const ASPECT = {
+  bronze: 280 / 200,
+  gold: 280 / 200,
+  diamond: 280 / 200,
+  top3: 1,
 };
 
 function UnrankedBadge({ size, className }) {
@@ -67,7 +75,7 @@ export default function RankBadge({ tier, division = 3, size = 40, className = "
       src={src}
       alt={`${LABELS[tier]} rank, division ${division}`}
       width={size}
-      height={(size * 280) / 200}
+      height={size * ASPECT[tier]}
       className={className}
     />
   );
