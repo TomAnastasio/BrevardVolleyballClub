@@ -32,6 +32,7 @@ function GameCardBody({ game, user, isAdmin }) {
   return (
     <>
       <div className="relative flex items-center justify-center">
+        <span className="absolute left-0 text-xs text-muted">{game.date}</span>
         <span
           className={`text-[0.62rem] font-bold uppercase tracking-wide ${
             isIndoor ? "text-sky-400" : "text-amber-400"
@@ -64,11 +65,6 @@ function GameCardBody({ game, user, isAdmin }) {
           <RosterAvatars players={game.teamBPlayers} align="right" />
         </div>
       )}
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm text-muted">
-          {game.date} at {game.time}
-        </span>
-      </div>
       {user && game.submittedByName && game.submittedByUserId !== user.id && (
         <p className="m-0 text-xs text-muted">Submitted by {game.submittedByName}</p>
       )}
