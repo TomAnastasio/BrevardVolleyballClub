@@ -70,13 +70,25 @@ export default function RankBadge({ tier, division = 3, size = 40, className = "
 
   const src = BADGES[tier]?.[division];
   if (!src) return null;
-  return (
-    <img
-      src={src}
-      alt={`${LABELS[tier]} rank, division ${division}`}
-      width={size}
-      height={size * ASPECT[tier]}
-      className={className}
-    />
-  );
+
+  const alt = `${LABELS[tier]} rank, division ${division}`;
+  const height = size * ASPECT[tier];
+
+  // The literal #1/#2/#3 players get a shimmer sweep + faint glow (CSS only,
+  // same PNG) so the top of the leaderboard reads as a bigger deal. The
+  // sweep is masked to this badge's own art via --rank-badge-mask so the
+  // light only plays across the actual emblem, not its transparent margin.
+  if (tier === "top3") {
+    return (
+      <span
+        className={`relative inline-block rank-badge-top3 ${className}`}
+        data-division={division}
+        style={{ width: size, height, "--rank-badge-mask": `url(${src})` }}
+      >
+        <img src={src} alt={alt} width={size} height={height} />
+      </span>
+    );
+  }
+
+  return <img src={src} alt={alt} width={size} height={height} className={className} />;
 }

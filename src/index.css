@@ -135,3 +135,92 @@ body {
     transform: none;
   }
 }
+
+/* Top-3 rank badge: shimmer sweep + whisper glow (bespoke, not a HeroUI
+   component). See RankBadge.jsx for why only the "top3" tier gets this. */
+
+.rank-badge-top3 img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  animation: rank-badge-glow 3.2s ease-in-out infinite;
+}
+
+.rank-badge-top3[data-division="1"] img {
+  --rank-badge-glow-a: #9df7e8;
+  --rank-badge-glow-b: #2fb79b;
+}
+.rank-badge-top3[data-division="2"] img {
+  --rank-badge-glow-a: #cfc4ff;
+  --rank-badge-glow-b: #8171f2;
+}
+.rank-badge-top3[data-division="3"] img {
+  --rank-badge-glow-a: #ffe3a1;
+  --rank-badge-glow-b: #f5a623;
+}
+
+.rank-badge-top3::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  -webkit-mask-image: var(--rank-badge-mask);
+  mask-image: var(--rank-badge-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.9) 48%,
+    rgba(255, 255, 255, 0.9) 52%,
+    transparent 65%
+  );
+  background-size: 320% 320%;
+  mix-blend-mode: screen;
+  animation: rank-badge-sweep 2.9s ease-in-out infinite;
+}
+
+@keyframes rank-badge-sweep {
+  0% {
+    background-position: 220% 220%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  50% {
+    background-position: -40% -40%;
+  }
+  62% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 0;
+  }
+  100% {
+    background-position: -40% -40%;
+    opacity: 0;
+  }
+}
+
+@keyframes rank-badge-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 1px var(--rank-badge-glow-a)) drop-shadow(0 0 2px var(--rank-badge-glow-b));
+  }
+  50% {
+    filter: drop-shadow(0 0 2px var(--rank-badge-glow-a)) drop-shadow(0 0 4px var(--rank-badge-glow-b));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rank-badge-top3 img,
+  .rank-badge-top3::after {
+    animation: none;
+  }
+}
