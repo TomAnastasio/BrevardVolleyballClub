@@ -141,6 +141,13 @@ export function useGameHistory() {
       const time = pad2(now.getHours()) + ":" + pad2(now.getMinutes());
       const mode = normalizeMode(game.mode);
 
+      // `synced: false` marks a game that was saved while signed out (or
+      // Supabase isn't configured) and therefore will never show up in
+      // remoteHistory — `history` below uses this to merge it back in
+      // instead of letting it quietly disappear once remote data loads.
+      // Older cached records predate this field (`synced === undefined`)
+      // and are deliberately left out of that merge, since there's no way
+      // to tell whether they were already synced before this existed.
       const record = {
         id: "game-" + now.getTime(),
         nameA: game.nameA,
@@ -153,6 +160,7 @@ export function useGameHistory() {
         format: game.format || "beach",
         teamAPlayers: game.format === "indoor" ? game.teamAPlayers || [] : [],
         teamBPlayers: game.format === "indoor" ? game.teamBPlayers || [] : [],
+        synced: Boolean(isSupabaseConfigured && user),
       };
 
       setLocalHistory((prev) => {
@@ -243,7 +251,16 @@ export function useGameHistory() {
     [user],
   );
 
-  const history = isSupabaseConfigured && remoteHistory !== null ? remoteHistory : localHistory;
+  // Local games saved while signed out never reach `games` (its insert
+  // policy requires auth.uid() = user_id), so they'd otherwise vanish from
+  // Past Games the moment remoteHistory loads. Merge them back in, sorted
+  // alongside the remote (public) history by when they were played.
+  const history =
+    isSupabaseConfigured && remoteHistory !== null
+      ? [...remoteHistory, ...localHistory.filter((g) => g.synced === false)].sort((a, b) =>
+          `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`),
+        )
+      : localHistory;
   const historyLoading = isSupabaseConfigured && remoteLoading;
   const dismissSaveError = useCallback(() => setSaveError(null), []);
 
