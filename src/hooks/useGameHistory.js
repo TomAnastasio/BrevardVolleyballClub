@@ -39,7 +39,40 @@ export function mapTeamPlayers(gamePlayers, team) {
     .sort((x, y) => x.name.localeCompare(y.name));
 }
 
-function mapRowToRecord(row) {
+// Beach's A1 is never a game_players row (see migration
+// 20261001191519_add_game_participants.sql) — it's the submitter, identified
+// via games.user_id. `submitterProfilesById` carries that one extra profile
+// lookup in so A1 can show an avatar like A2/B1/B2 do. A2/B1/B2 are only
+// present when the submitter picked them from player search (ranked beach
+// requires it; casual beach doesn't), so a free-typed, unlinked slot simply
+// contributes no entry here — same "only show what's actually linked"
+// behavior indoor rosters already have.
+function mapBeachTeamPlayers(gamePlayers, side, submitterUserId, submitterProfilesById) {
+  const players = [];
+  if (side === "a" && submitterUserId) {
+    const profile = submitterProfilesById[submitterUserId];
+    players.push({
+      id: submitterUserId,
+      name: profile?.display_name || "Player",
+      avatarUrl: profile?.avatar_url || null,
+    });
+  }
+  const slots = side === "a" ? ["a2"] : ["b1", "b2"];
+  for (const slot of slots) {
+    const gp = (gamePlayers || []).find((p) => p.slot === slot);
+    if (gp) {
+      players.push({
+        id: gp.user_id,
+        name: gp.profiles?.display_name || "Player",
+        avatarUrl: gp.profiles?.avatar_url || null,
+      });
+    }
+  }
+  return players;
+}
+
+function mapRowToRecord(row, submitterProfilesById = {}) {
+  const isIndoor = row.format === "indoor";
   return {
     id: row.id,
     nameA: row.name_a,
@@ -52,8 +85,12 @@ function mapRowToRecord(row) {
     submittedByUserId: row.user_id,
     submittedByName: row.submitted_by_name,
     format: row.format,
-    teamAPlayers: row.format === "indoor" ? mapTeamPlayers(row.game_players, "a") : [],
-    teamBPlayers: row.format === "indoor" ? mapTeamPlayers(row.game_players, "b") : [],
+    teamAPlayers: isIndoor
+      ? mapTeamPlayers(row.game_players, "a")
+      : mapBeachTeamPlayers(row.game_players, "a", row.user_id, submitterProfilesById),
+    teamBPlayers: isIndoor
+      ? mapTeamPlayers(row.game_players, "b")
+      : mapBeachTeamPlayers(row.game_players, "b", row.user_id, submitterProfilesById),
   };
 }
 
@@ -94,12 +131,27 @@ export function useGameHistory() {
       // optimistic inserts tied to the new session correctly.
       const { data, error } = await supabase
         .from("games")
-        .select("*, game_players(user_id, team, profiles(id, display_name, avatar_url))")
+        .select("*, game_players(user_id, slot, team, profiles(id, display_name, avatar_url))")
         .order("created_at", { ascending: false });
       if (error) throw error;
       if (requestId !== latestRequestRef.current) return;
 
-      const fetched = (data || []).map(mapRowToRecord);
+      // Beach's A1 player is identified only via games.user_id (see
+      // mapBeachTeamPlayers above), so their profile isn't covered by the
+      // game_players join above — fetch it separately, one query for every
+      // submitter in this page of history rather than N+1.
+      const submitterIds = [...new Set((data || []).map((row) => row.user_id).filter(Boolean))];
+      let submitterProfilesById = {};
+      if (submitterIds.length > 0) {
+        const { data: submitterProfiles, error: submitterError } = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url")
+          .in("id", submitterIds);
+        if (submitterError) throw submitterError;
+        submitterProfilesById = Object.fromEntries((submitterProfiles || []).map((p) => [p.id, p]));
+      }
+
+      const fetched = (data || []).map((row) => mapRowToRecord(row, submitterProfilesById));
       const fetchedIds = new Set(fetched.map((g) => g.id));
       // Carry forward any optimistic insert this fetch raced past (i.e.
       // doesn't yet reflect) instead of letting it disappear; drop entries
@@ -214,7 +266,7 @@ export function useGameHistory() {
                       team: p.team ?? null,
                     })),
                   )
-                  .select("user_id, team, profiles(id, display_name, avatar_url)");
+                  .select("user_id, slot, team, profiles(id, display_name, avatar_url)");
                 if (linkError) throw linkError;
                 insertedPlayers = linkData;
               } catch (linkErr) {
@@ -230,8 +282,20 @@ export function useGameHistory() {
             // user?.id to change and re-trigger the fetch effect. Prefer the
             // DB-returned row (has real id/created_at); fall back to the
             // locally-generated record if the insert didn't return one.
+            // The submitter is always the current user, so their profile for
+            // beach's implicit A1 slot (see mapBeachTeamPlayers) is already
+            // on hand here — no extra round trip needed like the bulk fetch
+            // above.
             const newRecord = data
-              ? mapRowToRecord({ ...data, game_players: insertedPlayers })
+              ? mapRowToRecord(
+                  { ...data, game_players: insertedPlayers },
+                  {
+                    [user.id]: {
+                      display_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+                      avatar_url: user.user_metadata?.avatar_url || null,
+                    },
+                  },
+                )
               : record;
             pendingInsertsRef.current.set(newRecord.id, newRecord);
             setRemoteHistory((prev) => {

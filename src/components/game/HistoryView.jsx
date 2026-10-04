@@ -27,18 +27,31 @@ function RosterAvatars({ players, align }) {
 }
 
 function GameCardBody({ game, user, isAdmin }) {
+  const isIndoor = game.format === "indoor";
+  const hasRosterPhotos = game.teamAPlayers?.length > 0 || game.teamBPlayers?.length > 0;
   return (
     <>
       <div className="flex items-center justify-between gap-2 font-bold">
-        <span className={`min-w-0 break-words ${game.a > game.b ? "text-success" : ""}`}>{game.nameA}</span>
-        <span className="flex-none text-lg [font-variant-numeric:tabular-nums]">
-          {game.a} – {game.b}
+        <span className={`min-w-0 flex-1 break-words ${game.a > game.b ? "text-success" : ""}`}>
+          {!isIndoor && game.nameA}
         </span>
-        <span className={`min-w-0 break-words text-right ${game.b > game.a ? "text-success" : ""}`}>
-          {game.nameB}
+        <span className="flex flex-none flex-col items-center justify-center self-center text-center">
+          <span
+            className={`text-[0.62rem] font-bold uppercase tracking-wide ${
+              isIndoor ? "text-sky-400" : "text-amber-400"
+            }`}
+          >
+            {isIndoor ? "🏐 Indoor" : "🏖️ Beach"}
+          </span>
+          <span className="text-lg [font-variant-numeric:tabular-nums]">
+            {game.a} – {game.b}
+          </span>
+        </span>
+        <span className={`min-w-0 flex-1 break-words text-right ${game.b > game.a ? "text-success" : ""}`}>
+          {!isIndoor && game.nameB}
         </span>
       </div>
-      {game.format === "indoor" && (
+      {hasRosterPhotos && (
         <div className="flex items-start justify-between gap-2">
           <RosterAvatars players={game.teamAPlayers} />
           <RosterAvatars players={game.teamBPlayers} align="right" />
