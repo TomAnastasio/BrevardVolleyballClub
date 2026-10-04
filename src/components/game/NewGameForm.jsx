@@ -101,7 +101,7 @@ function SideFields({
   otherColor,
   onColorChange,
   hideColors,
-  isIndoor,
+  useRosterPicker,
   roster,
   onAddPlayer,
   onRemovePlayer,
@@ -122,7 +122,7 @@ function SideFields({
     <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
       <span aria-hidden="true" className="h-2 w-16 rounded-full" style={{ backgroundColor: color }} />
       <div className="flex w-full flex-col gap-2">
-        {isIndoor ? (
+        {useRosterPicker ? (
           <TeamRosterPicker
             label={label}
             roster={roster}
@@ -181,8 +181,21 @@ function SideFields({
   );
 }
 
-export default function NewGameForm({ format, onStart, editing = false, initialGame = null, onSave, loggingPast = false }) {
+export default function NewGameForm({
+  format,
+  teamSize = null,
+  onStart,
+  editing = false,
+  initialGame = null,
+  onSave,
+  loggingPast = false,
+}) {
   const isIndoor = format === "indoor";
+  // "Squad" beach (3v3/4v4) reuses indoor's roster-picker UI and variable-
+  // roster state wholesale instead of beach's fixed a1/a2/b1/b2 fields — see
+  // migration 20261004150000. 2v2 beach (teamSize null) keeps the original
+  // fixed-field path below untouched.
+  const usesRoster = isIndoor || teamSize != null;
   // Beach now matches indoor: every player, on both sides, ranked or
   // casual, always comes from the real player directory — no free-typed
   // guest names and no self-prefill of the submitter into A1. "editing" and
@@ -248,31 +261,37 @@ export default function NewGameForm({ format, onStart, editing = false, initialG
     setPlayerIdB2(playerId);
   }
 
-  // Applies to beach only (indoor has team names, not individual players) —
-  // and to every player field regardless of mode or whether its name came
-  // from a profile pick or was just typed, per the user's ask.
-  const duplicateNameKeys = isIndoor
+  // Applies to the fixed-field beach path only (roster-based formats have
+  // team names, not individual free-typed fields) — and to every player
+  // field regardless of mode or whether its name came from a profile pick
+  // or was just typed, per the user's ask.
+  const duplicateNameKeys = usesRoster
     ? new Set()
     : findDuplicateNameKeys({ a1: nameA1, a2: nameA2, b1: nameB1, b2: nameB2 });
   const hasDuplicateNames = duplicateNameKeys.size > 0;
 
-  // Every beach player — all 4 slots, ranked or casual, live or
-  // editing/logging-past — must be a known profile, not free-typed: Elo
-  // needs something real to attach a rating to, and the admin RPCs (edit,
-  // and the past-game-logging insert's A1 fixup) only accept real profile
-  // ids anyway.
-  const requireLinkedPlayers = !isIndoor;
+  // Every beach player in the fixed-field path — all 4 slots, ranked or
+  // casual, live or editing/logging-past — must be a known profile, not
+  // free-typed: Elo needs something real to attach a rating to, and the
+  // admin RPCs (edit, and the past-game-logging insert's A1 fixup) only
+  // accept real profile ids anyway. Roster-based formats (indoor, squad
+  // beach) already only allow picking real profiles via TeamRosterPicker.
+  const requireLinkedPlayers = !usesRoster;
   const hasUnlinkedPlayers =
     requireLinkedPlayers && (!playerIdA1 || !playerIdA2 || !playerIdB1 || !playerIdB2);
 
   const hasUndersizedRoster =
-    isIndoor && (teamAPlayers.length < MIN_ROSTER_SIZE || teamBPlayers.length < MIN_ROSTER_SIZE);
+    usesRoster &&
+    (isIndoor
+      ? teamAPlayers.length < MIN_ROSTER_SIZE || teamBPlayers.length < MIN_ROSTER_SIZE
+      : teamAPlayers.length !== teamSize || teamBPlayers.length !== teamSize);
 
   function handleStart() {
-    if (isIndoor) {
+    if (usesRoster) {
       if (hasUndersizedRoster) return;
       onStart({
-        format: "indoor",
+        format: isIndoor ? "indoor" : "beach",
+        teamSize: isIndoor ? undefined : teamSize,
         teamAPlayers,
         teamBPlayers,
         colorA,
@@ -297,9 +316,14 @@ export default function NewGameForm({ format, onStart, editing = false, initialG
   }
 
   function handleSave() {
-    if (isIndoor) {
+    if (usesRoster) {
       if (hasUndersizedRoster) return;
-      onSave({ format: "indoor", teamAPlayers, teamBPlayers });
+      onSave({
+        format: isIndoor ? "indoor" : "beach",
+        teamSize: isIndoor ? undefined : teamSize,
+        teamAPlayers,
+        teamBPlayers,
+      });
     } else {
       if (hasDuplicateNames || hasUnlinkedPlayers) return;
       onSave({ format: "beach", a1: playerIdA1, a2: playerIdA2, b1: playerIdB1, b2: playerIdB2 });
@@ -315,7 +339,7 @@ export default function NewGameForm({ format, onStart, editing = false, initialG
           otherColor={colorB}
           onColorChange={setColorA}
           hideColors={isPastOrEdit}
-          isIndoor={isIndoor}
+          useRosterPicker={usesRoster}
           roster={teamAPlayers}
           onAddPlayer={addPlayerA}
           onRemovePlayer={removePlayerA}
@@ -338,7 +362,7 @@ export default function NewGameForm({ format, onStart, editing = false, initialG
           otherColor={colorA}
           onColorChange={setColorB}
           hideColors={isPastOrEdit}
-          isIndoor={isIndoor}
+          useRosterPicker={usesRoster}
           roster={teamBPlayers}
           onAddPlayer={addPlayerB}
           onRemovePlayer={removePlayerB}
@@ -368,9 +392,12 @@ export default function NewGameForm({ format, onStart, editing = false, initialG
             Every player must be picked from search — they need to have signed in at least once.
           </p>
         )}
-        {isIndoor && hasUndersizedRoster && (
+        {usesRoster && hasUndersizedRoster && (
           <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
-            Each side needs at least {MIN_ROSTER_SIZE} players{isPastOrEdit ? "." : " to start."}
+            {isIndoor
+              ? `Each side needs at least ${MIN_ROSTER_SIZE} players`
+              : `Each side needs exactly ${teamSize} players`}
+            {isPastOrEdit ? "." : " to start."}
           </p>
         )}
         <Button

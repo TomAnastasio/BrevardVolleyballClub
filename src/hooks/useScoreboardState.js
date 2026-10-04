@@ -17,6 +17,19 @@ function normalizeFormat(format) {
   return format === "indoor" ? "indoor" : DEFAULT_FORMAT;
 }
 
+function normalizeTeamSize(format, teamSize) {
+  return format === "beach" && (teamSize === 3 || teamSize === 4) ? teamSize : null;
+}
+
+// "Squad" beach (3v3/4v4) reuses indoor's variable-roster mechanism
+// (TeamRosterPicker, game_players.team rows, generic average-Elo-per-team
+// math) wholesale instead of beach's fixed a1/a2/b1/b2 slots — see migration
+// 20261004150000. 2v2 beach (teamSize null) keeps the original slot-based
+// path untouched.
+function usesRosterFor(format, teamSize) {
+  return format === "indoor" || Boolean(teamSize);
+}
+
 function winScoreFor(format) {
   return WIN_SCORE_BY_FORMAT[normalizeFormat(format)];
 }
@@ -36,9 +49,10 @@ function loadState() {
     if (typeof saved.a !== "number" || typeof saved.b !== "number") return null;
 
     const format = normalizeFormat(saved.format);
-    const state = { a: saved.a, b: saved.b, format };
+    const teamSize = normalizeTeamSize(format, saved.teamSize);
+    const state = { a: saved.a, b: saved.b, format, teamSize };
 
-    if (format === "indoor") {
+    if (usesRosterFor(format, teamSize)) {
       state.teamAPlayers = sanitizeRoster(saved.teamAPlayers);
       state.teamBPlayers = sanitizeRoster(saved.teamBPlayers);
     } else {
@@ -98,7 +112,7 @@ export function useScoreboardState() {
 
   const setName = useCallback((team, slot, name) => {
     setState((prev) => {
-      if (prev.format === "indoor") return prev; // rosters replace editable team names
+      if (usesRosterFor(prev.format, prev.teamSize)) return prev; // rosters replace editable team names
       const key = `name${team === "a" ? "A" : "B"}${slot}`;
       return { ...prev, [key]: name };
     });
@@ -106,8 +120,9 @@ export function useScoreboardState() {
 
   const startGame = useCallback((payload) => {
     const format = normalizeFormat(payload.format);
-    const next = { a: 0, b: 0, format, colorA: payload.colorA, colorB: payload.colorB, mode: payload.mode };
-    if (format === "indoor") {
+    const teamSize = normalizeTeamSize(format, payload.teamSize);
+    const next = { a: 0, b: 0, format, teamSize, colorA: payload.colorA, colorB: payload.colorB, mode: payload.mode };
+    if (usesRosterFor(format, teamSize)) {
       next.teamAPlayers = sanitizeRoster(payload.teamAPlayers);
       next.teamBPlayers = sanitizeRoster(payload.teamBPlayers);
     } else {
@@ -133,18 +148,20 @@ export function useScoreboardState() {
   }, []);
 
   const format = state ? normalizeFormat(state.format) : DEFAULT_FORMAT;
+  const teamSize = state?.teamSize ?? null;
   const winScore = winScoreFor(format);
   const isIndoor = format === "indoor";
+  const usesRoster = Boolean(state) && usesRosterFor(format, teamSize);
   const aWins = Boolean(state) && state.a >= winScore && state.a - state.b >= 2;
   const bWins = Boolean(state) && state.b >= winScore && state.b - state.a >= 2;
   const teamAName = !state
     ? ""
-    : isIndoor
+    : usesRoster
       ? state.teamAPlayers.map((p) => p.name).join(", ")
       : `${state.nameA1} & ${state.nameA2}`;
   const teamBName = !state
     ? ""
-    : isIndoor
+    : usesRoster
       ? state.teamBPlayers.map((p) => p.name).join(", ")
       : `${state.nameB1} & ${state.nameB2}`;
   // The submitter doesn't need a link of their own (already identified via
@@ -152,11 +169,12 @@ export function useScoreboardState() {
   // search profile ids, when present, become game_players rows once the
   // game is saved. Each one is tagged with its slot (not just flattened to
   // an id) so the Elo trigger can tell which team a linked player was on.
-  // Indoor has no implicit submitter slot (roster size is variable, see
-  // migration 0011), so every picked player on both rosters becomes a row.
+  // Indoor (and squad beach, 3v3/4v4) have no implicit submitter slot
+  // (roster size is variable/explicit, see migration 0011 and 20261004150000)
+  // so every picked player on both rosters becomes a row.
   const participants = !state
     ? []
-    : isIndoor
+    : usesRoster
       ? [
           ...state.teamAPlayers.map((p) => ({ team: "a", userId: p.id })),
           ...state.teamBPlayers.map((p) => ({ team: "b", userId: p.id })),
@@ -173,7 +191,9 @@ export function useScoreboardState() {
     state,
     hasActiveGame: state !== null,
     format,
+    teamSize,
     isIndoor,
+    usesRoster,
     winScore,
     aWins,
     bWins,

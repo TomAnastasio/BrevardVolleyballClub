@@ -30,14 +30,16 @@ export default function EditGameScreen({ gameId, onSaved }) {
       try {
         const { data: row, error } = await supabase
           .from("games")
-          .select("id, user_id, format, game_players(user_id, slot, team, profiles(id, display_name, avatar_url))")
+          .select(
+            "id, user_id, format, team_size, game_players(user_id, slot, team, profiles(id, display_name, avatar_url))",
+          )
           .eq("id", gameId)
           .single();
         if (error) throw error;
         if (!active) return;
 
-        if (row.format === "indoor") {
-          setGame({ format: "indoor" });
+        if (row.format === "indoor" || row.team_size) {
+          setGame({ format: row.format, teamSize: row.team_size ?? null });
           setInitialGame({
             teamAPlayers: mapTeamPlayers(row.game_players, "a"),
             teamBPlayers: mapTeamPlayers(row.game_players, "b"),
@@ -95,13 +97,19 @@ export default function EditGameScreen({ gameId, onSaved }) {
               p_team_a: payload.teamAPlayers.map((p) => p.id),
               p_team_b: payload.teamBPlayers.map((p) => p.id),
             })
-          : await supabase.rpc("admin_update_beach_game_players", {
-              p_game_id: gameId,
-              p_a1_user_id: payload.a1,
-              p_a2_user_id: payload.a2,
-              p_b1_user_id: payload.b1,
-              p_b2_user_id: payload.b2,
-            });
+          : payload.teamSize
+            ? await supabase.rpc("admin_update_beach_squad_game_players", {
+                p_game_id: gameId,
+                p_team_a: payload.teamAPlayers.map((p) => p.id),
+                p_team_b: payload.teamBPlayers.map((p) => p.id),
+              })
+            : await supabase.rpc("admin_update_beach_game_players", {
+                p_game_id: gameId,
+                p_a1_user_id: payload.a1,
+                p_a2_user_id: payload.a2,
+                p_b1_user_id: payload.b1,
+                p_b2_user_id: payload.b2,
+              });
       if (error) throw error;
       setSaving(false);
       onSaved();
@@ -130,7 +138,7 @@ export default function EditGameScreen({ gameId, onSaved }) {
         </p>
       )}
       {saving && <p className="flex-none px-3 pt-2 text-center text-sm text-muted">Saving…</p>}
-      <NewGameForm format={game.format} editing initialGame={initialGame} onSave={handleSave} />
+      <NewGameForm format={game.format} teamSize={game.teamSize} editing initialGame={initialGame} onSave={handleSave} />
     </div>
   );
 }

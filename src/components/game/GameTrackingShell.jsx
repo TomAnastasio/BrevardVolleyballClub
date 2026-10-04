@@ -5,6 +5,7 @@ import { useForcedLandscape } from "../../hooks/useForcedLandscape.js";
 import { useAuth } from "../../hooks/useAuth.js";
 import GameMenu from "./GameMenu.jsx";
 import GameFormatMenu from "./GameFormatMenu.jsx";
+import BeachSizeMenu from "./BeachSizeMenu.jsx";
 import GameModeMenu from "./GameModeMenu.jsx";
 import GameTrackingSignInGate from "./GameTrackingSignInGate.jsx";
 import NewGameForm from "./NewGameForm.jsx";
@@ -18,6 +19,7 @@ const SCREEN_META = {
   menu: { title: "Beach Volleyball Scoreboard", subtitle: "Brevard Volleyball Club" },
   signin: { title: "Sign In Required", subtitle: null },
   format: { title: "Select Game Type", subtitle: null },
+  "beach-size": { title: "Beach Team Size", subtitle: null },
   mode: { title: "Ranked or Casual?", subtitle: null },
   new: { title: "New Game", subtitle: null },
   active: { title: null, subtitle: null },
@@ -29,7 +31,7 @@ const SCREEN_META = {
 const BACK_MAP = {
   signin: "menu",
   format: "menu",
-  mode: "format",
+  "beach-size": "format",
   new: "mode",
   active: "menu",
   history: "menu",
@@ -44,6 +46,7 @@ export default function GameTrackingShell({ onBack }) {
   const { user, loading, isConfigured, isAdmin, signInWithGoogle } = useAuth();
   const [screen, setScreen] = useState("menu");
   const [pendingFormat, setPendingFormat] = useState(null);
+  const [pendingTeamSize, setPendingTeamSize] = useState(null);
   const [pendingMode, setPendingMode] = useState(null);
   const [editingGameId, setEditingGameId] = useState(null);
   const [isLoggingPast, setIsLoggingPast] = useState(false);
@@ -63,6 +66,12 @@ export default function GameTrackingShell({ onBack }) {
 
   function handleSelectFormat(format) {
     setPendingFormat(format);
+    setPendingTeamSize(null);
+    setScreen(format === "beach" ? "beach-size" : "mode");
+  }
+
+  function handleSelectBeachSize(size) {
+    setPendingTeamSize(size);
     setScreen("mode");
   }
 
@@ -143,21 +152,32 @@ export default function GameTrackingShell({ onBack }) {
             teamAPlayers: pastGameDraft.teamAPlayers,
             teamBPlayers: pastGameDraft.teamBPlayers,
           }
-        : {
-            format: "beach",
-            mode: pendingMode,
-            a,
-            b,
-            playedDate: date,
-            nameA1: pastGameDraft.nameA1,
-            nameA2: pastGameDraft.nameA2,
-            nameB1: pastGameDraft.nameB1,
-            nameB2: pastGameDraft.nameB2,
-            a1: pastGameDraft.playerIdA1,
-            a2: pastGameDraft.playerIdA2,
-            b1: pastGameDraft.playerIdB1,
-            b2: pastGameDraft.playerIdB2,
-          };
+        : pastGameDraft.teamSize
+          ? {
+              format: "beach",
+              teamSize: pastGameDraft.teamSize,
+              mode: pendingMode,
+              a,
+              b,
+              playedDate: date,
+              teamAPlayers: pastGameDraft.teamAPlayers,
+              teamBPlayers: pastGameDraft.teamBPlayers,
+            }
+          : {
+              format: "beach",
+              mode: pendingMode,
+              a,
+              b,
+              playedDate: date,
+              nameA1: pastGameDraft.nameA1,
+              nameA2: pastGameDraft.nameA2,
+              nameB1: pastGameDraft.nameB1,
+              nameB2: pastGameDraft.nameB2,
+              a1: pastGameDraft.playerIdA1,
+              a2: pastGameDraft.playerIdA2,
+              b1: pastGameDraft.playerIdB1,
+              b2: pastGameDraft.playerIdB2,
+            };
     const { error } = await logPastGame(payload);
     setPastGameSubmitting(false);
     if (error) {
@@ -178,8 +198,9 @@ export default function GameTrackingShell({ onBack }) {
       mode: scoreboard.state.mode,
       participants: scoreboard.participants,
       format: scoreboard.format,
-      teamAPlayers: scoreboard.isIndoor ? scoreboard.state.teamAPlayers : undefined,
-      teamBPlayers: scoreboard.isIndoor ? scoreboard.state.teamBPlayers : undefined,
+      teamSize: scoreboard.teamSize,
+      teamAPlayers: scoreboard.usesRoster ? scoreboard.state.teamAPlayers : undefined,
+      teamBPlayers: scoreboard.usesRoster ? scoreboard.state.teamBPlayers : undefined,
     });
     scoreboard.clearActiveGame();
     if (navigator.vibrate) navigator.vibrate(20);
@@ -203,7 +224,11 @@ export default function GameTrackingShell({ onBack }) {
       >
         <button
           type="button"
-          onClick={() => (isMenu ? onBack() : setScreen(BACK_MAP[screen] || "menu"))}
+          onClick={() =>
+            isMenu
+              ? onBack()
+              : setScreen(screen === "mode" ? (pendingFormat === "beach" ? "beach-size" : "format") : BACK_MAP[screen] || "menu")
+          }
           aria-label={isMenu ? "Back to main menu" : "Back to game tracking menu"}
           className="rounded-lg px-2 py-2 font-bold phone-landscape:px-1.5 phone-landscape:py-1 phone-landscape:text-sm focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
         >
@@ -253,20 +278,26 @@ export default function GameTrackingShell({ onBack }) {
         )}
         {screen === "signin" && <GameTrackingSignInGate onSignIn={handleSignIn} loading={loading} />}
         {screen === "format" && <GameFormatMenu onSelectFormat={handleSelectFormat} />}
+        {screen === "beach-size" && <BeachSizeMenu onSelectSize={handleSelectBeachSize} />}
         {screen === "mode" && <GameModeMenu onSelectMode={handleSelectMode} isSupabaseConfigured={isConfigured} />}
         {screen === "new" && (
-          <NewGameForm format={pendingFormat} loggingPast={isLoggingPast} onStart={handleStartGame} />
+          <NewGameForm
+            format={pendingFormat}
+            teamSize={pendingFormat === "beach" ? pendingTeamSize : null}
+            loggingPast={isLoggingPast}
+            onStart={handleStartGame}
+          />
         )}
         {screen === "past-score" && pastGameDraft && (
           <LogPastGameScoreScreen
             format={pastGameDraft.format}
             teamAName={
-              pastGameDraft.format === "indoor"
+              pastGameDraft.format === "indoor" || pastGameDraft.teamSize
                 ? pastGameDraft.teamAPlayers.map((p) => p.name).join(", ")
                 : `${pastGameDraft.nameA1} & ${pastGameDraft.nameA2}`
             }
             teamBName={
-              pastGameDraft.format === "indoor"
+              pastGameDraft.format === "indoor" || pastGameDraft.teamSize
                 ? pastGameDraft.teamBPlayers.map((p) => p.name).join(", ")
                 : `${pastGameDraft.nameB1} & ${pastGameDraft.nameB2}`
             }

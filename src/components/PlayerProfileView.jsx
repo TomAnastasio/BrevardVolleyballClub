@@ -32,7 +32,13 @@ function GameRow({ game }) {
             <span />
           )}
           <span className="flex flex-none items-center gap-1 text-[0.65rem] font-bold text-muted">
-            <span>{game.format === "indoor" ? "🏐 Indoor" : "🏖️ Beach"}</span>
+            <span>
+              {game.format === "indoor"
+                ? "🏐 Indoor"
+                : game.teamSize
+                  ? `${game.teamSize}v${game.teamSize} 🏖️ Beach`
+                  : "🏖️ Beach"}
+            </span>
             <span>·</span>
             <span className={game.mode === "ranked" ? "text-accent" : ""}>
               {game.mode === "ranked" ? "🏆 Ranked" : "🎲 Casual"}

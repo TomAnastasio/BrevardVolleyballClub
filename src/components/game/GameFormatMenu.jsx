@@ -6,7 +6,7 @@ export default function GameFormatMenu({ onSelectFormat }) {
       <div className="flex w-full max-w-96 flex-col gap-3">
         <MenuCard
           icon="🏖️"
-          label="2v2 Beach"
+          label="Beach"
           subtitle="First to 21, win by 2"
           onClick={() => onSelectFormat("beach")}
         />

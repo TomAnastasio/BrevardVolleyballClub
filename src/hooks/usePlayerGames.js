@@ -1,18 +1,22 @@
 import { useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 
-// Which side of a game a given player was on. Beach's submitter (a1) never
-// gets a game_players row of their own (see migration
+// Which side of a game a given player was on. 2v2 beach's submitter (a1)
+// never gets a game_players row of their own (see migration
 // 20261001191519_add_game_participants.sql) — identified via games.user_id
-// instead, always team 'a'. Every other slot (beach a2/b1/b2, or any indoor
-// roster spot) has an explicit game_players row to read team/slot off.
+// instead, always team 'a'. Squad beach (3v3/4v4, migration 20261004150000)
+// has no such implicit slot — like indoor, every player including the
+// submitter gets an explicit game_players row — so the games.user_id
+// fallback below must only apply to 2v2 beach (team_size null), not squad
+// beach, or a submitter who merely logged the game (and wasn't playing, or
+// was on team 'b') would be wrongly credited with a team-'a' appearance.
 export function sideForPlayer(game, playerId, gpByGameId) {
   const link = (gpByGameId.get(game.id) || []).find((gp) => gp.user_id === playerId);
   if (link) {
     if (link.team) return link.team;
     if (link.slot) return link.slot.startsWith("a") ? "a" : "b";
   }
-  if (game.format === "beach" && game.user_id === playerId) return "a";
+  if (game.format === "beach" && game.team_size == null && game.user_id === playerId) return "a";
   return null;
 }
 
@@ -24,6 +28,7 @@ export function mapGameForPlayer(game, playerId, gpByGameId) {
     date: game.played_date,
     mode: game.mode,
     format: game.format,
+    teamSize: game.team_size ?? null,
     ownScore: side === "a" ? game.score_a : game.score_b,
     oppScore: side === "a" ? game.score_b : game.score_a,
     oppName: side === "a" ? game.name_b : game.name_a,

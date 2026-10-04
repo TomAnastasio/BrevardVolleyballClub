@@ -46,7 +46,7 @@ function GameCardBody({ game, user, isAdmin }) {
             isIndoor ? "text-sky-400" : "text-amber-400"
           }`}
         >
-          {isIndoor ? "🏐 Indoor" : "🏖️ Beach"}
+          {isIndoor ? "🏐 Indoor" : game.teamSize ? `${game.teamSize}v${game.teamSize} 🏖️ Beach` : "🏖️ Beach"}
         </span>
         <span
           className={`absolute right-0 flex-none rounded-full border px-2 py-0.5 text-xs font-bold ${

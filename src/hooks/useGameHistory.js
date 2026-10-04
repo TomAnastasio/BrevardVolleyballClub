@@ -73,6 +73,7 @@ function mapBeachTeamPlayers(gamePlayers, side, submitterUserId, submitterProfil
 
 function mapRowToRecord(row, submitterProfilesById = {}) {
   const isIndoor = row.format === "indoor";
+  const usesRoster = isIndoor || Boolean(row.team_size);
   return {
     id: row.id,
     nameA: row.name_a,
@@ -85,10 +86,11 @@ function mapRowToRecord(row, submitterProfilesById = {}) {
     submittedByUserId: row.user_id,
     submittedByName: row.submitted_by_name,
     format: row.format,
-    teamAPlayers: isIndoor
+    teamSize: row.team_size ?? null,
+    teamAPlayers: usesRoster
       ? mapTeamPlayers(row.game_players, "a")
       : mapBeachTeamPlayers(row.game_players, "a", row.user_id, submitterProfilesById),
-    teamBPlayers: isIndoor
+    teamBPlayers: usesRoster
       ? mapTeamPlayers(row.game_players, "b")
       : mapBeachTeamPlayers(row.game_players, "b", row.user_id, submitterProfilesById),
   };
@@ -200,6 +202,8 @@ export function useGameHistory() {
       // Older cached records predate this field (`synced === undefined`)
       // and are deliberately left out of that merge, since there's no way
       // to tell whether they were already synced before this existed.
+      const format = game.format || "beach";
+      const usesRoster = format === "indoor" || Boolean(game.teamSize);
       const record = {
         id: "game-" + now.getTime(),
         nameA: game.nameA,
@@ -209,9 +213,10 @@ export function useGameHistory() {
         date,
         time,
         mode,
-        format: game.format || "beach",
-        teamAPlayers: game.format === "indoor" ? game.teamAPlayers || [] : [],
-        teamBPlayers: game.format === "indoor" ? game.teamBPlayers || [] : [],
+        format,
+        teamSize: format === "beach" ? game.teamSize ?? null : null,
+        teamAPlayers: usesRoster ? game.teamAPlayers || [] : [],
+        teamBPlayers: usesRoster ? game.teamBPlayers || [] : [],
         synced: Boolean(isSupabaseConfigured && user),
       };
 
@@ -240,7 +245,8 @@ export function useGameHistory() {
                 played_time: time,
                 user_id: user.id,
                 submitted_by_name: submittedByName,
-                format: game.format || "beach",
+                format,
+                team_size: format === "beach" ? game.teamSize ?? null : null,
               })
               .select()
               .single();
@@ -316,13 +322,13 @@ export function useGameHistory() {
   );
 
   // Admin-only: insert a game that already happened, with a caller-chosen
-  // played_date instead of "now". Indoor is a plain insert (its rosters have
-  // no implicit submitter-as-player slot, so Elo already keys off
-  // game_players alone — see migration 20261002204815). Beach is trickier:
-  // games.user_id doubles as A1's identity for both display and the ranked
-  // Elo trigger, and the admin logging this almost certainly isn't A1
-  // themself. So beach inserts as normal (submitter = admin), then
-  // immediately reuses admin_update_beach_game_players (migration
+  // played_date instead of "now". Indoor (and squad beach, 3v3/4v4 — see
+  // migration 20261004150000) is a plain insert: their rosters have no
+  // implicit submitter-as-player slot, so Elo already keys off game_players
+  // alone. 2v2 beach is trickier: games.user_id doubles as A1's identity for
+  // both display and the ranked Elo trigger, and the admin logging this
+  // almost certainly isn't A1 themself. So 2v2 beach inserts as normal
+  // (submitter = admin), then immediately reuses admin_update_beach_game_players (migration
   // 20261003120000, the same RPC the "Edit Game" admin flow calls) to
   // reassign user_id to the real A1 and replay Elo correctly — no new
   // migration needed. That RPC also re-enforces is_admin server-side, so
@@ -334,10 +340,9 @@ export function useGameHistory() {
       }
       const mode = normalizeMode(game.mode);
       const format = game.format === "indoor" ? "indoor" : "beach";
-      const nameA =
-        format === "indoor" ? game.teamAPlayers.map((p) => p.name).join(", ") : `${game.nameA1} & ${game.nameA2}`;
-      const nameB =
-        format === "indoor" ? game.teamBPlayers.map((p) => p.name).join(", ") : `${game.nameB1} & ${game.nameB2}`;
+      const usesRoster = format === "indoor" || Boolean(game.teamSize);
+      const nameA = usesRoster ? game.teamAPlayers.map((p) => p.name).join(", ") : `${game.nameA1} & ${game.nameA2}`;
+      const nameB = usesRoster ? game.teamBPlayers.map((p) => p.name).join(", ") : `${game.nameB1} & ${game.nameB2}`;
 
       try {
         const submittedByName =
@@ -356,12 +361,13 @@ export function useGameHistory() {
             user_id: user.id,
             submitted_by_name: submittedByName,
             format,
+            team_size: format === "beach" ? game.teamSize ?? null : null,
           })
           .select()
           .single();
         if (error) throw error;
 
-        if (format === "indoor") {
+        if (usesRoster) {
           const rows = [
             ...game.teamAPlayers.map((p) => ({ game_id: data.id, user_id: p.id, team: "a" })),
             ...game.teamBPlayers.map((p) => ({ game_id: data.id, user_id: p.id, team: "b" })),
