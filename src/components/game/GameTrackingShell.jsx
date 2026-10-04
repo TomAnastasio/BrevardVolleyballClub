@@ -64,6 +64,11 @@ export default function GameTrackingShell({ onBack }) {
     setScreen("history");
   }
 
+  function handleGameDeleted() {
+    refreshHistory();
+    setScreen("history");
+  }
+
   function handleSelectFormat(format) {
     setPendingFormat(format);
     setPendingTeamSize(null);
@@ -322,7 +327,9 @@ export default function GameTrackingShell({ onBack }) {
             onEditGame={handleEditGame}
           />
         )}
-        {screen === "edit-game" && <EditGameScreen gameId={editingGameId} onSaved={handleGameEdited} />}
+        {screen === "edit-game" && (
+          <EditGameScreen gameId={editingGameId} onSaved={handleGameEdited} onDeleted={handleGameDeleted} />
+        )}
       </main>
     </div>
   );

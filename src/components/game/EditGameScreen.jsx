@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AlertDialog, Button } from "@heroui/react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { useAuth } from "../../hooks/useAuth.js";
 import { mapTeamPlayers } from "../../hooks/useGameHistory.js";
@@ -6,13 +7,14 @@ import NewGameForm from "./NewGameForm.jsx";
 
 // Thin data/save wrapper around NewGameForm's `editing` mode: fetches the
 // target game's current roster, builds the `initialGame` shape NewGameForm
-// expects, and turns its onSave payload into a call to one of the two
-// admin-only RPCs (migration 20261003120000). The real authorization gate is
-// server-side (those RPCs raise if the caller isn't an admin) — the isAdmin
-// check here is just defense in depth / a friendlier message, since the only
-// way to reach this screen is already admin-gated (HistoryView's edit
-// affordance only renders for admins).
-export default function EditGameScreen({ gameId, onSaved }) {
+// expects, and turns its onSave payload into a call to one of the three
+// admin-only RPCs (migrations 20261003120000 and 20261004150000). The real
+// authorization gate is server-side (those RPCs raise if the caller isn't an
+// admin) — the isAdmin check here is just defense in depth / a friendlier
+// message, since the only way to reach this screen is already admin-gated
+// (HistoryView's edit affordance only renders for admins). Deleting (below)
+// follows the same convention via admin_delete_game (migration 20261004170100).
+export default function EditGameScreen({ gameId, onSaved, onDeleted }) {
   const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -20,6 +22,8 @@ export default function EditGameScreen({ gameId, onSaved }) {
   const [initialGame, setInitialGame] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -120,6 +124,22 @@ export default function EditGameScreen({ gameId, onSaved }) {
     }
   }
 
+  async function handleDelete() {
+    if (deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const { error } = await supabase.rpc("admin_delete_game", { p_game_id: gameId });
+      if (error) throw error;
+      setDeleting(false);
+      onDeleted();
+    } catch (e) {
+      console.error("Failed to delete game:", e);
+      setDeleteError("Couldn't delete this game. Please try again.");
+      setDeleting(false);
+    }
+  }
+
   if (!isAdmin) {
     return <p className="p-6 text-center text-muted">Admin access required.</p>;
   }
@@ -139,6 +159,42 @@ export default function EditGameScreen({ gameId, onSaved }) {
       )}
       {saving && <p className="flex-none px-3 pt-2 text-center text-sm text-muted">Saving…</p>}
       <NewGameForm format={game.format} teamSize={game.teamSize} editing initialGame={initialGame} onSave={handleSave} />
+
+      <div className="flex-none p-3 pt-0">
+        {deleteError && (
+          <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
+            {deleteError}
+          </p>
+        )}
+        <AlertDialog>
+          <AlertDialog.Trigger
+            className="w-full rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-400 focus-visible:outline-[3px] focus-visible:outline-red-500 focus-visible:outline-offset-2"
+          >
+            {deleting ? "Deleting…" : "Delete Game"}
+          </AlertDialog.Trigger>
+          <AlertDialog.Backdrop>
+            <AlertDialog.Container>
+              <AlertDialog.Dialog>
+                <AlertDialog.Header>
+                  <AlertDialog.Heading>Delete this game?</AlertDialog.Heading>
+                </AlertDialog.Header>
+                <AlertDialog.Body>
+                  This permanently deletes this game and can't be undone. If it was a ranked game, every player's
+                  rating will be recalculated.
+                </AlertDialog.Body>
+                <AlertDialog.Footer className="flex-col items-stretch gap-2">
+                  <Button variant="outline" slot="close" className="w-full">
+                    Cancel
+                  </Button>
+                  <Button variant="danger" slot="close" isDisabled={deleting} onPress={handleDelete} className="w-full">
+                    Delete Game
+                  </Button>
+                </AlertDialog.Footer>
+              </AlertDialog.Dialog>
+            </AlertDialog.Container>
+          </AlertDialog.Backdrop>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
