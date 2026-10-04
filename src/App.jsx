@@ -3,6 +3,7 @@ import SplashScreen from "./components/SplashScreen.jsx";
 import LandingView from "./components/LandingView.jsx";
 import PlayTodayView from "./components/PlayTodayView.jsx";
 import LeaderboardView from "./components/LeaderboardView.jsx";
+import PlayerProfileView from "./components/PlayerProfileView.jsx";
 import GameTrackingShell from "./components/game/GameTrackingShell.jsx";
 import AdminPanelView from "./components/admin/AdminPanelView.jsx";
 import VersionBadge from "./components/VersionBadge.jsx";
@@ -16,6 +17,7 @@ export default function App() {
   // tracking so a signed-in user lands on their in-progress ranked game
   // instead of having to re-navigate from the top.
   const [view, setView] = useState(() => (hasPendingRankedGame() ? "game" : "landing"));
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   return (
     <AuthProvider>
@@ -32,7 +34,18 @@ export default function App() {
             />
           )}
           {view === "play" && <PlayTodayView onBack={() => setView("landing")} />}
-          {view === "leaderboard" && <LeaderboardView onBack={() => setView("landing")} />}
+          {view === "leaderboard" && (
+            <LeaderboardView
+              onBack={() => setView("landing")}
+              onSelectPlayer={(player) => {
+                setSelectedPlayer(player);
+                setView("profile");
+              }}
+            />
+          )}
+          {view === "profile" && selectedPlayer && (
+            <PlayerProfileView player={selectedPlayer} onBack={() => setView("leaderboard")} />
+          )}
           {view === "game" && <GameTrackingShell onBack={() => setView("landing")} />}
           {view === "admin" && <AdminPanelView onBack={() => setView("landing")} />}
         </div>

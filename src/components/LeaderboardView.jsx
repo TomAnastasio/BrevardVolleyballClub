@@ -12,7 +12,7 @@ function PlayerAvatar({ src }) {
   return <img src={src} alt="" aria-hidden="true" className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover" />;
 }
 
-export default function LeaderboardView({ onBack }) {
+export default function LeaderboardView({ onBack, onSelectPlayer }) {
   const { user, isConfigured } = useAuth();
   const { players, loading } = useLeaderboard(isConfigured);
   const [showUnranked, setShowUnranked] = useState(false);
@@ -59,23 +59,30 @@ export default function LeaderboardView({ onBack }) {
                   const isSelf = player.id === user?.id;
                   return (
                     <li key={player.id}>
-                      <Card className={`gap-1 p-3 ${isSelf ? "border border-accent/60 bg-accent/5" : ""}`}>
-                        <div className="flex items-center gap-3">
-                          <span className="w-6 flex-none text-center font-bold text-muted">{index + 1}</span>
-                          <PlayerAvatar src={player.avatar_url} />
-                          <span className="min-w-0 flex-1 truncate font-bold">
-                            {player.display_name}
-                            {isSelf && <span className="ml-1 font-normal text-muted">(you)</span>}
-                          </span>
-                          <span className="flex flex-none items-center gap-2">
-                            <span className="text-right [font-variant-numeric:tabular-nums]">
-                              <span className="block text-xs font-semibold text-muted">{player.elo_rating}</span>
-                              <span className="block text-[0.65rem] text-muted">{player.elo_games_played} games</span>
+                      <button
+                        type="button"
+                        onClick={() => onSelectPlayer(player)}
+                        aria-label={`View ${player.display_name}'s profile`}
+                        className="block w-full rounded-2xl text-left focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+                      >
+                        <Card className={`gap-1 p-3 ${isSelf ? "border border-accent/60 bg-accent/5" : ""}`}>
+                          <div className="flex items-center gap-3">
+                            <span className="w-6 flex-none text-center font-bold text-muted">{index + 1}</span>
+                            <PlayerAvatar src={player.avatar_url} />
+                            <span className="min-w-0 flex-1 truncate font-bold">
+                              {player.display_name}
+                              {isSelf && <span className="ml-1 font-normal text-muted">(you)</span>}
                             </span>
-                            <RankBadge tier={player.tier} division={player.division} size={38} />
-                          </span>
-                        </div>
-                      </Card>
+                            <span className="flex flex-none items-center gap-2">
+                              <span className="text-right [font-variant-numeric:tabular-nums]">
+                                <span className="block text-xs font-semibold text-muted">{player.elo_rating}</span>
+                                <span className="block text-[0.65rem] text-muted">{player.elo_games_played} games</span>
+                              </span>
+                              <RankBadge tier={player.tier} division={player.division} size={38} />
+                            </span>
+                          </div>
+                        </Card>
+                      </button>
                     </li>
                   );
                 })}
@@ -103,19 +110,26 @@ export default function LeaderboardView({ onBack }) {
                       const isSelf = player.id === user?.id;
                       return (
                         <li key={player.id}>
-                          <Card className={`gap-1 p-3 opacity-75 ${isSelf ? "border border-accent/60 bg-accent/5" : ""}`}>
-                            <div className="flex items-center gap-3">
-                              <PlayerAvatar src={player.avatar_url} />
-                              <span className="min-w-0 flex-1 truncate font-bold">
-                                {player.display_name}
-                                {isSelf && <span className="ml-1 font-normal text-muted">(you)</span>}
-                              </span>
-                              <span className="flex flex-none items-center gap-2">
-                                <span className="text-xs text-muted">No games yet</span>
-                                <RankBadge tier="unranked" size={38} />
-                              </span>
-                            </div>
-                          </Card>
+                          <button
+                            type="button"
+                            onClick={() => onSelectPlayer(player)}
+                            aria-label={`View ${player.display_name}'s profile`}
+                            className="block w-full rounded-2xl text-left focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+                          >
+                            <Card className={`gap-1 p-3 opacity-75 ${isSelf ? "border border-accent/60 bg-accent/5" : ""}`}>
+                              <div className="flex items-center gap-3">
+                                <PlayerAvatar src={player.avatar_url} />
+                                <span className="min-w-0 flex-1 truncate font-bold">
+                                  {player.display_name}
+                                  {isSelf && <span className="ml-1 font-normal text-muted">(you)</span>}
+                                </span>
+                                <span className="flex flex-none items-center gap-2">
+                                  <span className="text-xs text-muted">No games yet</span>
+                                  <RankBadge tier="unranked" size={38} />
+                                </span>
+                              </div>
+                            </Card>
+                          </button>
                         </li>
                       );
                     })}
