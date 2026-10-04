@@ -59,6 +59,7 @@ function loadState() {
       for (const key of Object.keys(NAME_FIELDS)) {
         state[key] = typeof saved[key] === "string" && saved[key].trim() ? saved[key] : NAME_FIELDS[key];
       }
+      state.playerIdA1 = typeof saved.playerIdA1 === "string" ? saved.playerIdA1 : null;
       state.playerIdA2 = typeof saved.playerIdA2 === "string" ? saved.playerIdA2 : null;
       state.playerIdB1 = typeof saved.playerIdB1 === "string" ? saved.playerIdB1 : null;
       state.playerIdB2 = typeof saved.playerIdB2 === "string" ? saved.playerIdB2 : null;
@@ -130,6 +131,7 @@ export function useScoreboardState() {
       next.nameA2 = payload.nameA2;
       next.nameB1 = payload.nameB1;
       next.nameB2 = payload.nameB2;
+      next.playerIdA1 = payload.playerIdA1 ?? null;
       next.playerIdA2 = payload.playerIdA2 ?? null;
       next.playerIdB1 = payload.playerIdB1 ?? null;
       next.playerIdB2 = payload.playerIdB2 ?? null;

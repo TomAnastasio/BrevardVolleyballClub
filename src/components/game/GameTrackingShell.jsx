@@ -206,6 +206,7 @@ export default function GameTrackingShell({ onBack }) {
       teamSize: scoreboard.teamSize,
       teamAPlayers: scoreboard.usesRoster ? scoreboard.state.teamAPlayers : undefined,
       teamBPlayers: scoreboard.usesRoster ? scoreboard.state.teamBPlayers : undefined,
+      playerIdA1: scoreboard.usesRoster ? undefined : scoreboard.state.playerIdA1,
     });
     scoreboard.clearActiveGame();
     if (navigator.vibrate) navigator.vibrate(20);

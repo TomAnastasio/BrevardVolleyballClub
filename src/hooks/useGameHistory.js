@@ -283,6 +283,34 @@ export function useGameHistory() {
               }
             }
 
+            // Classic 2v2 beach has no game_players row for A1 — that slot's
+            // identity is implicit via games.user_id, which the insert above
+            // always sets to the submitter. If a different real player was
+            // actually picked for A1 (self-service correction, scoped to
+            // "only the submitter, only to someone already linked to this
+            // game" — see migration 20261004180000), reassign it here so
+            // the real A1 gets Elo/history credit instead of the submitter.
+            let reassignedA1 = false;
+            if (data && !usesRoster && game.playerIdA1 && game.playerIdA1 !== user.id) {
+              try {
+                const { error: a1Error } = await supabase.rpc("assign_beach_game_a1", {
+                  p_game_id: data.id,
+                  p_a1_user_id: game.playerIdA1,
+                });
+                if (a1Error) throw a1Error;
+                reassignedA1 = true;
+              } catch (a1Err) {
+                console.error("Failed to assign beach game A1:", a1Err);
+                setSaveError(
+                  "This game saved, but Player 1 couldn't be linked correctly — their stats may not update.",
+                );
+              }
+            }
+            if (reassignedA1) {
+              await fetchRemoteHistory();
+              return;
+            }
+
             // Optimistically (and asynchronously) merge the saved game into
             // remoteHistory so it shows up immediately, without waiting for
             // user?.id to change and re-trigger the fetch effect. Prefer the
@@ -318,7 +346,7 @@ export function useGameHistory() {
         })();
       }
     },
-    [user],
+    [user, fetchRemoteHistory],
   );
 
   // Admin-only: insert a game that already happened, with a caller-chosen
