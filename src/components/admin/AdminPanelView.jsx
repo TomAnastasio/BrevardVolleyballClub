@@ -2,14 +2,16 @@ import { useState } from "react";
 import MenuCard from "../game/MenuCard.jsx";
 import AddManualProfileView from "./AddManualProfileView.jsx";
 import RecomputeEloView from "./RecomputeEloView.jsx";
+import MergeProfilesView from "./MergeProfilesView.jsx";
 
 const SCREEN_META = {
   menu: "Admin Panel",
   "add-profile": "Add Manual Profile",
   "recompute-elo": "Recompute Elo Ratings",
+  "merge-profiles": "Merge Profiles",
 };
 
-const BACK_MAP = { "add-profile": "menu", "recompute-elo": "menu" };
+const BACK_MAP = { "add-profile": "menu", "recompute-elo": "menu", "merge-profiles": "menu" };
 
 export default function AdminPanelView({ onBack }) {
   const [screen, setScreen] = useState("menu");
@@ -48,10 +50,17 @@ export default function AdminPanelView({ onBack }) {
             subtitle="Reset and replay every ranked game's rating from scratch"
             onClick={() => setScreen("recompute-elo")}
           />
+          <MenuCard
+            icon="🔗"
+            label="Merge Profiles"
+            subtitle="Combine a manual profile into its matching Google profile"
+            onClick={() => setScreen("merge-profiles")}
+          />
         </div>
       )}
       {screen === "add-profile" && <AddManualProfileView onDone={() => setScreen("menu")} />}
       {screen === "recompute-elo" && <RecomputeEloView />}
+      {screen === "merge-profiles" && <MergeProfilesView />}
     </main>
   );
 }

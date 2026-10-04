@@ -15,7 +15,7 @@ export function usePlayerDirectory(enabled) {
 
     supabase
       .from("profiles")
-      .select("id, display_name, avatar_url")
+      .select("id, display_name, avatar_url, is_manual")
       .then(({ data, error }) => {
         if (cancelled || error || !data) return;
         setPlayers(data.filter((p) => p.display_name && p.display_name.trim()));
