@@ -1,0 +1,43 @@
+name: Apply database migrations
+
+# Pushes any new file(s) in supabase/migrations/ to the live Supabase
+# database automatically whenever they land on main — see supabase/README.md
+# ("Automatic migrations") for the one-time setup this depends on and what
+# to do if a run fails.
+#
+# Reuses the same SUPABASE_DB_URL secret as the nightly backup workflow — no
+# new secrets needed. Decided 2026-10-03: the user has accepted that a bad
+# migration can cause app downtime until fixed with a follow-up migration
+# (and, if data itself is damaged, a restore from the nightly backups repo)
+# — see TODO.md's Architecture Decisions.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "supabase/migrations/**"
+  workflow_dispatch:
+
+concurrency:
+  group: "apply-migrations"
+  cancel-in-progress: false
+
+jobs:
+  push-migrations:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push pending migrations to Supabase
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "::error::SUPABASE_DB_URL secret is not set yet — see supabase/README.md for setup steps."
+            exit 1
+          fi
+          npx -y supabase@latest db push --db-url "$SUPABASE_DB_URL" --yes

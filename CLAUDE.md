@@ -10,8 +10,15 @@ irreplaceable club data (game history, player profiles, Elo ratings). See
   from a session (`DROP`, `TRUNCATE`, bare `DELETE`, dropping/altering a
   column that loses data, etc.), even if asked to "clean up" or "fix" data.
   Schema changes are new, additive files in `supabase/migrations/` (see
-  naming convention there) for the user to review and apply themselves —
-  never executed ad hoc against the live project.
+  naming convention there) — never typed/executed ad hoc against the live
+  project from inside a session. As of 2026-10-03, committing a migration
+  file to `main` auto-applies it to production via
+  `.github/workflows/apply-migrations.yml` (see "Automatic migrations" in
+  `supabase/README.md`) — the user has explicitly accepted the risk of
+  app downtime from a bad migration, recoverable via a follow-up migration
+  and, for data loss, the nightly backups. That acceptance does not extend
+  to anything destructive or ad hoc — the additive-only and
+  never-edit-a-committed-migration rules above still apply in full.
 - **Never edit or delete an existing file in `supabase/migrations/`.** Once
   committed, a migration is permanent history. Fix mistakes with a new
   migration file, never by rewriting an old one.

@@ -40,6 +40,64 @@ Once a migration has been pasted into the real database, it's history —
 fix mistakes with a *new* migration file, the same way you'd never edit a
 bank statement from last month, only add a new one.
 
+## Automatic migrations (new as of 2026-10-03)
+
+A GitHub Action (`.github/workflows/apply-migrations.yml`) now runs
+`supabase db push` automatically whenever a new file in this folder is
+pushed to `main` — no more manually pasting into the Supabase SQL Editor
+going forward. It reuses the same `SUPABASE_DB_URL` secret as the nightly
+backup workflow above; no extra secrets needed.
+
+**Accepted risk (decided with the user 2026-10-03):** a bad migration can
+now reach production automatically and cause downtime. That's an accepted
+trade-off for not having to hand-paste SQL every time — recovery is a new,
+additive fix-up migration (schema) and, if data was actually damaged, a
+restore from the nightly backups repo (see below). This does **not** loosen
+any of the hard rules in `CLAUDE.md` — migrations must still only ever be
+new, additive files; nothing destructive, and nothing editing a file already
+committed.
+
+### One-time setup: tell the CLI what's already applied
+
+Every migration file that was already pasted by hand into the SQL Editor
+before this automation existed needs to be marked as applied in the CLI's
+remote tracking table *without re-running it* — otherwise the first
+automated push would try to recreate tables/columns that already exist and
+fail. This is a one-time step; do it yourself from a terminal with the
+Supabase CLI (`npx supabase ...`), using the same `SUPABASE_DB_URL` you
+already saved for the backup workflow:
+
+```
+npx supabase migration repair --db-url "<your SUPABASE_DB_URL>" --status applied \
+  20260930191053 20261001163456 20261001164613 20261001165312 \
+  20261001191519 20261001205558 20261002150250 20261002151245 \
+  20261002151652 20261002171849 20261002204815
+```
+
+(That's every migration timestamp as of 2026-10-03 **except**
+`20261003120000_admin_edit_game_participants.sql`, which — per TODO.md item
+13 — genuinely has **not** been applied to the database yet. Don't include
+it: marking an unapplied migration as "applied" would permanently hide it
+from the CLI, and its tables/functions would never get created. Once this
+baseline is in place, that one real pending migration is actually a good
+first live test of the new automated workflow — or it can still be
+hand-pasted per item 13's existing steps; either is fine.)
+
+If a *future* session ever adds another migration file before this baseline
+step has been done, don't let it push automatically yet — run this repair
+step first, or temporarily pause the workflow (Actions tab → disable), to
+avoid the same "tries to recreate what already exists" failure.
+
+### What a failed run looks like, and what to do
+
+`supabase db push` stops at the first migration that errors (e.g. "relation
+already exists") — it does not run partial changes from that file, and it
+does not touch any other data. A failed run means: the app keeps running on
+whatever schema was already live (nothing was torn down), but the change
+you just pushed isn't in effect. Check the failed job's log in the Actions
+tab for the actual Postgres error, fix it with a *new* migration file (never
+edit the one that failed), and push again.
+
 ## How the nightly backup works
 
 A GitHub Action (`.github/workflows/backup-database.yml`) runs every night,
