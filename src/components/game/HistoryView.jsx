@@ -1,5 +1,4 @@
 import { Card } from "@heroui/react";
-import AuthButton from "../AuthButton.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 
 // Capped at 8 per team (two rows of 4) to keep a big indoor roster from
@@ -89,16 +88,10 @@ function GameCardBody({ game, user, isAdmin }) {
 }
 
 export default function HistoryView({ history, historyLoading, isAdmin, onEditGame }) {
-  const { user, loading, isConfigured } = useAuth();
+  const { user } = useAuth();
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto px-3 pt-3 pb-6">
-      <div className="mb-2 flex items-center justify-end">
-        <AuthButton />
-      </div>
-      {isConfigured && !loading && !user && (
-        <p className="mb-2 text-sm text-muted">Sign in to sync your games across devices.</p>
-      )}
       {historyLoading ? (
         <p className="p-6 text-center text-muted">Loading your games…</p>
       ) : history.length === 0 ? (
