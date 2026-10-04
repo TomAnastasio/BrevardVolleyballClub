@@ -391,7 +391,7 @@ export function useGameHistory() {
         return { error: null };
       } catch (e) {
         console.error("Failed to log past game:", e);
-        return { error: "Couldn't save this game. Please try again." };
+        return { error: `Couldn't save this game: ${e?.message || "unknown error"}` };
       }
     },
     [user, fetchRemoteHistory],

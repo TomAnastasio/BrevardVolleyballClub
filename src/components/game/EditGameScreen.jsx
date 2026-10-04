@@ -119,7 +119,7 @@ export default function EditGameScreen({ gameId, onSaved, onDeleted }) {
       onSaved();
     } catch (e) {
       console.error("Failed to save game edits:", e);
-      setSaveError("Couldn't save changes. Please try again.");
+      setSaveError(`Couldn't save changes: ${e?.message || "unknown error"}`);
       setSaving(false);
     }
   }
@@ -135,7 +135,7 @@ export default function EditGameScreen({ gameId, onSaved, onDeleted }) {
       onDeleted();
     } catch (e) {
       console.error("Failed to delete game:", e);
-      setDeleteError("Couldn't delete this game. Please try again.");
+      setDeleteError(`Couldn't delete this game: ${e?.message || "unknown error"}`);
       setDeleting(false);
     }
   }
@@ -152,25 +152,15 @@ export default function EditGameScreen({ gameId, onSaved, onDeleted }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {saveError && (
-        <p role="alert" className="flex-none px-3 pt-2 text-center text-sm font-semibold text-red-400">
-          {saveError}
-        </p>
-      )}
-      {saving && <p className="flex-none px-3 pt-2 text-center text-sm text-muted">Saving…</p>}
-      <NewGameForm format={game.format} teamSize={game.teamSize} editing initialGame={initialGame} onSave={handleSave} />
-
-      <div className="flex-none p-3 pt-0">
+      <div className="flex-none border-b border-white/10 p-3">
         {deleteError && (
           <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
             {deleteError}
           </p>
         )}
         <AlertDialog>
-          <AlertDialog.Trigger
-            className="w-full rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-400 focus-visible:outline-[3px] focus-visible:outline-red-500 focus-visible:outline-offset-2"
-          >
-            {deleting ? "Deleting…" : "Delete Game"}
+          <AlertDialog.Trigger className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-red-500 bg-red-500/20 px-3 py-2 text-sm font-bold text-red-300 focus-visible:outline-[3px] focus-visible:outline-red-500 focus-visible:outline-offset-2">
+            🗑️ {deleting ? "Deleting…" : "Delete This Game"}
           </AlertDialog.Trigger>
           <AlertDialog.Backdrop>
             <AlertDialog.Container>
@@ -195,6 +185,14 @@ export default function EditGameScreen({ gameId, onSaved, onDeleted }) {
           </AlertDialog.Backdrop>
         </AlertDialog>
       </div>
+
+      {saveError && (
+        <p role="alert" className="flex-none px-3 pt-2 text-center text-sm font-semibold text-red-400">
+          {saveError}
+        </p>
+      )}
+      {saving && <p className="flex-none px-3 pt-2 text-center text-sm text-muted">Saving…</p>}
+      <NewGameForm format={game.format} teamSize={game.teamSize} editing initialGame={initialGame} onSave={handleSave} />
     </div>
   );
 }
