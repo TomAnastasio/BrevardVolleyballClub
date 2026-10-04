@@ -2,10 +2,15 @@ import { Card } from "@heroui/react";
 import AuthButton from "../AuthButton.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 
+// Capped at 8 per team (two rows of 4) to keep a big indoor roster from
+// blowing up the card's height — see HistoryView's goal of compact cards.
+const MAX_ROSTER_PHOTOS = 8;
+const ROSTER_ROW_SIZE = 4;
+
 function RosterAvatars({ players, align }) {
   if (!players?.length) return null;
   return (
-    <div className={`flex min-w-0 flex-1 flex-wrap gap-1 ${align === "right" ? "justify-end" : ""}`}>
+    <div className={`flex flex-wrap gap-1 ${align === "right" ? "justify-end" : ""}`}>
       {players.map((p) =>
         p.avatarUrl ? (
           <img
@@ -28,7 +33,11 @@ function RosterAvatars({ players, align }) {
 
 function GameCardBody({ game, user, isAdmin }) {
   const isIndoor = game.format === "indoor";
-  const hasRosterPhotos = game.teamAPlayers?.length > 0 || game.teamBPlayers?.length > 0;
+  const teamAPlayers = (game.teamAPlayers || []).slice(0, MAX_ROSTER_PHOTOS);
+  const teamBPlayers = (game.teamBPlayers || []).slice(0, MAX_ROSTER_PHOTOS);
+  const teamARow2 = teamAPlayers.slice(ROSTER_ROW_SIZE);
+  const teamBRow2 = teamBPlayers.slice(ROSTER_ROW_SIZE);
+  const hasOverflowRow = teamARow2.length > 0 || teamBRow2.length > 0;
   return (
     <>
       <div className="relative flex items-center justify-center">
@@ -49,20 +58,26 @@ function GameCardBody({ game, user, isAdmin }) {
         </span>
       </div>
       <div className="flex items-center justify-between gap-2 font-bold">
-        <span className={`min-w-0 flex-1 break-words ${game.a > game.b ? "text-success" : ""}`}>
-          {!isIndoor && game.nameA}
-        </span>
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
+          {!isIndoor && (
+            <span className={`break-words ${game.a > game.b ? "text-success" : ""}`}>{game.nameA}</span>
+          )}
+          <RosterAvatars players={teamAPlayers.slice(0, ROSTER_ROW_SIZE)} />
+        </div>
         <span className="flex-none text-lg [font-variant-numeric:tabular-nums]">
           {game.a} – {game.b}
         </span>
-        <span className={`min-w-0 flex-1 break-words text-right ${game.b > game.a ? "text-success" : ""}`}>
-          {!isIndoor && game.nameB}
-        </span>
+        <div className="flex min-w-0 flex-1 flex-col items-end gap-1">
+          {!isIndoor && (
+            <span className={`break-words text-right ${game.b > game.a ? "text-success" : ""}`}>{game.nameB}</span>
+          )}
+          <RosterAvatars players={teamBPlayers.slice(0, ROSTER_ROW_SIZE)} align="right" />
+        </div>
       </div>
-      {hasRosterPhotos && (
+      {hasOverflowRow && (
         <div className="flex items-start justify-between gap-2">
-          <RosterAvatars players={game.teamAPlayers} />
-          <RosterAvatars players={game.teamBPlayers} align="right" />
+          <RosterAvatars players={teamARow2} />
+          <RosterAvatars players={teamBRow2} align="right" />
         </div>
       )}
       {user && game.submittedByName && game.submittedByUserId !== user.id && (
