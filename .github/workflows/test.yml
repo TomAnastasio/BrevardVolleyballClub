@@ -1,0 +1,31 @@
+name: Tests
+
+# Runs the unit tests (Vitest) and the one end-to-end flow that needs no
+# backend/auth (Playwright — a casual game played and saved). Purely a
+# pass/fail signal: doesn't gate deploy.yml or apply-migrations.yml, so a
+# failure here never blocks a push from going live.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: Install Playwright's browser
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end test
+        run: npm run test:e2e

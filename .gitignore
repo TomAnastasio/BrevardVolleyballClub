@@ -10,3 +10,7 @@ TODO.md
 # Supabase CLI local cache (project linking state, not source of truth)
 supabase/.temp/
 supabase/.branches/
+
+# Playwright output
+/test-results/
+/playwright-report/

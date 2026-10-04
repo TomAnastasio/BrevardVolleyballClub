@@ -6,7 +6,7 @@ import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 // 20261001191519_add_game_participants.sql) — identified via games.user_id
 // instead, always team 'a'. Every other slot (beach a2/b1/b2, or any indoor
 // roster spot) has an explicit game_players row to read team/slot off.
-function sideForPlayer(game, playerId, gpByGameId) {
+export function sideForPlayer(game, playerId, gpByGameId) {
   const link = (gpByGameId.get(game.id) || []).find((gp) => gp.user_id === playerId);
   if (link) {
     if (link.team) return link.team;
@@ -16,7 +16,7 @@ function sideForPlayer(game, playerId, gpByGameId) {
   return null;
 }
 
-function mapGameForPlayer(game, playerId, gpByGameId) {
+export function mapGameForPlayer(game, playerId, gpByGameId) {
   const side = sideForPlayer(game, playerId, gpByGameId);
   if (!side) return null;
   return {

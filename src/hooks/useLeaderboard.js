@@ -12,7 +12,7 @@ import { supabase } from "../lib/supabaseClient.js";
 // (bottom 40% / next 50% / top 10%) are then computed over everyone else.
 // Within whichever tier a player lands in, a 1/2/3 "division" sub-badge
 // marks their position within that tier's own bottom-30%/middle-40%/top-30%.
-function divisionForIndex(index, groupSize) {
+export function divisionForIndex(index, groupSize) {
   // Symmetric 30%-from-each-end split. Using the same rounded count from
   // both ends (rather than independent ceil'd cutoffs) guarantees the three
   // buckets never overlap or leave one empty for small groupSize — e.g. a
@@ -24,7 +24,7 @@ function divisionForIndex(index, groupSize) {
   return 2;
 }
 
-function assignTiers(ranked) {
+export function assignTiers(ranked) {
   const top3 = ranked.slice(0, 3);
   const rest = ranked.slice(3);
 
