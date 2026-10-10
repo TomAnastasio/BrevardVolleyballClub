@@ -34,16 +34,17 @@ function SelectedProfile({ profile, onClear }) {
   );
 }
 
-// Lets an admin collapse a manually-added profile into the Google profile
-// of the same real person, moving the manual one's game history over and
-// deleting it. The direction is fixed on purpose (manual -> Google, never
-// the reverse, never Google -> Google) -- see migration 20261004140000 for
-// why. Elo is intentionally left stale until the admin runs the existing
-// "Recompute Elo Ratings" button, same as that migration's reasoning.
+// Lets an admin collapse a manually-added profile into another profile of
+// the same real person -- Google or manual -- moving the manual one's game
+// history over and deleting it. The removed side is always manual (a
+// Google profile is never deleted) -- see migrations 20261004140000 and
+// 20261009120000 for why. Elo is intentionally left stale until the admin
+// runs the existing "Recompute Elo Ratings" button, same as that
+// migration's reasoning.
 export default function MergeProfilesView() {
   const directory = usePlayerDirectory(true);
   const manualDirectory = useMemo(() => directory.filter((p) => p.is_manual), [directory]);
-  const keepDirectory = useMemo(() => directory.filter((p) => !p.is_manual), [directory]);
+  const keepDirectory = directory;
 
   const [removeQuery, setRemoveQuery] = useState("");
   const [removeProfile, setRemoveProfile] = useState(null);
@@ -94,8 +95,8 @@ export default function MergeProfilesView() {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
         <p className="text-sm text-muted">
-          Use this when the same person ended up with two profiles — one added manually, one from signing in with
-          Google. Their game history moves onto the Google profile and the manual one is deleted.
+          Use this when the same person ended up with two profiles. Pick the manual profile to remove and the
+          profile to keep (Google or manual). Their game history moves onto the kept profile and the manual one is deleted.
         </p>
 
         <div className="flex flex-col items-center gap-2">
@@ -106,6 +107,7 @@ export default function MergeProfilesView() {
               onChange={handlePickRemove}
               placeholder="Search manual profiles"
               ariaLabel="Manual profile to remove"
+              excludeIds={keepProfile ? [keepProfile.id] : undefined}
               directory={manualDirectory}
               inputClassName={fieldInputClass}
             />
@@ -114,13 +116,14 @@ export default function MergeProfilesView() {
         </div>
 
         <div className="flex flex-col items-center gap-2">
-          <label className="text-sm font-bold">Google profile to keep</label>
+          <label className="text-sm font-bold">Profile to keep</label>
           <div className="w-full max-w-80">
             <PlayerSearchField
               value={keepQuery}
               onChange={handlePickKeep}
-              placeholder="Search Google profiles"
-              ariaLabel="Google profile to keep"
+              placeholder="Search all profiles"
+              ariaLabel="Profile to keep"
+              excludeIds={removeProfile ? [removeProfile.id] : undefined}
               directory={keepDirectory}
               inputClassName={fieldInputClass}
             />
