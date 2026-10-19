@@ -60,5 +60,11 @@ docker compose run --rm claude
 The first time, it'll ask you to log in (follow the printed link in your
 browser). After that, login and settings are remembered automatically.
 
-Git is already configured inside the container with its own SSH key, so
-Claude can commit and push to GitHub when you ask it to.
+Claude pushes its work to a `claude/...` branch and gives you a link to open
+a pull request — `main` is protected, so nothing goes live until you merge.
+
+On the Windows PC, the container is started from a launch config kept
+*outside* this repo (so Claude can't change what the container is allowed to
+reach), and the SSH key it pushes with is held in Bitwarden: Claude can use
+it, but never sees it. Revoke it any time by deleting the deploy key under
+the repo's Settings → Deploy keys.

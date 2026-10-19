@@ -6,8 +6,9 @@ name: Nightly database backup
 # why that repo is separate, how this works, and how to restore from one of
 # these snapshots.
 #
-# Requires two one-time repo secrets (Settings -> Secrets and variables ->
-# Actions), documented in supabase/README.md:
+# Requires two one-time secrets in the "production" environment (Settings ->
+# Environments -> production), which only `main` can use — documented in
+# supabase/README.md ("Where the secrets live"):
 #   SUPABASE_DB_URL     - the Supabase "Session pooler" connection string
 #   BACKUP_REPO_TOKEN   - a fine-grained PAT scoped ONLY to the backups repo,
 #                         with Contents: Read and write (nothing more)
@@ -26,6 +27,7 @@ concurrency:
 jobs:
   backup:
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: read
     steps:

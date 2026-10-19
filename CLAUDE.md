@@ -35,6 +35,24 @@ irreplaceable club data (game history, player profiles, Elo ratings). See
   request back to the user instead of executing it; pruning, if ever
   wanted, should be a deliberate manual decision, not something routine.
 
+## Git workflow: branches and pull requests, never `main` directly
+
+- **`main` is protected** (GitHub ruleset): every change must arrive as a
+  pull request that the user merges; force-pushes and deleting `main` are
+  blocked. Pushing to `main` will be rejected — don't try to work around it.
+- Do work on a branch named `claude/<short-topic>`, commit, and push that
+  branch. Then give the user the link to open the pull request, so they can
+  review and merge from their phone:
+  `https://github.com/TomAnastasio/BrevardVolleyballClub/compare/main...claude/<short-topic>?expand=1`
+  (The container has no GitHub API token, so it can't open the PR itself.)
+- The SSH key used for pushing is held in the user's Bitwarden vault and
+  reached through an agent relay — the container can *use* it but never sees
+  it. Never try to export, print, copy, or work around that key, and never
+  ask the user for it.
+- Never add or change a workflow so that it exposes, prints, or sends
+  anywhere the `production` environment secrets (`SUPABASE_DB_URL`,
+  `BACKUP_REPO_TOKEN`). See "Where the secrets live" in `supabase/README.md`.
+
 ## Everything else
 
 See `README.md` for app-level context and `TODO.md` for the live roadmap and
