@@ -164,8 +164,10 @@ day going back as far as the repo exists.
      by hand from those plus the password instead.)
    - The finished string (real password included) is what goes into the
      `SUPABASE_DB_URL` secret in step 3 below.
-3. **Add two secrets to *this* repo** (the app repo, not the backups repo):
-   Settings → Secrets and variables → Actions → New repository secret.
+3. **Add two secrets to *this* repo's "production" environment** (the app
+   repo, not the backups repo): Settings → Environments → production → Add
+   environment secret. (Not plain "repository secrets" — see "Where the
+   secrets live" below for why.)
    - `SUPABASE_DB_URL` — the connection string from step 2.
    - `BACKUP_REPO_TOKEN` — a GitHub token that can push to the backups repo
      *and nothing else*: GitHub avatar → Settings → Developer settings →
@@ -180,13 +182,11 @@ day going back as far as the repo exists.
    have a `backups/<today>.sql.gz` file and a `main` branch. Do this before
    step 5: a brand-new repo has zero commits and no branch yet, so there's
    nothing yet for a branch-protection rule to attach to.
-5. **Locking the backups repo down further is a dead end on the free
-   plan — skip it.** GitHub's Rulesets feature (Settings → Rules →
-   Rulesets) is the only branch-protection option this repo offers, and it
-   explicitly does not enforce anything on a private repo without
-   upgrading to GitHub Team (~$4/user/month). Decided 2026-10-03: not worth
-   paying for — see the next section for why the setup is still solid
-   without it.
+5. **Locking the backups repo down on GitHub needs a paid plan — skipped.**
+   GitHub's Rulesets (which could block force-pushes/deletion there) don't
+   enforce anything on a private repo on the free plan. Decided 2026-10-03
+   not to pay for it. Instead (2026-10-19), an add-only copy of every backup
+   is kept on the owner's own PC — see the next section.
 
 Until steps 2–3 are done, the workflow will fail every night with a clear
 error message (not silently) — that's expected, not a bug, until setup is
@@ -197,21 +197,40 @@ finished.
 - Deleting the Supabase project doesn't touch GitHub at all — the backups
   live somewhere entirely independent.
 - The token used to push backups (`BACKUP_REPO_TOKEN`) is scoped to only
-  "Contents: Read and write" on that one repo — it has no permission to
-  delete the repo, rewrite its settings, or touch this app's repo. This is
-  the actual load-bearing protection: it holds regardless of branch
-  protection, and it's what stops the scenario originally worried about —
-  an automated job or AI session with access to that token going rogue.
-  GitHub-level branch protection (restrict deletion/force-push) would have
-  been additional defense specifically against *your own* full-access
-  account doing something destructive by accident, but that requires
-  GitHub Team on a private repo (see step 5) — decided not worth paying for
-  just for this, so that residual, smaller risk (a mistake from your own
-  account, not automation) is knowingly accepted rather than closed.
+  "Contents: Read and write" on that one repo — it can't delete the repo,
+  change its settings, or touch this app's repo. **Correction (2026-10-19):**
+  this section used to say that scoping was enough to stop the token wiping
+  the backups. It isn't — "Contents: write" also allows force-pushing, which
+  can erase the repo's whole history even though the repo itself survives.
+  Two things now cover that gap:
+  - **An add-only copy on the owner's PC.** A daily scheduled task on the
+    owner's Windows PC downloads each new backup (with a separate,
+    read-only key) into a local folder and never deletes or overwrites a
+    saved file. It raises a Desktop alert if the GitHub history is ever
+    rewritten, an old backup changes, or no new backup appears for 3 days.
+    Nothing that can push to GitHub can reach that folder.
+  - **The token itself is harder to get** — see "Where the secrets live".
 - No AI coding session (this one or a future one) should ever be given admin
   rights on the backups repo, and should never hold your Supabase database
   password or service-role key. See the ground rules in `CLAUDE.md` at the
   repo root.
+
+### Where the secrets live (and why not as plain repo secrets)
+
+`SUPABASE_DB_URL` (the full database password) and `BACKUP_REPO_TOKEN` are
+stored as secrets of a GitHub **environment** called `production`, which is
+restricted to the `main` branch — not as ordinary repository secrets.
+
+Why: anyone who can push *any* branch to this repo could add a workflow file
+that reads ordinary repository secrets. Environment secrets are only handed
+to workflow jobs that say `environment: production` **and** are running from
+`main`. And `main` is protected (a ruleset requires every change to arrive as
+a pull request the owner merges, and blocks force-pushes and deletion), so
+nothing reaches `main` — and therefore nothing can read these secrets —
+without the owner's tap on Merge.
+
+If a new workflow ever genuinely needs one of these secrets, its job must
+declare `environment: production` and only ever run on `main`.
 
 ## How to restore from a backup
 

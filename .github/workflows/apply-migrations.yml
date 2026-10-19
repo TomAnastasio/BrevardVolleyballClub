@@ -6,7 +6,15 @@ name: Apply database migrations
 # to do if a run fails.
 #
 # Reuses the same SUPABASE_DB_URL secret as the nightly backup workflow — no
-# new secrets needed. Decided 2026-10-03: the user has accepted that a bad
+# new secrets needed. That secret lives in the "production" environment,
+# which only `main` can use (see supabase/README.md, "Where the secrets
+# live"), so a workflow pushed on any other branch can't read it.
+#
+# The Supabase CLI is pinned to an exact version on purpose: this step runs
+# with the full database password, so it shouldn't silently pick up whatever
+# version is published on the day. Bump it deliberately when needed.
+#
+# Decided 2026-10-03: the user has accepted that a bad
 # migration can cause app downtime until fixed with a follow-up migration
 # (and, if data itself is damaged, a restore from the nightly backups repo)
 # — see TODO.md's Architecture Decisions.
@@ -25,6 +33,7 @@ concurrency:
 jobs:
   push-migrations:
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: read
     steps:
@@ -40,4 +49,4 @@ jobs:
             echo "::error::SUPABASE_DB_URL secret is not set yet — see supabase/README.md for setup steps."
             exit 1
           fi
-          npx -y supabase@latest db push --db-url "$SUPABASE_DB_URL" --yes
+          npx -y supabase@2.121.0 db push --db-url "$SUPABASE_DB_URL" --yes
