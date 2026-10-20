@@ -66,6 +66,29 @@ irreplaceable club data (game history, player profiles, Elo ratings). See
   a one-line change here, plus the user re-adding the GitHub branch-
   protection ruleset on `main`.
 
+## E2E testing uses a separate staging Supabase project
+
+As of 2026-10-20, `e2e/*.spec.js` run against a real backend — a staging
+Supabase project (ref `cbgismbfbfvovxhvhtor`), never production — because
+real e2e coverage needs real signed-in/directory-search behavior that an
+unconfigured backend can't provide. Key things a future session won't see
+locally (all live only in the gitignored `.env.local` of whichever container
+set this up, so may be missing in a fresh one — see `TODO.md` if present for
+full recovery steps):
+- Two test-only email/password bot accounts (`E2E_ADMIN_EMAIL`/`PASSWORD`,
+  `E2E_PLAYER_EMAIL`/`PASSWORD`) sign in via `e2e/signInAsTestUser.js`,
+  bypassing real Google OAuth — see that file for how and why.
+- The admin bot has `profiles.is_admin = true` on staging only, granted by
+  hand once via the SQL Editor (no self-serve way to grant admin, and this
+  must never be done with the service-role key).
+- `e2e/seedStaging.js` seeds fixture player profiles via the admin bot's own
+  normal API access — never the service-role key or DB password.
+- Staging's schema must be kept in sync with `supabase/migrations/` by hand
+  (`supabase db push` against staging) — there's no automation for this.
+All the database-safety rules above (no service-role key, no DB password,
+additive-only migrations) apply identically to the staging project — it's
+lower-stakes than production, not a place those rules get relaxed.
+
 ## Everything else
 
 See `README.md` for app-level context and `TODO.md` for the live roadmap and
