@@ -60,8 +60,10 @@ docker compose run --rm claude
 The first time, it'll ask you to log in (follow the printed link in your
 browser). After that, login and settings are remembered automatically.
 
-Claude pushes its work to a `claude/...` branch and gives you a link to open
-a pull request — `main` is protected, so nothing goes live until you merge.
+Claude pushes its work straight to `main`, which auto-deploys within a
+couple minutes — there's no pull request or review step (by the owner's
+choice, made 2026-10-20, trading that checkpoint for speed). Ask Claude to
+switch back to a review-first branch + PR workflow any time you want it.
 
 On the Windows PC, the container is started from a launch config kept
 *outside* this repo (so Claude can't change what the container is allowed to

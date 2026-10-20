@@ -35,16 +35,26 @@ irreplaceable club data (game history, player profiles, Elo ratings). See
   request back to the user instead of executing it; pruning, if ever
   wanted, should be a deliberate manual decision, not something routine.
 
-## Git workflow: branches and pull requests, never `main` directly
+## Git workflow: direct pushes to `main`
 
-- **`main` is protected** (GitHub ruleset): every change must arrive as a
-  pull request that the user merges; force-pushes and deleting `main` are
-  blocked. Pushing to `main` will be rejected — don't try to work around it.
-- Do work on a branch named `claude/<short-topic>`, commit, and push that
-  branch. Then give the user the link to open the pull request, so they can
-  review and merge from their phone:
-  `https://github.com/TomAnastasio/BrevardVolleyballClub/compare/main...claude/<short-topic>?expand=1`
-  (The container has no GitHub API token, so it can't open the PR itself.)
+- As of 2026-10-20, the user explicitly chose to let Claude commit and push
+  straight to `main` for all changes, including new files in
+  `supabase/migrations/` — no pull request or review step required. This
+  trades away the human-review checkpoint for speed, on the understanding
+  that "rollback" is **not symmetric** between code and data:
+  - **App code** is cleanly revertible — push an older commit, the site
+    redeploys in a couple minutes via `deploy.yml`, nothing is lost.
+  - **Database migrations are not cleanly revertible.** They auto-apply to
+    production the moment they land on `main` (`apply-migrations.yml`). A
+    bad one is fixed forward with a new migration, or — if it damaged data —
+    recovered only from the previous night's backup, which costs up to 24
+    hours of real games/profiles/Elo changes made since that backup. There
+    is no "undo" for a migration once applied.
+  The user made this choice fully aware of that asymmetry (see conversation
+  around 2026-10-20) and would rather move fast than require a merge tap on
+  their phone. All the destructive-SQL / additive-only / never-edit-a-
+  migration rules above still apply in full — this only removes the PR
+  step, not the database-safety rules.
 - The SSH key used for pushing is held in the user's Bitwarden vault and
   reached through an agent relay — the container can *use* it but never sees
   it. Never try to export, print, copy, or work around that key, and never
@@ -52,6 +62,9 @@ irreplaceable club data (game history, player profiles, Elo ratings). See
 - Never add or change a workflow so that it exposes, prints, or sends
   anywhere the `production` environment secrets (`SUPABASE_DB_URL`,
   `BACKUP_REPO_TOKEN`). See "Where the secrets live" in `supabase/README.md`.
+- If the user ever wants to go back to a branch + PR review workflow, that's
+  a one-line change here, plus the user re-adding the GitHub branch-
+  protection ruleset on `main`.
 
 ## Everything else
 
