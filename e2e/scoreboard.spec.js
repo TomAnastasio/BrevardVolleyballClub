@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-// Covers the app's one fully backend-free flow: start a casual 2v2 beach
-// game, score it to a win, save it, and see it show up in Past Games.
+// Covers starting a casual 2v2 beach game, scoring it to a win, saving it,
+// and seeing it show up in Past Games. NOTE: as of the "directory-only"
+// player selection change (98738b4, 2026-10-04), players must be picked
+// from a real search of signed-in profiles — this test can no longer run
+// against an empty/unconfigured backend and needs a Supabase project with
+// at least a couple of seeded player profiles to get past name entry.
 // Everything else (ranked games, sign-in, admin) needs a real Google OAuth
 // round trip and isn't covered here.
 test("play and save a casual beach game end to end", async ({ page }) => {
@@ -9,6 +13,7 @@ test("play and save a casual beach game end to end", async ({ page }) => {
 
   await page.getByRole("button", { name: "Game tracking" }).click();
   await page.getByRole("button", { name: "New Game" }).click();
+  await page.getByRole("button", { name: "Beach" }).click();
   await page.getByRole("button", { name: "2v2 Beach" }).click();
   await page.getByRole("button", { name: "Casual" }).click();
 
