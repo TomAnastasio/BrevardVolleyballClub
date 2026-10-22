@@ -104,6 +104,12 @@ Its one secret, `STAGING_SUPABASE_DB_URL`, lives in a separate GitHub
 environment called `staging` — not `production` — so this workflow can't
 read the production secrets and the production workflow can't read this.
 
+**✅ Done (2026-10-22).** The owner created the `staging` environment and
+secret; the workflow's first run caught staging up within about a minute
+(confirmed by the profile-photo e2e test passing against it). Kept below
+for reference — e.g. if the staging password is ever reset, only step 3
+needs redoing with the new connection string.
+
 **One-time setup (owner only):**
 1. Get the **staging** project's connection string exactly as in step 2 of
    the backup setup below, but in the staging project's dashboard: Connect
@@ -251,16 +257,26 @@ finished.
 stored as secrets of a GitHub **environment** called `production`, which is
 restricted to the `main` branch — not as ordinary repository secrets.
 
+The staging project's equivalent, `STAGING_SUPABASE_DB_URL`, is stored the
+same way in a separate environment called `staging` (also restricted to
+`main`), so each workflow can only read its own project's secret.
+
 Why: anyone who can push *any* branch to this repo could add a workflow file
 that reads ordinary repository secrets. Environment secrets are only handed
-to workflow jobs that say `environment: production` **and** are running from
-`main`. And `main` is protected (a ruleset requires every change to arrive as
-a pull request the owner merges, and blocks force-pushes and deletion), so
-nothing reaches `main` — and therefore nothing can read these secrets —
-without the owner's tap on Merge.
+to workflow jobs that name that environment **and** are running from
+`main`.
+
+**Changed 2026-10-20:** this used to be backed by a ruleset requiring every
+change to `main` to arrive as a pull request the owner merged. The owner
+removed that review step so Claude sessions can push straight to `main`
+(see "Git workflow" in `CLAUDE.md`). So today, the thing standing between a
+session and these secrets is the ground rule in `CLAUDE.md` that no
+workflow may ever expose, print, or send them anywhere — not a mandatory
+human review. Re-adding the pull-request ruleset on `main` restores the
+stronger guarantee.
 
 If a new workflow ever genuinely needs one of these secrets, its job must
-declare `environment: production` and only ever run on `main`.
+declare the matching environment and only ever run on `main`.
 
 ## How to restore from a backup
 
