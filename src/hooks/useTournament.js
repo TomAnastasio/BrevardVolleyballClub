@@ -224,7 +224,7 @@ export function usePlayerTournaments(profileId) {
     let cancelled = false;
     supabase
       .from("tournament_entrants")
-      .select("id, final_place, title, costume_winner, division:tournament_divisions(name), tournament:tournaments(id, name, event_date, status)")
+      .select("id, final_place, title, division:tournament_divisions(name), tournament:tournaments(id, name, event_date, status)")
       .eq("profile_id", profileId)
       .then(({ data, error }) => {
         if (cancelled) return;

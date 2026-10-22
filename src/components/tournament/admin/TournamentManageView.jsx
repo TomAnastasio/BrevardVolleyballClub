@@ -202,26 +202,7 @@ export default function TournamentManageView({ tournamentId, onDeleted }) {
         onClick={() => open("pools")}
       />
       <MenuCard icon="🏐" label={SECTION_TITLES.finals} subtitle="Top 2 of each round 2 pool, best 2 of 3" onClick={() => open("finals")} />
-      <MenuCard icon="👑" label={SECTION_TITLES.results} subtitle="Queen, Princess & best costume" onClick={() => open("results")} />
-
-      {t.status !== "draft" && (
-        <Card className="gap-2 p-3">
-          <p className="m-0 font-bold">🎃 Best costume voting: {t.costume_voting_open ? "open" : "closed"}</p>
-          <p className="m-0 text-sm text-muted">
-            {t.costume_voting_open
-              ? "Signed-in players can vote on the live page. Close it before crowning the winner."
-              : "Opens a vote on the live page; each signed-in player gets one vote."}
-          </p>
-          <Button
-            variant={t.costume_voting_open ? "outline" : "secondary"}
-            onPress={() => update({ costume_voting_open: !t.costume_voting_open })}
-            isDisabled={busy}
-            className="font-bold"
-          >
-            {t.costume_voting_open ? "Close voting" : "Open voting"}
-          </Button>
-        </Card>
-      )}
+      <MenuCard icon="👑" label={SECTION_TITLES.results} subtitle="Queen & Princess" onClick={() => open("results")} />
 
       {t.status === "draft" &&
         (confirmDelete ? (

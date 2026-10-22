@@ -22,9 +22,6 @@ export function friendlyError(e, fallback = "Something went wrong. Please try ag
     "only be entered while the tournament is running",
     "delete its game first",
     "tournament game not found",
-    "sign in to vote",
-    "costume voting isn't open",
-    "can't vote for yourself",
     "isn't in this tournament",
   ];
   if (known.some((k) => msg.includes(k))) return msg.charAt(0).toUpperCase() + msg.slice(1) + ".";
@@ -226,20 +223,17 @@ export async function deleteMatch(id) {
   if (!rows.length) throw new Error("This game already has a score; delete its game first.");
 }
 
-// Records Queen/Princess for each division and the best costume, and marks
+// Records Queen/Princess for each division and marks
 // the tournament done. `results` is [{ entrantId, title, place }]; everyone
 // else is cleared so re-running this (e.g. to fix a mistake) never leaves a
 // stale title.
-export async function completeTournament(tournamentId, results, costumeEntrantId = null) {
+export async function completeTournament(tournamentId, results) {
   unwrap(
     await supabase
       .from("tournament_entrants")
-      .update({ title: null, final_place: null, costume_winner: false })
+      .update({ title: null, final_place: null })
       .eq("tournament_id", tournamentId),
   );
-  if (costumeEntrantId) {
-    unwrap(await supabase.from("tournament_entrants").update({ costume_winner: true }).eq("id", costumeEntrantId));
-  }
   for (const r of results) {
     unwrap(
       await supabase
@@ -276,26 +270,4 @@ export async function pushLiveScore(matchId, scoreA, scoreB) {
 // to null (ON DELETE SET NULL), so the game can simply be scored again.
 export async function undoMatchScore(gameId) {
   unwrap(await supabase.rpc("admin_delete_game", { p_game_id: gameId }));
-}
-
-export async function castCostumeVote(tournamentId, entrantId) {
-  unwrap(await supabase.rpc("cast_costume_vote", { p_tournament_id: tournamentId, p_entrant_id: entrantId }));
-}
-
-// The signed-in user's own vote (RLS only returns their own), or null.
-export async function fetchMyCostumeVote(tournamentId, userId) {
-  const rows = unwrap(
-    await supabase
-      .from("tournament_costume_votes")
-      .select("entrant_id")
-      .eq("tournament_id", tournamentId)
-      .eq("voter_id", userId),
-  );
-  return rows[0]?.entrant_id ?? null;
-}
-
-// Map of entrant id -> votes. Admins any time; everyone once it's complete.
-export async function fetchCostumeTally(tournamentId) {
-  const rows = unwrap(await supabase.rpc("costume_vote_tally", { p_tournament_id: tournamentId }));
-  return new Map(rows.map((r) => [r.entrant_id, Number(r.votes)]));
 }

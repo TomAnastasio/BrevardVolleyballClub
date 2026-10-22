@@ -117,14 +117,9 @@ Queen of Paradise (2026-10-31):
    all to 21), or one set to 21 if both teams agree; win by 2, no cap. A
    third set that isn't needed disappears on its own. Only the Gold final
    decides the Queen and the cash prize.
-8. **Best costume.** Open voting from the tournament's manage screen.
-   Each signed-in player gets one vote (changeable, not for themselves) on
-   the live page. Votes are private; the tally shows only to admins until
-   the tournament is finished.
-9. **Crown the winners.** Queen and Princess default to the Gold final's
-   winner and runner-up, and best costume to the most votes. The 👑, 👸
-   and 🎃 show on player profiles, and every entrant's profile lists their
-   tournaments.
+8. **Crown the winners.** Queen and Princess default to the Gold final's
+   winner and runner-up. The 👑 and 👸 show on player profiles, and every
+   entrant's profile lists their tournaments.
 
 A player imported as a manual profile who later signs up with the QR code
 keeps their tournament history when you merge the profiles.

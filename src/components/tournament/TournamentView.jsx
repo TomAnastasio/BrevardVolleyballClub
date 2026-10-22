@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Card } from "@heroui/react";
 import CopyableText from "../CopyableText.jsx";
 import LoadingMeteor from "../LoadingMeteor.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useTournament } from "../../hooks/useTournament.js";
 import { buildTournamentUrl, setPendingTournament } from "../../lib/tournamentLink.js";
-import { castCostumeVote, fetchMyCostumeVote, friendlyError, undoMatchScore } from "../../lib/tournamentApi.js";
+import { friendlyError, undoMatchScore } from "../../lib/tournamentApi.js";
 import { formatEventDate, placeLabel, playerName, STATUS_LABELS, teamNames, TITLE_LABELS } from "./tournamentFormat.js";
 
 const POLL_MS = 15000;
@@ -140,84 +140,6 @@ function StandingsTable({ standings, profilesById, highlightId }) {
   );
 }
 
-// Players vote for the best costume while the admin has voting open.
-function CostumeVote({ tournament, entrants, profilesById, user, onSignIn }) {
-  const [vote, setVote] = useState(null);
-  const [choice, setChoice] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    fetchMyCostumeVote(tournament.id, user.id)
-      .then((v) => {
-        setVote(v);
-        setChoice(v || "");
-      })
-      .catch((e) => console.error("Failed to load costume vote:", e));
-  }, [tournament.id, user]);
-
-  async function handleVote() {
-    setBusy(true);
-    setError("");
-    setSaved(false);
-    try {
-      await castCostumeVote(tournament.id, choice);
-      setVote(choice);
-      setSaved(true);
-    } catch (e) {
-      console.error("Costume vote failed:", e);
-      setError(friendlyError(e, "Couldn't save your vote. Please try again."));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const options = entrants
-    .filter((e) => e.profile_id !== user?.id)
-    .map((e) => ({ id: e.id, name: playerName(profilesById, e.profile_id) }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  return (
-    <Card className="gap-2 border border-accent/40 p-3">
-      <p className="m-0 font-extrabold">🎃 Vote for best costume</p>
-      {!user ? (
-        <Button variant="outline" onPress={onSignIn} className="self-start font-bold">
-          Sign in to vote
-        </Button>
-      ) : (
-        <>
-          <select
-            aria-label="Best costume vote"
-            value={choice}
-            onChange={(e) => {
-              setChoice(e.target.value);
-              setSaved(false);
-            }}
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-base"
-          >
-            <option value="">Choose a player</option>
-            {options.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-          <Button variant="primary" onPress={handleVote} isDisabled={busy || !choice || choice === vote} className="font-bold">
-            {vote ? "Change my vote" : "Vote"}
-          </Button>
-          <p className="m-0 text-xs text-muted">
-            {saved ? "✓ Vote saved. " : ""}One vote each; you can change it until voting closes. Results are revealed at the
-            end.
-          </p>
-        </>
-      )}
-      {error && <p className="m-0 text-xs font-semibold text-red-400">{error}</p>}
-    </Card>
-  );
-}
-
 export default function TournamentView({ tournamentId, notice, onDismissNotice, onScoreMatch, onManage }) {
   const { user, isAdmin, signInWithGoogle } = useAuth();
   const { model, loading, error, reload } = useTournament(tournamentId, { pollMs: POLL_MS });
@@ -272,8 +194,6 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
   }
 
   const champions = division?.entrants.filter((e) => e.title).sort((a, b) => (a.final_place ?? 9) - (b.final_place ?? 9));
-  const allEntrants = divisions.flatMap((d) => d.entrants);
-  const costumeWinner = allEntrants.find((e) => e.costume_winner);
   const finalPools = division?.finalPools.filter((p) => p.final) ?? [];
   // Latest round first: once round 2 starts, that's what people need.
   const pools = [...(division?.pools ?? [])].sort((a, b) => b.round - a.round);
@@ -331,16 +251,6 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
             {myNext.pool.nextMatchId === myNext.match.id ? " · up now" : ""}
           </p>
         </Card>
-      )}
-
-      {costumeWinner && (
-        <Card className="items-center p-3 text-center">
-          <p className="m-0 font-extrabold">🎃 Best costume · {playerName(profilesById, costumeWinner.profile_id)}</p>
-        </Card>
-      )}
-
-      {t.costume_voting_open && t.status !== "complete" && (
-        <CostumeVote tournament={t} entrants={allEntrants} profilesById={profilesById} user={user} onSignIn={promptSignIn} />
       )}
 
       {divisions.length > 1 && (

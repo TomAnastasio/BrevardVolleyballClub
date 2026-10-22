@@ -3,14 +3,14 @@ import { getAdminSession, PLAYER_NAME, signInAsAdmin, signInAsPlayer } from "./s
 
 // Queen of the Court past round 1: 8 players in two pools of 4 (games to
 // 28), round 2 Gold/Silver pools, a best-of-3 Gold final where set 3 isn't
-// needed after 2-0, costume voting by a regular member, and crowning. The
+// needed after 2-0, a regular member's live view, and crowning. The
 // setup and the many scores go through the admin bot's normal API access
 // (the UI for scoring is covered by tournament.spec.js); the screens under
 // test are driven in the browser. Uses existing staging profiles, is
 // unranked, and removes its games and tournament afterward. Needs migration
 // 20261022200000 on staging.
 
-test("round 2, best-of-3 final, costume vote", async ({ page, browser }) => {
+test("round 2, best-of-3 final, crowning", async ({ page, browser }) => {
   test.setTimeout(240_000);
   const url = process.env.VITE_SUPABASE_URL;
   const key = process.env.VITE_SUPABASE_ANON_KEY;
@@ -82,30 +82,21 @@ test("round 2, best-of-3 final, costume vote", async ({ page, browser }) => {
     await page.getByRole("button", { name: "Finals" }).click();
     await expect(page.getByText("Set 3 (to 15, win by 2, no cap): not needed")).toBeVisible();
 
-    await page.getByRole("button", { name: `‹ ${name}` }).click();
-    await page.getByRole("button", { name: "Open voting" }).click();
-    await expect(page.getByText("🎃 Best costume voting: open")).toBeVisible();
-
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const pp = await ctx.newPage();
     await signInAsPlayer(pp);
     await pp.goto(`/?t=${tid}`);
-    await expect(pp.getByText("🎃 Vote for best costume")).toBeVisible({ timeout: 20_000 });
-    await expect(pp.getByText("sets 2–0")).toBeVisible();
+    await expect(pp.getByText("sets 2–0")).toBeVisible({ timeout: 20_000 });
     await expect(pp.getByText("Set 3")).toHaveCount(0);
-    await pp.getByLabel("Best costume vote").selectOption({ index: 2 });
-    await pp.getByRole("button", { name: "Vote", exact: true }).click();
-    await expect(pp.getByText(/✓ Vote saved/)).toBeVisible();
     await ctx.close();
 
+    await page.getByRole("button", { name: `‹ ${name}` }).click();
     await page.getByRole("button", { name: "Crown the winners" }).click();
-    await expect(page.getByLabel("Best costume")).toContainText("(1 vote)");
     await expect(page.getByLabel("E2E Open queen")).not.toHaveValue("");
     await page.getByRole("button", { name: "Crown winners & finish tournament" }).click();
     await expect(page.getByText("Final results")).toBeVisible();
     await page.goto(`/?t=${tid}`);
-    await expect(page.getByText(/🎃 Best costume · /)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/👑 Queen · /)).toBeVisible();
+    await expect(page.getByText(/👑 Queen · /)).toBeVisible({ timeout: 20_000 });
   } finally {
     const scored = await rest(`tournament_matches?tournament_id=eq.${tid}&game_id=not.is.null&select=game_id`);
     for (const m of scored) await rest("rpc/admin_delete_game", { method: "POST", body: { p_game_id: m.game_id } });

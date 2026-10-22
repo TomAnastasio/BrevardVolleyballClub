@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Card } from "@heroui/react";
-import { completeTournament, fetchCostumeTally, friendlyError } from "../../../lib/tournamentApi.js";
+import { completeTournament, friendlyError } from "../../../lib/tournamentApi.js";
 import { playerName } from "../tournamentFormat.js";
 import { inputClass } from "./TournamentDetailsForm.jsx";
 
@@ -22,23 +22,9 @@ function defaultWinners(division) {
 
 export default function ResultsView({ model, onDone }) {
   const { divisions, profilesById, tournament } = model;
-  const allEntrants = divisions.flatMap((d) => d.entrants);
   const [picks, setPicks] = useState(() => Object.fromEntries(divisions.map((d) => [d.id, defaultWinners(d)])));
-  const [costume, setCostume] = useState(() => allEntrants.find((e) => e.costume_winner)?.id ?? "");
-  const [tally, setTally] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    fetchCostumeTally(tournament.id)
-      .then((t) => {
-        setTally(t);
-        // Default to the most votes, unless a winner is already saved.
-        const top = [...t.entries()].sort((a, b) => b[1] - a[1])[0];
-        if (top) setCostume((c) => c || top[0]);
-      })
-      .catch((e) => console.error("Failed to load costume votes:", e));
-  }, [tournament.id]);
 
   const invalid = divisions.some((d) => picks[d.id].queen && picks[d.id].queen === picks[d.id].princess);
   const name = (e) => `${playerName(profilesById, e.profile_id)}${e.is_junior ? " (Jr)" : ""}`;
@@ -54,7 +40,7 @@ export default function ResultsView({ model, onDone }) {
       ...(picks[d.id].princess ? [{ entrantId: picks[d.id].princess, title: "princess", place: 2 }] : []),
     ]);
     try {
-      await completeTournament(tournament.id, results, costume || null);
+      await completeTournament(tournament.id, results);
       onDone();
     } catch (e) {
       console.error("Failed to complete tournament:", e);
@@ -62,8 +48,6 @@ export default function ResultsView({ model, onDone }) {
       setSaving(false);
     }
   }
-
-  const byVotes = [...allEntrants].sort((a, b) => (tally?.get(b.id) ?? 0) - (tally?.get(a.id) ?? 0));
 
   return (
     <div className="flex flex-col gap-4 px-3 pb-8">
@@ -96,22 +80,6 @@ export default function ResultsView({ model, onDone }) {
           ))}
         </Card>
       ))}
-
-      <Card className="gap-3 p-3">
-        <p className="m-0 font-extrabold">🎃 Best costume</p>
-        <label className="flex flex-col gap-1 text-sm font-bold">
-          Winner
-          <select aria-label="Best costume" value={costume} onChange={(e) => setCostume(e.target.value)} className={`${inputClass} py-1`}>
-            <option value="">Nobody</option>
-            {byVotes.map((e) => (
-              <option key={e.id} value={e.id}>
-                {playerName(profilesById, e.profile_id)}
-                {tally ? ` (${tally.get(e.id) ?? 0} vote${tally.get(e.id) === 1 ? "" : "s"})` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-      </Card>
 
       {juniorPicks.length > 0 && (
         <p className="m-0 text-sm font-semibold text-warning">
