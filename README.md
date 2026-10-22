@@ -24,8 +24,11 @@ ever change their own photo, never anyone else's — see migration
 
 ### Admin tools
 
-The **Admin Panel** button on the home screen only appears for the admin
-account (`profiles.is_admin`, set by hand in Supabase). It contains:
+The **Admin Panel** button on the home screen only appears for admin
+accounts (`profiles.is_admin`). There's no in-app button to make someone an
+admin. It's a one-line database change matched to their sign-in email,
+either a new migration or run by hand in the Supabase SQL Editor. It
+contains:
 
 - **Sign-Up QR Code** — the fastest way to onboard a new player in person.
   Shows a QR code for `brevardvolleyballclub.com/?join=1`; when they scan it
@@ -41,12 +44,26 @@ account (`profiles.is_admin`, set by hand in Supabase). It contains:
   Google profile (e.g. after someone who played as a manual profile signs up
   via the QR code).
 
+Admins also see an **Admin only** box on every player's profile (open a
+player from Rankings): their sign-in email, how they sign in, when they
+signed up and last signed in, whether they're an admin, any email/phone
+from tournament registration forms, and the profile ID. A profile marked
+"Manual profile" has no sign-in account. The data comes from the admin-only
+`admin_profile_details()` database function
+(`20261022220000_admin_profile_details.sql`); players never see the box or
+the data.
+
+Anywhere the app lets you copy something (those details, a tournament's
+share link), it shows a copy icon, and tapping the text or the icon copies
+it. The icon briefly turns into a ✓. New copyable text should use
+`src/components/CopyableText.jsx` so it works the same way.
+
 ### Tournaments (Queen of the Court)
 
 The **Tournaments** button on the home screen lists every published
 tournament. Each one has a public live page, which needs no sign-in. Its
-link is `brevardvolleyballclub.com/?t=<id>` and the page has a Copy link
-button. The page shows each division's pools, live standings and the fixed
+link is `brevardvolleyballclub.com/?t=<id>`, shown at the bottom of the
+page (tap it to copy). The page shows each division's pools, live standings and the fixed
 game order, highlights who's up next, and shows a signed-in player their own
 next game.
 
