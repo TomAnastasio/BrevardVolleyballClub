@@ -3,7 +3,10 @@ import { Card } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
 import RankBadge from "./RankBadge.jsx";
 import ProfilePhotoEditor from "./ProfilePhotoEditor.jsx";
-import { usePlayerGames, winLossRecords } from "../hooks/usePlayerGames.js";
+import { partnerStats, usePlayerGames, winLossRecords } from "../hooks/usePlayerGames.js";
+import { usePlayerElo } from "../hooks/usePlayerElo.js";
+import EloChart from "./EloChart.jsx";
+import PartnersAndRivals from "./PartnersAndRivals.jsx";
 import { usePlayerTournaments } from "../hooks/useTournament.js";
 import { formatEventDate, placeLabel, TITLE_LABELS } from "./tournament/tournamentFormat.js";
 import { useAuth } from "../hooks/useAuth.js";
@@ -143,12 +146,14 @@ export default function PlayerProfileView({
   backLabel = "Rankings",
   refreshKey,
   onOpenGame,
+  onOpenPlayer,
   onOpenTournament,
 }) {
   const { games, loading } = usePlayerGames(player?.id, refreshKey);
   const tournaments = usePlayerTournaments(player?.id);
   const titles = tournaments.filter((e) => e.title);
   const { user, isAdmin } = useAuth();
+  const { series: eloSeries } = usePlayerElo(player?.id, Boolean(user), refreshKey);
   const isOwnProfile = Boolean(user) && user.id === player.id;
   const [avatarUrl, setAvatarUrl] = useState(player.avatar_url);
   const [photoSaved, setPhotoSaved] = useState(false);
@@ -225,6 +230,15 @@ export default function PlayerProfileView({
             )}
           </div>
         )}
+
+        {hasRanked &&
+          (user ? (
+            <EloChart series={eloSeries} />
+          ) : (
+            <p className="m-0 text-xs text-muted">Sign in to see Elo over time.</p>
+          ))}
+
+        {!loading && <PartnersAndRivals stats={partnerStats(games)} onOpenPlayer={onOpenPlayer} />}
 
         {isAdmin && <AdminDetails profileId={player.id} />}
 

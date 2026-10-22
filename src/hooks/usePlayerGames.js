@@ -21,10 +21,33 @@ export function sideForPlayer(game, playerId, gpByGameId) {
   return null;
 }
 
-export function mapGameForPlayer(game, playerId, gpByGameId) {
+// Every other linked player in the game, split into the player's teammates
+// and opponents. `gpByGameId` holds each game's full game_players list (with
+// `profiles`); 2v2 beach's A1 comes from games.user_id, its profile from
+// `profilesById`. Typed-in names have no profile, so they aren't counted.
+function peopleInGame(game, playerId, side, gpByGameId, profilesById) {
+  const people = new Map();
+  for (const gp of gpByGameId.get(game.id) || []) {
+    const gpSide = sideForPlayer(game, gp.user_id, gpByGameId);
+    if (gp.user_id !== playerId && gpSide) people.set(gp.user_id, { side: gpSide, profile: gp.profiles });
+  }
+  if (game.format === "beach" && game.team_size == null && game.user_id && game.user_id !== playerId) {
+    people.set(game.user_id, { side: "a", profile: profilesById[game.user_id] });
+  }
+  const teammates = [];
+  const opponents = [];
+  for (const [id, { side: s, profile }] of people) {
+    const person = { id, name: profile?.display_name || "Player", avatarUrl: profile?.avatar_url || null };
+    (s === side ? teammates : opponents).push(person);
+  }
+  return { teammates, opponents };
+}
+
+export function mapGameForPlayer(game, playerId, gpByGameId, profilesById = {}) {
   const side = sideForPlayer(game, playerId, gpByGameId);
   if (!side) return null;
   return {
+    ...peopleInGame(game, playerId, side, gpByGameId, profilesById),
     id: game.id,
     date: game.played_date,
     mode: game.mode,
@@ -47,6 +70,50 @@ export function winLossRecords(games) {
     losses: list.filter((g) => g.ownScore < g.oppScore).length,
   });
   return { overall: tally(games), ranked: tally(games.filter((g) => g.mode === "ranked")) };
+}
+
+// Minimum games together (or against) before someone can be "best partner"
+// or "toughest opponent" (owner's call, 2026-10-22).
+export const PARTNER_MIN_GAMES = 3;
+
+// Partners & rivals from a player's mapped games (all games, ranked and
+// casual, beach and indoor; owner's call, 2026-10-22):
+// - mostFrequentPartner: most games on the same team (ties: more wins)
+// - bestPartner: highest win rate together, min PARTNER_MIN_GAMES (ties: more games)
+// - toughestOpponent: lowest win rate against, min PARTNER_MIN_GAMES, and
+//   only someone they've actually lost to (ties: more games)
+// Each is `{ player, games, wins, losses }` or null.
+export function partnerStats(games) {
+  const partners = new Map();
+  const opponents = new Map();
+  const add = (map, person, won) => {
+    const entry = map.get(person.id) || { player: person, games: 0, wins: 0, losses: 0 };
+    entry.games += 1;
+    if (won) entry.wins += 1;
+    else entry.losses += 1;
+    map.set(person.id, entry);
+  };
+  for (const g of games) {
+    if (g.ownScore === g.oppScore) continue;
+    const won = g.ownScore > g.oppScore;
+    for (const p of g.teammates || []) add(partners, p, won);
+    for (const p of g.opponents || []) add(opponents, p, won);
+  }
+  const rate = (e) => e.wins / e.games;
+  const pick = (list, better) => list.reduce((best, e) => (best === null || better(e, best) ? e : best), null);
+  const partnerList = [...partners.values()];
+  const eligibleOpponents = [...opponents.values()].filter((e) => e.games >= PARTNER_MIN_GAMES && e.losses > 0);
+  return {
+    mostFrequentPartner: pick(partnerList, (e, b) => e.games > b.games || (e.games === b.games && e.wins > b.wins)),
+    bestPartner: pick(
+      partnerList.filter((e) => e.games >= PARTNER_MIN_GAMES),
+      (e, b) => rate(e) > rate(b) || (rate(e) === rate(b) && e.games > b.games),
+    ),
+    toughestOpponent: pick(
+      eligibleOpponents,
+      (e, b) => rate(e) < rate(b) || (rate(e) === rate(b) && e.games > b.games),
+    ),
+  };
 }
 
 // Every game a given player has been a part of — beach or indoor, submitted
@@ -76,25 +143,42 @@ export function usePlayerGames(playerId, refreshKey) {
         if (linksError) throw linksError;
 
         const linkedGameIds = (links || []).map((l) => l.game_id);
-        const gpByGameId = new Map();
-        for (const link of links || []) {
-          if (!gpByGameId.has(link.game_id)) gpByGameId.set(link.game_id, []);
-          gpByGameId.get(link.game_id).push({ user_id: playerId, team: link.team, slot: link.slot });
-        }
 
         const filters = [`user_id.eq.${playerId}`];
         if (linkedGameIds.length > 0) filters.push(`id.in.(${linkedGameIds.join(",")})`);
 
+        // Each game's full roster comes along too, for partners & rivals.
         const { data: rows, error: gamesError } = await supabase
           .from("games")
-          .select(`*, ${TOURNAMENT_MATCH_EMBED}`)
+          .select(`*, game_players(user_id, slot, team, profiles(id, display_name, avatar_url)), ${TOURNAMENT_MATCH_EMBED}`)
           .or(filters.join(","))
           .order("created_at", { ascending: false });
         if (gamesError) throw gamesError;
+
+        const gpByGameId = new Map((rows || []).map((row) => [row.id, row.game_players || []]));
+
+        // 2v2 beach's A1 is games.user_id, not a game_players row, so their
+        // profile needs its own lookup (one query, like Past Games does).
+        const a1Ids = [
+          ...new Set(
+            (rows || [])
+              .filter((r) => r.format === "beach" && r.team_size == null && r.user_id && r.user_id !== playerId)
+              .map((r) => r.user_id),
+          ),
+        ];
+        let profilesById = {};
+        if (a1Ids.length > 0) {
+          const { data: a1Profiles, error: a1Error } = await supabase
+            .from("profiles")
+            .select("id, display_name, avatar_url")
+            .in("id", a1Ids);
+          if (a1Error) throw a1Error;
+          profilesById = Object.fromEntries((a1Profiles || []).map((p) => [p.id, p]));
+        }
         if (cancelled) return;
 
         const mapped = (rows || [])
-          .map((row) => mapGameForPlayer(row, playerId, gpByGameId))
+          .map((row) => mapGameForPlayer(row, playerId, gpByGameId, profilesById))
           .filter(Boolean);
         setGames(mapped);
       } catch (e) {

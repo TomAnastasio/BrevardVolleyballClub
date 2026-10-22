@@ -89,6 +89,7 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
                 onBack={() => setView("landing")}
                 refreshKey={gamesVersion}
                 onOpenGame={openGame}
+                onOpenPlayer={openPlayer}
                 onOpenTournament={openTournament}
               />
             )}
@@ -119,6 +120,7 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
                 onBack={() => setView("leaderboard")}
                 refreshKey={gamesVersion}
                 onOpenGame={openGame}
+                onOpenPlayer={openPlayer}
                 onOpenTournament={openTournament}
               />
             )}
@@ -160,6 +162,7 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
               onBack={() => popPages()}
               refreshKey={gamesVersion}
               onOpenGame={openGame}
+              onOpenPlayer={openPlayer}
               onOpenTournament={openTournament}
             />
           )}

@@ -31,6 +31,20 @@ Signed out, that corner says **Sign in**. After Google sign-in it opens your
 profile (a short-lived breadcrumb, `src/lib/pendingMyProfile.js`, survives
 the redirect).
 
+### Profile stats
+
+Below the Overall/Ranked records, a profile shows:
+
+- **Elo over time.** A line chart of their Elo after every ranked game,
+  one evenly spaced step per game, from their starting rating. Touch, hover
+  or use the arrow keys to read each game's date, Elo and change. Signed-in
+  members only, since Elo history isn't public.
+- **Partners & rivals.** Most frequent partner, best partner (highest win
+  rate together), and toughest opponent (lowest win rate against, only
+  someone they've lost to). Best and toughest need at least 3 games. All
+  games count, ranked and casual, beach and indoor. Typed-in names that
+  aren't linked to a profile don't count. Tap one to open their profile.
+
 ### Profile photos
 
 A player's photo starts as their Google account photo (copied once, at
