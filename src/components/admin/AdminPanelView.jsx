@@ -3,15 +3,17 @@ import MenuCard from "../game/MenuCard.jsx";
 import AddManualProfileView from "./AddManualProfileView.jsx";
 import RecomputeEloView from "./RecomputeEloView.jsx";
 import MergeProfilesView from "./MergeProfilesView.jsx";
+import SignUpQrCodeView from "./SignUpQrCodeView.jsx";
 
 const SCREEN_META = {
   menu: "Admin Panel",
+  "signup-qr": "Sign-Up QR Code",
   "add-profile": "Add Manual Profile",
   "recompute-elo": "Recompute Elo Ratings",
   "merge-profiles": "Merge Profiles",
 };
 
-const BACK_MAP = { "add-profile": "menu", "recompute-elo": "menu", "merge-profiles": "menu" };
+const BACK_MAP = { "signup-qr": "menu","add-profile": "menu", "recompute-elo": "menu", "merge-profiles": "menu" };
 
 export default function AdminPanelView({ onBack }) {
   const [screen, setScreen] = useState("menu");
@@ -39,6 +41,12 @@ export default function AdminPanelView({ onBack }) {
       {screen === "menu" && (
         <div className="flex flex-col gap-2 px-3 pb-6">
           <MenuCard
+            icon="📱"
+            label="Sign-Up QR Code"
+            subtitle="Let a new player scan to sign up with Google"
+            onClick={() => setScreen("signup-qr")}
+          />
+          <MenuCard
             icon="👤"
             label="Add Manual Profile"
             subtitle="Create a player profile without a Google account"
@@ -58,6 +66,7 @@ export default function AdminPanelView({ onBack }) {
           />
         </div>
       )}
+      {screen === "signup-qr" && <SignUpQrCodeView />}
       {screen === "add-profile" && <AddManualProfileView onDone={() => setScreen("menu")} />}
       {screen === "recompute-elo" && <RecomputeEloView />}
       {screen === "merge-profiles" && <MergeProfilesView />}
