@@ -2,12 +2,33 @@
 
 ## Beach Volleyball Scoreboard
 
-A free, mobile-first web app for keeping score of a beach volleyball game to 21.
-No install, no backend — just open it in a phone browser. Live at
-[brevardvolleyballclub.com](https://brevardvolleyballclub.com).
+A free, mobile-first web app for keeping score of volleyball games, tracking
+player Elo rankings, and finding places to play. No install — just open it in a
+phone browser. Live at
+[brevardvolleyballclub.com](https://brevardvolleyballclub.com). Sign-in (Google)
+and all game/profile data live in Supabase — see `supabase/README.md`.
 
 Built with React, Vite, Tailwind CSS, and [HeroUI](https://www.heroui.com) as
 the component/design library.
+
+### Admin tools
+
+The **Admin Panel** button on the home screen only appears for the admin
+account (`profiles.is_admin`, set by hand in Supabase). It contains:
+
+- **Sign-Up QR Code** — the fastest way to onboard a new player in person.
+  Shows a QR code for `brevardvolleyballclub.com/?join=1`; when they scan it
+  with their phone camera, the app skips the intro animation and sends them
+  straight to Google sign-in. Their first Google sign-in creates their player
+  profile automatically (the `handle_new_user` database trigger), and they
+  land on a "Welcome" screen confirming it worked — with a retry button if
+  they backed out of Google. The QR code points at whatever site it's opened
+  from, so open it on the live site, not a local dev server.
+- **Add Manual Profile** — create a player with no Google account.
+- **Recompute Elo Ratings** — reset and replay every ranked game's rating.
+- **Merge Profiles** — combine a manual profile into the player's real
+  Google profile (e.g. after someone who played as a manual profile signs up
+  via the QR code).
 
 ### Local development
 
