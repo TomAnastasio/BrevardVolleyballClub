@@ -38,6 +38,17 @@ export function mapGameForPlayer(game, playerId, gpByGameId) {
   };
 }
 
+// Profile records: every game, and ranked games only. There are no seasons
+// yet, so "ranked" is every ranked game ever (owner's call, 2026-10-22: this
+// is season 1; seasons come later).
+export function winLossRecords(games) {
+  const tally = (list) => ({
+    wins: list.filter((g) => g.ownScore > g.oppScore).length,
+    losses: list.filter((g) => g.ownScore < g.oppScore).length,
+  });
+  return { overall: tally(games), ranked: tally(games.filter((g) => g.mode === "ranked")) };
+}
+
 // Every game a given player has been a part of — beach or indoor, submitted
 // by them or linked as a participant — newest first. `games`/`game_players`
 // are both fully public (migrations 20261002151652/20261002204815), so this

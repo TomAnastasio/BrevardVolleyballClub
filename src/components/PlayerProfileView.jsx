@@ -3,7 +3,7 @@ import { Card } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
 import RankBadge from "./RankBadge.jsx";
 import ProfilePhotoEditor from "./ProfilePhotoEditor.jsx";
-import { usePlayerGames } from "../hooks/usePlayerGames.js";
+import { usePlayerGames, winLossRecords } from "../hooks/usePlayerGames.js";
 import { usePlayerTournaments } from "../hooks/useTournament.js";
 import { formatEventDate, placeLabel, TITLE_LABELS } from "./tournament/tournamentFormat.js";
 import { useAuth } from "../hooks/useAuth.js";
@@ -138,8 +138,8 @@ export default function PlayerProfileView({ player, onBack, onOpenTournament }) 
   const [avatarUrl, setAvatarUrl] = useState(player.avatar_url);
   const [photoSaved, setPhotoSaved] = useState(false);
 
-  const wins = games.filter((g) => g.ownScore > g.oppScore).length;
-  const losses = games.filter((g) => g.ownScore < g.oppScore).length;
+  const records = winLossRecords(games);
+  const hasRanked = player.elo_games_played > 0;
 
   return (
     <main className="flex flex-1 flex-col overflow-y-auto">
@@ -187,10 +187,28 @@ export default function PlayerProfileView({ player, onBack, onOpenTournament }) 
           </p>
         )}
 
-        {player.elo_games_played > 0 && (
-          <p className="m-0 text-sm text-muted">
-            {player.elo_rating} Elo · {wins}W – {losses}L
-          </p>
+        {(hasRanked || (!loading && games.length > 0)) && (
+          <div className="flex flex-col gap-0.5 text-sm text-muted">
+            {hasRanked && <p className="m-0 font-semibold text-foreground">{player.elo_rating} Elo</p>}
+            {/* Overall first, ranked right under it (owner's call). The
+                ranked line only appears once they've played a ranked game. */}
+            {!loading && games.length > 0 && (
+              <dl className="m-0 grid w-max grid-cols-[auto_auto] gap-x-4 [font-variant-numeric:tabular-nums]">
+                <dt>Overall</dt>
+                <dd className="m-0">
+                  {records.overall.wins}W – {records.overall.losses}L
+                </dd>
+                {hasRanked && (
+                  <>
+                    <dt>Ranked</dt>
+                    <dd className="m-0">
+                      {records.ranked.wins}W – {records.ranked.losses}L
+                    </dd>
+                  </>
+                )}
+              </dl>
+            )}
+          </div>
         )}
 
         {isAdmin && <AdminDetails profileId={player.id} />}

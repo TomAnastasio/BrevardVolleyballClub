@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapGameForPlayer, sideForPlayer } from "./usePlayerGames.js";
+import { mapGameForPlayer, sideForPlayer, winLossRecords } from "./usePlayerGames.js";
 
 const PLAYER = "player-1";
 const OTHER = "player-2";
@@ -57,5 +57,25 @@ describe("mapGameForPlayer", () => {
     expect(mapped.ownScore).toBe(15);
     expect(mapped.oppScore).toBe(21);
     expect(mapped.oppName).toBe("Team A");
+  });
+});
+
+describe("winLossRecords", () => {
+  it("counts every game overall and only ranked games for the ranked record", () => {
+    const games = [
+      { mode: "ranked", ownScore: 21, oppScore: 15 },
+      { mode: "ranked", ownScore: 12, oppScore: 21 },
+      { mode: "casual", ownScore: 21, oppScore: 19 },
+      { mode: "casual", ownScore: 21, oppScore: 10 },
+      { mode: "casual", ownScore: 5, oppScore: 21 },
+    ];
+    expect(winLossRecords(games)).toEqual({
+      overall: { wins: 3, losses: 2 },
+      ranked: { wins: 1, losses: 1 },
+    });
+  });
+
+  it("is all zeros with no games", () => {
+    expect(winLossRecords([])).toEqual({ overall: { wins: 0, losses: 0 }, ranked: { wins: 0, losses: 0 } });
   });
 });

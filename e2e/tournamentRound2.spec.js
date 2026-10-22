@@ -119,6 +119,8 @@ test("round 2, best-of-3 final, crowning", async ({ page, browser }) => {
     if (await unranked.count()) await unranked.click();
     await page.getByRole("button", { name: `View ${PLAYER_NAME}'s profile` }).click();
     await expect(tag("Pool play · Round 1")).toHaveCount(3, { timeout: 20_000 });
+    // Overall record always shows once they have games (these are unranked).
+    await expect(page.getByText("Overall", { exact: true })).toBeVisible();
     await tag("Pool play · Round 1").first().click();
     await expect(page.getByRole("heading", { name })).toBeVisible({ timeout: 20_000 });
   } finally {
