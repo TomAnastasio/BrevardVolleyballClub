@@ -1,0 +1,53 @@
+name: Apply database migrations (staging)
+
+# Staging twin of apply-migrations.yml: pushes any new file(s) in
+# supabase/migrations/ to the *staging* Supabase project (ref
+# cbgismbfbfvovxhvhtor, the one e2e tests run against — see CLAUDE.md) so
+# its schema never drifts behind production. Before this existed, staging
+# had to be updated by hand with the staging DB password, which a Claude
+# session must never handle (CLAUDE.md), so it routinely fell behind.
+#
+# STAGING_SUPABASE_DB_URL lives in its own "staging" GitHub environment
+# (restricted to main), separate from the "production" environment's
+# secrets — this workflow never declares `environment: production` and can't
+# read anything there. See supabase/README.md, "Automatic migrations for
+# staging".
+#
+# Runs independently of the production workflow: a failure here never
+# blocks or affects production, and vice versa.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "supabase/migrations/**"
+      # Also run when this file itself changes, so the very first push of it
+      # catches staging up on anything it's missing.
+      - ".github/workflows/apply-migrations-staging.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: "apply-migrations-staging"
+  cancel-in-progress: false
+
+jobs:
+  push-migrations:
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push pending migrations to staging Supabase
+        env:
+          STAGING_SUPABASE_DB_URL: ${{ secrets.STAGING_SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${STAGING_SUPABASE_DB_URL:-}" ]; then
+            echo "::error::STAGING_SUPABASE_DB_URL secret is not set yet — see supabase/README.md (Automatic migrations for staging)."
+            exit 1
+          fi
+          # Same pinned CLI version as the production workflow, on purpose.
+          npx -y supabase@2.121.0 db push --db-url "$STAGING_SUPABASE_DB_URL" --yes

@@ -83,8 +83,13 @@ full recovery steps):
   must never be done with the service-role key).
 - `e2e/seedStaging.js` seeds fixture player profiles via the admin bot's own
   normal API access — never the service-role key or DB password.
-- Staging's schema must be kept in sync with `supabase/migrations/` by hand
-  (`supabase db push` against staging) — there's no automation for this.
+- As of 2026-10-22, staging's schema is kept in sync with
+  `supabase/migrations/` automatically by
+  `.github/workflows/apply-migrations-staging.yml` (its own `staging`
+  GitHub environment and `STAGING_SUPABASE_DB_URL` secret, set up by the
+  owner — see "Automatic migrations for staging" in `supabase/README.md`).
+  If an e2e test fails on something a new migration adds, check that
+  workflow's latest run before assuming the code is wrong.
 All the database-safety rules above (no service-role key, no DB password,
 additive-only migrations) apply identically to the staging project — it's
 lower-stakes than production, not a place those rules get relaxed.

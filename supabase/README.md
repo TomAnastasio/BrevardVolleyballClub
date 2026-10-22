@@ -91,6 +91,36 @@ step has been done, don't let it push automatically yet — run this repair
 step first, or temporarily pause the workflow (Actions tab → disable), to
 avoid the same "tries to recreate what already exists" failure.
 
+### Automatic migrations for staging (new as of 2026-10-22)
+
+A second workflow, `.github/workflows/apply-migrations-staging.yml`, pushes
+the same migration files to the **staging** project (ref
+`cbgismbfbfvovxhvhtor` — the one the e2e tests use, never production) on
+every push to `main` that touches this folder. Before this, staging had to
+be caught up by hand, and kept falling behind because no Claude session may
+handle the staging DB password either.
+
+Its one secret, `STAGING_SUPABASE_DB_URL`, lives in a separate GitHub
+environment called `staging` — not `production` — so this workflow can't
+read the production secrets and the production workflow can't read this.
+
+**One-time setup (owner only):**
+1. Get the **staging** project's connection string exactly as in step 2 of
+   the backup setup below, but in the staging project's dashboard: Connect
+   → Direct → "Shared pooler" box (port 5432), with the staging DB password
+   filled in (resetting it is harmless — only this connection uses it).
+2. On github.com, this repo → Settings → Environments → **New environment**
+   → name it `staging` → Configure. Under "Deployment branches and tags",
+   choose **Selected branches and tags** → add `main`.
+3. Still in that environment → **Add environment secret** → name
+   `STAGING_SUPABASE_DB_URL`, value = the string from step 1.
+4. Actions tab → "Apply database migrations (staging)" → **Run workflow**
+   to catch staging up immediately (otherwise it'll catch up on the next
+   migration push).
+
+A failed staging run has no effect on production or the live site; it only
+means e2e tests may run against an out-of-date staging schema until fixed.
+
 ### What a failed run looks like, and what to do
 
 `supabase db push` stops at the first migration that errors (e.g. "relation
