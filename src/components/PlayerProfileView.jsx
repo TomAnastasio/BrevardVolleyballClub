@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
 import RankBadge from "./RankBadge.jsx";
+import { rankTitle } from "../lib/rankTitle.js";
 import ProfilePhotoEditor from "./ProfilePhotoEditor.jsx";
 import { partnerStats, usePlayerGames, winLossRecords } from "../hooks/usePlayerGames.js";
 import { usePlayerElo } from "../hooks/usePlayerElo.js";
@@ -209,7 +210,12 @@ export default function PlayerProfileView({
 
         {(hasRanked || (!loading && games.length > 0)) && (
           <div className="flex flex-col gap-0.5 text-sm text-muted">
-            {hasRanked && <p className="m-0 font-semibold text-foreground">{player.elo_rating} Elo</p>}
+            {hasRanked && (
+              <p className="m-0 font-semibold text-foreground">
+                {player.elo_rating} Elo
+                {player.tier && <span className="font-normal text-muted"> · {rankTitle(player.tier, player.division)}</span>}
+              </p>
+            )}
             {/* Overall first, ranked right under it (owner's call). The
                 ranked line only appears once they've played a ranked game. */}
             {!loading && games.length > 0 && (

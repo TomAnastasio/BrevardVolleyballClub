@@ -45,6 +45,15 @@ Below the Overall/Ranked records, a profile shows:
   games count, ranked and casual, beach and indoor. Typed-in names that
   aren't linked to a profile don't count. Tap one to open their profile.
 
+### Rank titles
+
+Each rank badge has a title, shown under the player's name in Rankings and
+next to their Elo on their profile: **Bronze I–III**, **Gold I–III**,
+**Diamond I–III** (III is the top of each tier), then **Emerald** (#3),
+**Amethyst** (#2) and **Champion** (#1). The lowest-ranked player is
+**Platinum** (the stink badge — it's a joke). Names live in
+`src/lib/rankTitle.js`; which badge a player gets is in `useLeaderboard.js`.
+
 ### Profile photos
 
 A player's photo starts as their Google account photo (copied once, at

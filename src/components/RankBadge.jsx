@@ -11,6 +11,7 @@ import top3_1 from "../assets/badges/top3-1.png";
 import top3_2 from "../assets/badges/top3-2.png";
 import top3_3 from "../assets/badges/top3-3.png";
 import lastplaceArt from "../assets/badges/lastplace.svg";
+import { rankTitle } from "../lib/rankTitle.js";
 
 // Badge artwork (not Riot's), one PNG per tier/division. Bronze, Gold, and
 // Diamond divisions mark a player's bottom-30%/middle-40%/top-30% position
@@ -23,14 +24,6 @@ const BADGES = {
   diamond: { 1: diamond1, 2: diamond2, 3: diamond3 },
   top3: { 1: top3_1, 2: top3_2, 3: top3_3 },
   lastplace: { 1: lastplaceArt, 2: lastplaceArt, 3: lastplaceArt },
-};
-
-const LABELS = {
-  bronze: "Bronze",
-  gold: "Gold",
-  diamond: "Diamond",
-  top3: "Top 3",
-  lastplace: "Last Place",
 };
 
 // Bronze/Gold/Diamond art is a tall 200x280 diamond; top3 and lastplace art
@@ -77,7 +70,7 @@ export default function RankBadge({ tier, division = 3, size = 40, className = "
   const src = BADGES[tier]?.[division];
   if (!src) return null;
 
-  const alt = tier === "lastplace" ? "Last place" : `${LABELS[tier]} rank, division ${division}`;
+  const alt = tier === "lastplace" ? "Platinum rank (last place)" : `${rankTitle(tier, division)} rank`;
   const height = size * ASPECT[tier];
 
   // The literal #1/#2/#3 players get a shimmer sweep + faint glow (CSS only,

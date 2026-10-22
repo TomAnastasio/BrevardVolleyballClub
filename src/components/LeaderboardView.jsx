@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
 import RankBadge from "./RankBadge.jsx";
+import { rankTitle } from "../lib/rankTitle.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { useLeaderboard } from "../hooks/useLeaderboard.js";
 
@@ -69,9 +70,14 @@ export default function LeaderboardView({ onBack, onSelectPlayer }) {
                           <div className="flex items-center gap-3">
                             <span className="w-6 flex-none text-center font-bold text-muted">{index + 1}</span>
                             <PlayerAvatar src={player.avatar_url} />
-                            <span className="min-w-0 flex-1 truncate font-bold">
-                              {player.display_name}
-                              {isSelf && <span className="ml-1 font-normal text-muted">(you)</span>}
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-bold">
+                                {player.display_name}
+                                {isSelf && <span className="ml-1 font-normal text-muted">(you)</span>}
+                              </span>
+                              <span className="block truncate text-xs text-muted">
+                                {rankTitle(player.tier, player.division)}
+                              </span>
                             </span>
                             <span className="flex flex-none items-center gap-2">
                               <span className="text-right [font-variant-numeric:tabular-nums]">
