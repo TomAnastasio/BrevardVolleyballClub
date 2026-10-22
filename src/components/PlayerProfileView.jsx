@@ -8,6 +8,7 @@ import { usePlayerTournaments } from "../hooks/useTournament.js";
 import { formatEventDate, placeLabel, TITLE_LABELS } from "./tournament/tournamentFormat.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { supabase } from "../lib/supabaseClient.js";
+import CopyableText from "./CopyableText.jsx";
 
 function PlayerAvatar({ src }) {
   if (!src) {
@@ -65,7 +66,6 @@ function formatWhen(value) {
 function AdminDetails({ profileId }) {
   const [details, setDetails] = useState(null);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -83,27 +83,14 @@ function AdminDetails({ profileId }) {
     };
   }, [profileId]);
 
-  async function copy(text) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(text);
-      setTimeout(() => setCopied(""), 2000);
-    } catch (e) {
-      setCopied("");
-    }
-  }
-
   const row = (label, value, copyable) => (
     <div className="flex items-baseline justify-between gap-2">
       <span className="flex-none text-xs font-bold text-muted">{label}</span>
-      <span className="flex min-w-0 items-baseline gap-2 text-right">
-        <span className="min-w-0 break-all">{value || "—"}</span>
-        {copyable && value && (
-          <button type="button" onClick={() => copy(value)} className="flex-none text-xs font-bold text-accent underline">
-            {copied === value ? "Copied" : "Copy"}
-          </button>
-        )}
-      </span>
+      {copyable && value ? (
+        <CopyableText value={value} label={label} className="justify-end text-right" />
+      ) : (
+        <span className="min-w-0 break-all text-right">{value || "—"}</span>
+      )}
     </div>
   );
 

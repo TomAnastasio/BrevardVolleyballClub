@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, Card } from "@heroui/react";
+import CopyableText from "../CopyableText.jsx";
 import LoadingMeteor from "../LoadingMeteor.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useTournament } from "../../hooks/useTournament.js";
@@ -222,7 +223,6 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
   const { model, loading, error, reload } = useTournament(tournamentId, { pollMs: POLL_MS });
   const [divisionId, setDivisionId] = useState(null);
   const [signInPrompt, setSignInPrompt] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   if (loading && !model) {
     return (
@@ -269,16 +269,6 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
       return;
     }
     onScoreMatch(matchId);
-  }
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (e) {
-      setCopied(false);
-    }
   }
 
   const champions = division?.entrants.filter((e) => e.title).sort((a, b) => (a.final_place ?? 9) - (b.final_place ?? 9));
@@ -476,10 +466,7 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
 
       <Card className="gap-2 p-3">
         <p className="m-0 text-xs font-bold text-muted">Share this page</p>
-        <p className="m-0 break-all text-xs">{shareUrl}</p>
-        <Button variant="outline" size="sm" onPress={handleCopy} className="self-start font-bold">
-          {copied ? "✓ Copied" : "Copy link"}
-        </Button>
+        <CopyableText value={shareUrl} label="link to this page" className="w-full py-1 text-sm" />
       </Card>
     </div>
   );
