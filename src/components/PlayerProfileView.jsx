@@ -4,6 +4,8 @@ import LoadingMeteor from "./LoadingMeteor.jsx";
 import RankBadge from "./RankBadge.jsx";
 import ProfilePhotoEditor from "./ProfilePhotoEditor.jsx";
 import { usePlayerGames } from "../hooks/usePlayerGames.js";
+import { usePlayerTournaments } from "../hooks/useTournament.js";
+import { formatEventDate, placeLabel, TITLE_LABELS } from "./tournament/tournamentFormat.js";
 import { useAuth } from "../hooks/useAuth.js";
 
 function PlayerAvatar({ src }) {
@@ -55,6 +57,8 @@ function GameRow({ game }) {
 
 export default function PlayerProfileView({ player, onBack }) {
   const { games, loading } = usePlayerGames(player?.id);
+  const tournaments = usePlayerTournaments(player?.id);
+  const titles = tournaments.filter((e) => e.title);
   const { user } = useAuth();
   const isOwnProfile = Boolean(user) && user.id === player.id;
   const [avatarUrl, setAvatarUrl] = useState(player.avatar_url);
@@ -92,7 +96,14 @@ export default function PlayerProfileView({ player, onBack }) {
           ) : (
             <PlayerAvatar src={avatarUrl} />
           )}
-          <span className="min-w-0 flex-1 truncate text-lg font-bold">{player.display_name}</span>
+          <span className="min-w-0 flex-1 truncate text-lg font-bold">
+            {player.display_name}
+            {titles.length > 0 && (
+              <span className="ml-1" aria-label={titles.map((e) => `${e.title} of ${e.tournament.name}`).join(", ")}>
+                {titles.map((e) => (e.title === "queen" ? "👑" : "👸")).join("")}
+              </span>
+            )}
+          </span>
           {player.tier && <RankBadge tier={player.tier} division={player.division} size={38} />}
         </div>
 
@@ -106,6 +117,30 @@ export default function PlayerProfileView({ player, onBack }) {
           <p className="m-0 text-sm text-muted">
             {player.elo_rating} Elo · {wins}W – {losses}L
           </p>
+        )}
+
+        {tournaments.length > 0 && (
+          <section className="flex flex-col gap-2">
+            <h3 className="m-0 text-sm font-bold uppercase tracking-wide text-muted">Tournaments</h3>
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              {tournaments.map((e) => (
+                <li key={e.id}>
+                  <Card className={`gap-0.5 p-3 ${e.title ? "border border-accent/40" : ""}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate font-bold">{e.tournament.name}</span>
+                      <span className="flex-none text-sm font-bold text-accent">
+                        {e.title ? TITLE_LABELS[e.title] : e.final_place ? placeLabel(e.final_place) : ""}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted">
+                      {formatEventDate(e.tournament.event_date)}
+                      {e.division?.name ? ` · ${e.division.name}` : ""}
+                    </span>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {loading ? (

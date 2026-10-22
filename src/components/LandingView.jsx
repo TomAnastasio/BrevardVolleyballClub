@@ -30,7 +30,7 @@ function LandingCard({ icon, label, subtitle, onClick, delay }) {
   );
 }
 
-export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard, onAdminPanel }) {
+export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard, onTournaments, onAdminPanel }) {
   const { user, isAdmin, avatarUrl: profileAvatarUrl } = useAuth();
   const avatarUrl = profileAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const isAuthenticated = Boolean(user);
@@ -69,13 +69,20 @@ export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard
             onClick={onLeaderboard}
             delay="240ms"
           />
+          <LandingCard
+            icon="👑"
+            label="Tournaments"
+            subtitle="Pools, live scores and results"
+            onClick={onTournaments}
+            delay="320ms"
+          />
           {isAdmin && (
             <LandingCard
               icon="🛠️"
               label="Admin Panel"
               subtitle="Manage manual player profiles"
               onClick={onAdminPanel}
-              delay="320ms"
+              delay="400ms"
             />
           )}
         </div>

@@ -7,11 +7,12 @@ import PlayerProfileView from "./components/PlayerProfileView.jsx";
 import GameTrackingShell from "./components/game/GameTrackingShell.jsx";
 import WelcomeView from "./components/WelcomeView.jsx";
 import AdminPanelView from "./components/admin/AdminPanelView.jsx";
+import TournamentsShell from "./components/tournament/TournamentsShell.jsx";
 import VersionBadge from "./components/VersionBadge.jsx";
 import { AuthProvider } from "./hooks/AuthContext.jsx";
 import { hasPendingGameTracking } from "./lib/pendingGameTracking.js";
 
-export default function App({ joinRequested, justJoined }) {
+export default function App({ joinRequested, justJoined, tournamentId }) {
   // A sign-up QR scan skips the splash so the visitor goes straight to Google.
   const [appReady, setAppReady] = useState(joinRequested);
   // The Google OAuth sign-in redirect reloads the page from scratch, which
@@ -20,9 +21,12 @@ export default function App({ joinRequested, justJoined }) {
   // in from, instead of having to re-navigate from the top.
   const [view, setView] = useState(() => {
     if (joinRequested || justJoined) return "welcome";
+    if (tournamentId) return "tournaments";
     return hasPendingGameTracking() ? "game" : "landing";
   });
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  // Only the first visit to Tournaments opens the linked tournament directly.
+  const [linkedTournamentId, setLinkedTournamentId] = useState(tournamentId);
 
   return (
     <AuthProvider>
@@ -35,6 +39,7 @@ export default function App({ joinRequested, justJoined }) {
               onPlayToday={() => setView("play")}
               onGameTracking={() => setView("game")}
               onLeaderboard={() => setView("leaderboard")}
+              onTournaments={() => setView("tournaments")}
               onAdminPanel={() => setView("admin")}
             />
           )}
@@ -64,6 +69,15 @@ export default function App({ joinRequested, justJoined }) {
           )}
           {view === "game" && <GameTrackingShell onBack={() => setView("landing")} />}
           {view === "admin" && <AdminPanelView onBack={() => setView("landing")} />}
+          {view === "tournaments" && (
+            <TournamentsShell
+              initialTournamentId={linkedTournamentId}
+              onBack={() => {
+                setLinkedTournamentId(null);
+                setView("landing");
+              }}
+            />
+          )}
         </div>
       )}
     </AuthProvider>

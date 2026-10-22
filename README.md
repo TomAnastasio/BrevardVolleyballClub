@@ -41,6 +41,45 @@ account (`profiles.is_admin`, set by hand in Supabase). It contains:
   Google profile (e.g. after someone who played as a manual profile signs up
   via the QR code).
 
+### Tournaments (Queen of the Court)
+
+The **Tournaments** button on the home screen lists every published
+tournament. Each one has a public live page, which needs no sign-in. Its
+link is `brevardvolleyballclub.com/?t=<id>` and the page has a Copy link
+button. The page shows each division's pools, live standings and the fixed
+game order, highlights who's up next, and shows a signed-in player their own
+next game.
+
+How a tournament runs (admins do this from **Manage tournament**):
+
+1. **New tournament.** Enter the name, date, location and divisions, plus the
+   game rules: target score, win by 2, optional point cap, and whether games
+   count toward Elo.
+2. **Import registrations.** Copy the Google Form's response sheet,
+   including the header row, and paste it in. Each name is matched to an
+   existing player, or a manual profile is created. You confirm every row
+   first. Email and phone are kept in an admin-only table. Date of birth is
+   never stored.
+3. **Pools & schedule.** Pick a pool size and seeding (balanced by Elo, or
+   random), preview, move players by hand if needed, and save. The app
+   builds each pool's game order so everyone partners everyone once, as far
+   as the pool size allows. Then **Publish** to post it.
+4. **Players & check-in** on the day. Tap each player as they arrive. If
+   anyone didn't show, rebuild pools with checked-in players only.
+   **Start tournament** stays locked until the pools match check-in.
+5. **Scoring.** Any signed-in member taps a game on the live page and keeps
+   score point by point (spectators see it live) or types the final score.
+   Each scored game is saved as a normal 2v2 beach game, so Elo and game
+   history work as usual. A wrong score: an admin taps **undo this score**
+   on the live page, and the game can be scored again.
+6. **Finals.** Pick each division's two finalists and their partners.
+7. **Crown the winners.** The Queen (👑) and Princess (👸) badges show on
+   their player profiles, and every entrant's profile lists their
+   tournaments.
+
+A player imported as a manual profile who later signs up with the QR code
+keeps their tournament history when you merge the profiles.
+
 ### Local development
 
 ```bash
