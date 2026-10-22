@@ -41,6 +41,10 @@ export default function App({ joinRequested, justJoined }) {
           {view === "welcome" && (
             <WelcomeView
               joinRequested={joinRequested}
+              onProfileReady={(player) => {
+                setSelectedPlayer(player);
+                setView("profile");
+              }}
               onRankings={() => setView("leaderboard")}
               onHome={() => setView("landing")}
             />

@@ -1,16 +1,42 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
 import { useAuth } from "../hooks/useAuth.js";
+import { supabase } from "../lib/supabaseClient.js";
 import { setJustJoined } from "../lib/joinLink.js";
 
 // Where someone lands after scanning the admin's sign-up QR code. On the
 // first visit (`joinRequested`) a signed-out player is sent straight to
-// Google; when they come back signed in, this confirms their profile exists.
-export default function WelcomeView({ joinRequested, onRankings, onHome }) {
+// Google; when they come back signed in, this hands their profile row to
+// `onProfileReady` so the app can open their profile page. The welcome
+// screen below is only a fallback if that lookup fails.
+export default function WelcomeView({ joinRequested, onProfileReady, onRankings, onHome }) {
   const { user, loading, isConfigured, signInWithGoogle } = useAuth();
   const redirectStarted = useRef(false);
   const shouldRedirect = joinRequested && isConfigured && !loading && !user;
+  const [profileLookup, setProfileLookup] = useState("pending"); // pending | failed
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    // Same columns useLeaderboard selects, which is what PlayerProfileView
+    // expects. The row itself is created by the handle_new_user trigger the
+    // moment the Google account is first created.
+    supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url, elo_rating, elo_games_played")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (!error && data) onProfileReady(data);
+        else setProfileLookup("failed");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   function startSignIn() {
     redirectStarted.current = true;
@@ -32,6 +58,13 @@ export default function WelcomeView({ joinRequested, onRankings, onHome }) {
       <>
         <LoadingMeteor size={120} />
         <p className="m-0 text-sm text-muted">Opening Google sign-in…</p>
+      </>
+    );
+  } else if (user && profileLookup === "pending") {
+    content = (
+      <>
+        <LoadingMeteor size={120} />
+        <p className="m-0 text-sm text-muted">Loading your profile…</p>
       </>
     );
   } else if (user) {

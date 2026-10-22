@@ -21,8 +21,8 @@ account (`profiles.is_admin`, set by hand in Supabase). It contains:
   with their phone camera, the app skips the intro animation and sends them
   straight to Google sign-in. Their first Google sign-in creates their player
   profile automatically (the `handle_new_user` database trigger), and they
-  land on a "Welcome" screen confirming it worked — with a retry button if
-  they backed out of Google. The QR code points at whatever site it's opened
+  land directly on their own player profile page. If they back out of
+  Google, they get a "Sign-in didn't finish" screen with a retry button. The QR code points at whatever site it's opened
   from, so open it on the live site, not a local dev server.
 - **Add Manual Profile** — create a player with no Google account.
 - **Recompute Elo Ratings** — reset and replay every ranked game's rating.
