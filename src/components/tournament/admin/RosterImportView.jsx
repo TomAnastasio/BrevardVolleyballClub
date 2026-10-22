@@ -91,7 +91,8 @@ export default function RosterImportView({ model, onDone }) {
       <div className="flex flex-col gap-3 px-3 pb-8">
         <p className="m-0 text-sm text-muted">
           In the form's response spreadsheet, select everything (including the header row), copy, and paste it here.
-          The app keeps name, division, email and phone only. Date of birth is ignored.
+          The app keeps name, division, email and phone, plus AVP rank, TruVolley score and a junior yes/no column if
+          the sheet has them (for seeding). Date of birth is ignored.
         </p>
         <textarea
           rows={8}
@@ -132,6 +133,13 @@ export default function RosterImportView({ model, onDone }) {
                 {r.name}
                 {already && <span className="text-xs font-semibold text-muted">(already entered)</span>}
               </label>
+              {(r.avpRank != null || r.truvolley != null || r.junior) && (
+                <p className="m-0 text-xs text-muted">
+                  {[r.avpRank != null && `AVP #${r.avpRank}`, r.truvolley != null && `TruVolley ${r.truvolley}`, r.junior && "Junior"]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              )}
               <select
                 value={r.profileId || NEW_PROFILE}
                 onChange={(e) => update(i, { profileId: e.target.value === NEW_PROFILE ? null : e.target.value })}

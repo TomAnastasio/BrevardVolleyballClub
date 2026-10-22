@@ -49,7 +49,10 @@ function EntrantRow({ entrant, name, contact, divisions, onChanged, setError }) 
           {entrant.checked_in ? "✓" : ""}
         </button>
         <button type="button" onClick={() => setOpen((o) => !o)} className="min-w-0 flex-1 text-left">
-          <span className="block truncate font-semibold">{name}</span>
+          <span className="block truncate font-semibold">
+            {name}
+            {entrant.is_junior && <span className="ml-1 text-xs font-bold text-accent">Jr</span>}
+          </span>
           <span className="block text-xs text-muted">{entrant.checked_in ? "Checked in" : "Not checked in"} · details ›</span>
         </button>
       </div>
@@ -73,6 +76,53 @@ function EntrantRow({ entrant, name, contact, divisions, onChanged, setError }) 
               ))}
             </select>
           </label>
+          <div className="flex gap-2">
+            <label className="flex flex-1 flex-col gap-1">
+              <span className="font-bold">AVP rank</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                defaultValue={entrant.avp_rank ?? ""}
+                placeholder="None"
+                aria-label={`${name}: AVP rank`}
+                onBlur={(e) => {
+                  const v = e.target.value === "" ? null : Math.round(Number(e.target.value));
+                  if (v !== entrant.avp_rank && (v === null || v >= 1)) run(() => updateEntrant(entrant.id, { avp_rank: v }));
+                }}
+                className={`${inputClass} py-1`}
+              />
+            </label>
+            <label className="flex flex-1 flex-col gap-1">
+              <span className="font-bold">TruVolley</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
+                defaultValue={entrant.truvolley_score ?? ""}
+                placeholder="None"
+                aria-label={`${name}: TruVolley score`}
+                onBlur={(e) => {
+                  const v = e.target.value === "" ? null : Number(e.target.value);
+                  const current = entrant.truvolley_score == null ? null : Number(entrant.truvolley_score);
+                  if (v !== current && (v === null || v >= 0)) run(() => updateEntrant(entrant.id, { truvolley_score: v }));
+                }}
+                className={`${inputClass} py-1`}
+              />
+            </label>
+          </div>
+          <p className="m-0 text-xs text-muted">Pools are seeded by AVP rank, then TruVolley, then Elo.</p>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={entrant.is_junior}
+              disabled={busy}
+              onChange={(e) => run(() => updateEntrant(entrant.id, { is_junior: e.target.checked }))}
+              className="h-5 w-5"
+            />
+            Junior (can play, not eligible for cash prizes)
+          </label>
           {confirmRemove ? (
             <div className="flex gap-2">
               <Button variant="danger" size="sm" onPress={() => run(() => removeEntrant(entrant.id))} isDisabled={busy}>
@@ -90,6 +140,45 @@ function EntrantRow({ entrant, name, contact, divisions, onChanged, setError }) 
         </div>
       )}
     </li>
+  );
+}
+
+// The organizer's rule: a division under its minimum merges into the next
+// level up or down. Moves every entrant; pools need rebuilding afterward.
+function MergeDivision({ division, divisions, reload, setError }) {
+  const [target, setTarget] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function handleMerge() {
+    setBusy(true);
+    setError("");
+    try {
+      for (const e of division.entrants) await updateEntrant(e.id, { division_id: target });
+      await reload();
+    } catch (e) {
+      console.error("Division merge failed:", e);
+      setError(friendlyError(e, "Couldn't move everyone. Some players may have moved; check both divisions."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <select value={target} onChange={(e) => setTarget(e.target.value)} aria-label={`Merge ${division.name} into`} className={`${inputClass} py-1`}>
+        <option value="">Merge all {division.entrants.length} into…</option>
+        {divisions
+          .filter((d) => d.id !== division.id)
+          .map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+      </select>
+      <Button variant="secondary" size="sm" onPress={handleMerge} isDisabled={busy || !target} className="font-bold">
+        Merge
+      </Button>
+    </div>
   );
 }
 
@@ -188,6 +277,9 @@ export default function EntrantsView({ model, reload, onImport }) {
                 {d.entrants.length < d.min_players ? ` · below ${d.min_players}-player minimum` : ""}
               </span>
             </h3>
+            {d.entrants.length > 0 && d.entrants.length < d.min_players && divisions.length > 1 && (
+              <MergeDivision division={d} divisions={divisions} reload={reload} setError={setError} />
+            )}
             {d.entrants.length === 0 && (
               <button type="button" onClick={() => handleDeleteDivision(d.id)} disabled={busy} className="self-start text-sm font-bold text-muted underline">
                 Delete empty division

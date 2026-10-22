@@ -1,5 +1,5 @@
 import { supabase } from "./supabaseClient.js";
-import { buildPoolSchedule, poolLabel } from "./queenOfCourt.js";
+import { buildPoolSchedule, poolLabel, poolRules } from "./queenOfCourt.js";
 
 // Every tournament write the app makes. Admin-only writes are plain table
 // writes gated by RLS (migration 20261022180000); score entry goes through
@@ -22,6 +22,10 @@ export function friendlyError(e, fallback = "Something went wrong. Please try ag
     "only be entered while the tournament is running",
     "delete its game first",
     "tournament game not found",
+    "sign in to vote",
+    "costume voting isn't open",
+    "can't vote for yourself",
+    "isn't in this tournament",
   ];
   if (known.some((k) => msg.includes(k))) return msg.charAt(0).toUpperCase() + msg.slice(1) + ".";
   if (msg.includes("duplicate key") && msg.includes("tournament_entrants")) return "That player is already entered.";
@@ -92,7 +96,14 @@ export async function importEntrants(tournamentId, rows) {
       const entrant = unwrap(
         await supabase
           .from("tournament_entrants")
-          .insert({ tournament_id: tournamentId, division_id: row.divisionId, profile_id: profileId })
+          .insert({
+            tournament_id: tournamentId,
+            division_id: row.divisionId,
+            profile_id: profileId,
+            avp_rank: row.avpRank ?? null,
+            truvolley_score: row.truvolley ?? null,
+            is_junior: Boolean(row.junior),
+          })
           .select("id")
           .single(),
       );
@@ -129,9 +140,11 @@ export async function fetchContacts(entrantIds) {
 }
 
 // Replaces a division's pools for one round with `pools` (arrays of
-// entrants, in seed order) and writes each pool's fixed game order. The
-// database refuses (trigger) if any game being replaced already has a score.
-export async function savePools({ tournamentId, divisionId, round, pools, courts = [] }) {
+// entrants, in seed order) and writes each pool's fixed game order, with
+// the game rules for that pool size. `labels` defaults to A, B, C...
+// The database refuses (trigger) if any game being replaced already has a
+// score. `fallbackRules` (the tournament's own) covers sizes other than 4/5.
+export async function savePools({ tournamentId, divisionId, round, pools, labels = [], courts = [], fallbackRules }) {
   unwrap(
     await supabase.from("tournament_pools").delete().eq("division_id", divisionId).eq("round", round),
   );
@@ -144,7 +157,7 @@ export async function savePools({ tournamentId, divisionId, round, pools, courts
           tournament_id: tournamentId,
           division_id: divisionId,
           round,
-          label: poolLabel(i),
+          label: labels[i] || poolLabel(i),
           court: courts[i] || null,
         })
         .select()
@@ -157,6 +170,7 @@ export async function savePools({ tournamentId, divisionId, round, pools, courts
     );
     const schedule = buildPoolSchedule(players.length);
     const pid = (index) => players[index].profile_id;
+    const rules = poolRules(players.length, fallbackRules);
     unwrap(
       await supabase.from("tournament_matches").insert(
         schedule.map(([[a1, a2], [b1, b2]], n) => ({
@@ -170,6 +184,9 @@ export async function savePools({ tournamentId, divisionId, round, pools, courts
           a2: pid(a2),
           b1: pid(b1),
           b2: pid(b2),
+          win_score: rules.winScore,
+          win_by_two: rules.winByTwo,
+          point_cap: rules.pointCap,
         })),
       ),
     );
@@ -180,19 +197,27 @@ export async function updatePoolCourt(poolId, court) {
   unwrap(await supabase.from("tournament_pools").update({ court: court || null }).eq("id", poolId));
 }
 
-export async function addFinalMatch({ tournamentId, divisionId, sequence, a1, a2, b1, b2 }) {
+// A final between two finalists (a1, b1) and their partners: one match
+// per set, linked to the pool it's the final of, each with its set's rules.
+export async function addFinal({ tournamentId, divisionId, pool, sets, a1, a2, b1, b2 }) {
   unwrap(
-    await supabase.from("tournament_matches").insert({
-      tournament_id: tournamentId,
-      division_id: divisionId,
-      stage: "final",
-      round: 1,
-      sequence,
-      a1,
-      a2,
-      b1,
-      b2,
-    }),
+    await supabase.from("tournament_matches").insert(
+      sets.map((rules, i) => ({
+        tournament_id: tournamentId,
+        division_id: divisionId,
+        pool_id: pool.id,
+        stage: "final",
+        round: pool.round,
+        sequence: i + 1,
+        a1,
+        a2,
+        b1,
+        b2,
+        win_score: rules.winScore,
+        win_by_two: rules.winByTwo,
+        point_cap: rules.pointCap,
+      })),
+    ),
   );
 }
 
@@ -201,16 +226,20 @@ export async function deleteMatch(id) {
   if (!rows.length) throw new Error("This game already has a score; delete its game first.");
 }
 
-// Records Queen/Princess for each division and marks the tournament done.
-// `results` is [{ entrantId, title, place }]; everyone else is cleared so
-// re-running this (e.g. to fix a mistake) never leaves a stale title.
-export async function completeTournament(tournamentId, results) {
+// Records Queen/Princess for each division and the best costume, and marks
+// the tournament done. `results` is [{ entrantId, title, place }]; everyone
+// else is cleared so re-running this (e.g. to fix a mistake) never leaves a
+// stale title.
+export async function completeTournament(tournamentId, results, costumeEntrantId = null) {
   unwrap(
     await supabase
       .from("tournament_entrants")
-      .update({ title: null, final_place: null })
+      .update({ title: null, final_place: null, costume_winner: false })
       .eq("tournament_id", tournamentId),
   );
+  if (costumeEntrantId) {
+    unwrap(await supabase.from("tournament_entrants").update({ costume_winner: true }).eq("id", costumeEntrantId));
+  }
   for (const r of results) {
     unwrap(
       await supabase
@@ -247,4 +276,26 @@ export async function pushLiveScore(matchId, scoreA, scoreB) {
 // to null (ON DELETE SET NULL), so the game can simply be scored again.
 export async function undoMatchScore(gameId) {
   unwrap(await supabase.rpc("admin_delete_game", { p_game_id: gameId }));
+}
+
+export async function castCostumeVote(tournamentId, entrantId) {
+  unwrap(await supabase.rpc("cast_costume_vote", { p_tournament_id: tournamentId, p_entrant_id: entrantId }));
+}
+
+// The signed-in user's own vote (RLS only returns their own), or null.
+export async function fetchMyCostumeVote(tournamentId, userId) {
+  const rows = unwrap(
+    await supabase
+      .from("tournament_costume_votes")
+      .select("entrant_id")
+      .eq("tournament_id", tournamentId)
+      .eq("voter_id", userId),
+  );
+  return rows[0]?.entrant_id ?? null;
+}
+
+// Map of entrant id -> votes. Admins any time; everyone once it's complete.
+export async function fetchCostumeTally(tournamentId) {
+  const rows = unwrap(await supabase.rpc("costume_vote_tally", { p_tournament_id: tournamentId }));
+  return new Map(rows.map((r) => [r.entrant_id, Number(r.votes)]));
 }

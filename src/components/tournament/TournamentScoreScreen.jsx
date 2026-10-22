@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button, Card } from "@heroui/react";
 import LoadingMeteor from "../LoadingMeteor.jsx";
 import { useTournament } from "../../hooks/useTournament.js";
-import { isGameOver } from "../../lib/queenOfCourt.js";
+import { isGameOver, rulesLabel } from "../../lib/queenOfCourt.js";
 import { friendlyError, pushLiveScore, submitMatchScore } from "../../lib/tournamentApi.js";
 import { DEFAULT_COLOR_A, DEFAULT_COLOR_B, colorForeground } from "../../lib/teamColors.js";
 import { teamNames } from "./tournamentFormat.js";
@@ -106,12 +106,14 @@ export default function TournamentScoreScreen({ tournamentId, matchId, onDone })
   const match = model?.matches.find((m) => m.id === matchId);
   if (!model || !match) return <p className="p-6 text-center text-muted">This game couldn't be found.</p>;
 
-  const t = model.tournament;
-  const rules = { winScore: t.win_score, winByTwo: t.win_by_two, pointCap: t.point_cap };
+  const rules = match.rules;
   const nameA = teamNames(model.profilesById, [match.a1, match.a2]);
   const nameB = teamNames(model.profilesById, [match.b1, match.b2]);
   const pool = model.divisions.flatMap((d) => d.pools).find((p) => p.id === match.poolId);
-  const heading = match.stage === "final" ? "Final" : `Pool ${pool?.label ?? ""} · Game ${match.sequence}`;
+  const heading =
+    match.stage === "final"
+      ? `${pool?.finalTitle ?? "Final"} · Set ${match.sequence}`
+      : `${pool?.title ?? "Pool"} · Game ${match.sequence}`;
 
   if (match.status === "final") {
     return (
@@ -167,9 +169,7 @@ export default function TournamentScoreScreen({ tournamentId, matchId, onDone })
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 px-3" style={{ paddingBottom: "calc(0.75rem + var(--safe-bottom))" }}>
       <p className="m-0 text-center text-sm font-bold text-muted">
-        {heading} · to {rules.winScore}
-        {rules.winByTwo ? ", win by 2" : ""}
-        {rules.pointCap ? `, cap ${rules.pointCap}` : ""}
+        {heading} · {rulesLabel(rules)}
       </p>
 
       {typing ? (
@@ -254,7 +254,7 @@ export default function TournamentScoreScreen({ tournamentId, matchId, onDone })
           </p>
           {confirming.unusual && (
             <p className="m-0 text-sm font-semibold text-warning">
-              Heads up: that doesn't look like a finished game under this tournament's rules.
+              Heads up: that doesn't look like a finished game under this game's rules.
             </p>
           )}
           <p className="m-0 text-xs text-muted">Only an admin can change it after this.</p>

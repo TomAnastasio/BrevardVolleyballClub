@@ -135,6 +135,7 @@ export default function PlayerProfileView({ player, onBack }) {
                     <span className="text-xs text-muted">
                       {formatEventDate(e.tournament.event_date)}
                       {e.division?.name ? ` · ${e.division.name}` : ""}
+                      {e.costume_winner ? " · 🎃 Best costume" : ""}
                     </span>
                   </Card>
                 </li>

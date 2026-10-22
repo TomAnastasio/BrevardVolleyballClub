@@ -4,8 +4,10 @@ import { fuzzyFilter } from "./fuzzyMatch.js";
 // Copying cells from Google Sheets pastes tab-separated text; a downloaded
 // .csv is comma-separated with "quoted" fields — both are handled. Columns
 // are found by header name, so column order and extra columns (timestamp,
-// date of birth, payment...) don't matter. Date of birth is deliberately
-// never read (owner's call: the app doesn't store it).
+// date of birth, payment...) don't matter. Optional seeding columns (AVP
+// rank, TruVolley score) and a junior yes/no column are picked up if
+// present. Date of birth is deliberately never read (owner's call: the app
+// doesn't store it).
 
 function splitRows(text) {
   const delimiter = text.split("\n")[0].includes("\t") ? "\t" : ",";
@@ -51,7 +53,16 @@ const COLUMN_PATTERNS = {
   email: /e-?mail/i,
   phone: /phone|cell|mobile/i,
   division: /division/i,
+  avp: /avp/i,
+  truvolley: /tru ?volley/i,
+  junior: /junior|\bjrs?\b/i,
 };
+
+// First number in a cell ("#12", "45.5 pts"), or null ("N/A", blank).
+function numberIn(text) {
+  const m = (text || "").replace(/,/g, "").match(/\d+(\.\d+)?/);
+  return m ? Number(m[0]) : null;
+}
 
 export function parseRoster(text) {
   const rows = splitRows(text || "");
@@ -82,7 +93,16 @@ export function parseRoster(text) {
       players.splice(i, 1);
     }
     seen.add(key);
-    players.push({ name, email, phone: get("phone"), division: get("division") });
+    const avp = numberIn(get("avp"));
+    players.push({
+      name,
+      email,
+      phone: get("phone"),
+      division: get("division"),
+      avpRank: avp && avp >= 1 ? Math.round(avp) : null,
+      truvolley: numberIn(get("truvolley")),
+      junior: /^(y|yes|true|x|✓|jr|junior)/i.test(get("junior")),
+    });
   }
   return { players, error: players.length ? "" : "No players found under the header row." };
 }

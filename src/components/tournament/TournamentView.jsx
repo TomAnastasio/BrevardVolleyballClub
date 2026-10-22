@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Card } from "@heroui/react";
 import LoadingMeteor from "../LoadingMeteor.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useTournament } from "../../hooks/useTournament.js";
 import { buildTournamentUrl, setPendingTournament } from "../../lib/tournamentLink.js";
-import { friendlyError, undoMatchScore } from "../../lib/tournamentApi.js";
-import { formatEventDate, playerName, STATUS_LABELS, teamNames, TITLE_LABELS } from "./tournamentFormat.js";
+import { castCostumeVote, fetchMyCostumeVote, friendlyError, undoMatchScore } from "../../lib/tournamentApi.js";
+import { formatEventDate, placeLabel, playerName, STATUS_LABELS, teamNames, TITLE_LABELS } from "./tournamentFormat.js";
 
 const POLL_MS = 15000;
 
@@ -119,7 +119,7 @@ function StandingsTable({ standings, profilesById, highlightId }) {
             <th className="py-1 pr-2 font-bold">#</th>
             <th className="py-1 pr-2 font-bold">Player</th>
             <th className="py-1 pr-2 text-right font-bold">W–L</th>
-            <th className="py-1 text-right font-bold">+/−</th>
+            <th className="py-1 text-right font-bold">Pts against</th>
           </tr>
         </thead>
         <tbody>
@@ -130,14 +130,90 @@ function StandingsTable({ standings, profilesById, highlightId }) {
               <td className="py-1.5 pr-2 text-right [font-variant-numeric:tabular-nums]">
                 {r.wins}–{r.losses}
               </td>
-              <td className="py-1.5 text-right [font-variant-numeric:tabular-nums]">
-                {r.diff > 0 ? `+${r.diff}` : r.diff}
-              </td>
+              <td className="py-1.5 text-right [font-variant-numeric:tabular-nums]">{r.pointsAgainst}</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+  );
+}
+
+// Players vote for the best costume while the admin has voting open.
+function CostumeVote({ tournament, entrants, profilesById, user, onSignIn }) {
+  const [vote, setVote] = useState(null);
+  const [choice, setChoice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchMyCostumeVote(tournament.id, user.id)
+      .then((v) => {
+        setVote(v);
+        setChoice(v || "");
+      })
+      .catch((e) => console.error("Failed to load costume vote:", e));
+  }, [tournament.id, user]);
+
+  async function handleVote() {
+    setBusy(true);
+    setError("");
+    setSaved(false);
+    try {
+      await castCostumeVote(tournament.id, choice);
+      setVote(choice);
+      setSaved(true);
+    } catch (e) {
+      console.error("Costume vote failed:", e);
+      setError(friendlyError(e, "Couldn't save your vote. Please try again."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const options = entrants
+    .filter((e) => e.profile_id !== user?.id)
+    .map((e) => ({ id: e.id, name: playerName(profilesById, e.profile_id) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return (
+    <Card className="gap-2 border border-accent/40 p-3">
+      <p className="m-0 font-extrabold">🎃 Vote for best costume</p>
+      {!user ? (
+        <Button variant="outline" onPress={onSignIn} className="self-start font-bold">
+          Sign in to vote
+        </Button>
+      ) : (
+        <>
+          <select
+            aria-label="Best costume vote"
+            value={choice}
+            onChange={(e) => {
+              setChoice(e.target.value);
+              setSaved(false);
+            }}
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-base"
+          >
+            <option value="">Choose a player</option>
+            {options.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+          <Button variant="primary" onPress={handleVote} isDisabled={busy || !choice || choice === vote} className="font-bold">
+            {vote ? "Change my vote" : "Vote"}
+          </Button>
+          <p className="m-0 text-xs text-muted">
+            {saved ? "✓ Vote saved. " : ""}One vote each; you can change it until voting closes. Results are revealed at the
+            end.
+          </p>
+        </>
+      )}
+      {error && <p className="m-0 text-xs font-semibold text-red-400">{error}</p>}
+    </Card>
   );
 }
 
@@ -176,6 +252,15 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
         break;
       }
     }
+    for (const pool of myNext ? [] : mine.finalPools) {
+      const set = pool.final?.sets.find(
+        ({ match: x, notNeeded }) => !notNeeded && x.status !== "final" && [x.a1, x.a2, x.b1, x.b2].includes(myId),
+      );
+      if (set) {
+        myNext = { match: set.match, pool, isFinal: true };
+        break;
+      }
+    }
   }
 
   function handleScore(matchId) {
@@ -197,6 +282,16 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
   }
 
   const champions = division?.entrants.filter((e) => e.title).sort((a, b) => (a.final_place ?? 9) - (b.final_place ?? 9));
+  const allEntrants = divisions.flatMap((d) => d.entrants);
+  const costumeWinner = allEntrants.find((e) => e.costume_winner);
+  const finalPools = division?.finalPools.filter((p) => p.final) ?? [];
+  // Latest round first: once round 2 starts, that's what people need.
+  const pools = [...(division?.pools ?? [])].sort((a, b) => b.round - a.round);
+  const multiRound = pools.some((p) => p.round > 1);
+  const promptSignIn = () => {
+    setPendingTournament(t.id);
+    signInWithGoogle();
+  };
 
   return (
     <div className="flex flex-col gap-3 px-3 pb-8">
@@ -231,14 +326,7 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
         <Card className="items-center gap-2 p-4 text-center">
           <p className="m-0 font-bold">Sign in to keep score</p>
           <p className="m-0 text-sm text-muted">Any club member can enter scores. You'll come right back here.</p>
-          <Button
-            variant="primary"
-            onPress={() => {
-              setPendingTournament(t.id);
-              signInWithGoogle();
-            }}
-            className="font-bold"
-          >
+          <Button variant="primary" onPress={promptSignIn} className="font-bold">
             Sign in with Google
           </Button>
         </Card>
@@ -248,11 +336,21 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
         <Card className="gap-1 border border-accent/40 p-3">
           <p className="m-0 text-xs font-bold uppercase tracking-wide text-accent">Your next game</p>
           <p className="m-0 text-sm">
-            Pool {myNext.pool.label}
-            {myNext.pool.court ? ` · ${myNext.pool.court}` : ""} · Game {myNext.match.sequence}
+            {myNext.isFinal ? myNext.pool.finalTitle : myNext.pool.title}
+            {myNext.pool.court ? ` · ${myNext.pool.court}` : ""} · {myNext.isFinal ? "Set" : "Game"} {myNext.match.sequence}
             {myNext.pool.nextMatchId === myNext.match.id ? " · up now" : ""}
           </p>
         </Card>
+      )}
+
+      {costumeWinner && (
+        <Card className="items-center p-3 text-center">
+          <p className="m-0 font-extrabold">🎃 Best costume · {playerName(profilesById, costumeWinner.profile_id)}</p>
+        </Card>
+      )}
+
+      {t.costume_voting_open && t.status !== "complete" && (
+        <CostumeVote tournament={t} entrants={allEntrants} profilesById={profilesById} user={user} onSignIn={promptSignIn} />
       )}
 
       {divisions.length > 1 && (
@@ -288,29 +386,49 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
             </Card>
           )}
 
-          {division.finals.length > 0 && (
-            <section className="flex flex-col gap-2">
-              <h3 className="m-0 text-lg font-extrabold">Finals</h3>
-              <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                {division.finals.map((m) => (
-                  <MatchRow
-                    key={m.id}
-                    match={m}
-                    label={division.finals.length > 1 ? `Final ${m.sequence}` : "Final"}
-                    profilesById={profilesById}
-                    isNext={false}
-                    highlightId={myId}
-                    canScore={isLive}
-                    onPress={() => handleScore(m.id)}
-                    isAdmin={isAdmin}
-                    onChanged={reload}
-                  />
-                ))}
-              </ul>
-            </section>
-          )}
+          {finalPools.map((pool, i) => {
+            const series = pool.final;
+            const first = series.sets[0].match;
+            return (
+              <section key={pool.id} className="flex flex-col gap-2">
+                <h3 className="m-0 text-lg font-extrabold">
+                  {pool.finalTitle}
+                  {series.sets.length > 1 && (
+                    <span className="text-sm font-bold text-muted">
+                      {" "}
+                      · sets {series.winsA}–{series.winsB}
+                    </span>
+                  )}
+                </h3>
+                {i === 0 && finalPools.length > 1 && <p className="m-0 text-xs text-muted">For the crown 👑</p>}
+                {series.winner && (
+                  <p className="m-0 text-sm font-bold text-success">
+                    🏆 {teamNames(profilesById, series.winner === "a" ? [first.a1, first.a2] : [first.b1, first.b2])}
+                  </p>
+                )}
+                <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                  {series.sets
+                    .filter(({ notNeeded }) => !notNeeded)
+                    .map(({ match: m }) => (
+                      <MatchRow
+                        key={m.id}
+                        match={m}
+                        label={series.sets.length > 1 ? `Set ${m.sequence}` : "Final"}
+                        profilesById={profilesById}
+                        isNext={false}
+                        highlightId={myId}
+                        canScore={isLive}
+                        onPress={() => handleScore(m.id)}
+                        isAdmin={isAdmin}
+                        onChanged={reload}
+                      />
+                    ))}
+                </ul>
+              </section>
+            );
+          })}
 
-          {division.pools.length === 0 ? (
+          {pools.length === 0 ? (
             <Card className="gap-1 p-4">
               <p className="m-0 font-bold">Pools haven't been posted yet.</p>
               <p className="m-0 text-sm text-muted">
@@ -318,14 +436,21 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
               </p>
             </Card>
           ) : (
-            division.pools.map((pool) => (
+            pools.map((pool) => (
               <section key={pool.id} className="flex flex-col gap-2">
                 <h3 className="m-0 text-lg font-extrabold">
-                  {division.pools.some((p) => p.round > 1) ? `Round ${pool.round} · ` : ""}Pool {pool.label}
+                  {multiRound ? `Round ${pool.round} · ` : ""}
+                  {pool.title}
                   {pool.court && <span className="text-sm font-bold text-muted"> · {pool.court}</span>}
                 </h3>
                 <Card className="p-3">
                   <StandingsTable standings={pool.standings} profilesById={profilesById} highlightId={myId} />
+                  {pool.ties.map((tie) => (
+                    <p key={tie.place} className="m-0 mt-2 text-xs text-warning">
+                      Tied for {placeLabel(tie.place)}: {tie.ids.map((id) => playerName(profilesById, id)).join(", ")}. A
+                      mini game to 15 decides it.
+                    </p>
+                  ))}
                 </Card>
                 <ul className="m-0 flex list-none flex-col gap-2 p-0">
                   {pool.matches.map((m) => (
@@ -338,8 +463,8 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
                       highlightId={myId}
                       canScore={isLive}
                       onPress={() => handleScore(m.id)}
-                    isAdmin={isAdmin}
-                    onChanged={reload}
+                      isAdmin={isAdmin}
+                      onChanged={reload}
                     />
                   ))}
                 </ul>

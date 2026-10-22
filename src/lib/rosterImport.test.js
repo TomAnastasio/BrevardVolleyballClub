@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { matchDivision, matchToProfiles, parseRoster } from "./rosterImport.js";
 
+const noSeeding = { avpRank: null, truvolley: null, junior: false };
+
 describe("parseRoster", () => {
   it("reads tab-separated text pasted from Google Sheets, ignoring date of birth", () => {
     const text = [
@@ -11,8 +13,8 @@ describe("parseRoster", () => {
     const { players, error } = parseRoster(text);
     expect(error).toBe("");
     expect(players).toEqual([
-      { name: "Jane Doe", email: "jane@x.com", phone: "321-555-0100", division: "Women's Open" },
-      { name: "Sam Lee", email: "sam@x.com", phone: "321-555-0101", division: "Women's A" },
+      { name: "Jane Doe", email: "jane@x.com", phone: "321-555-0100", division: "Women's Open", ...noSeeding },
+      { name: "Sam Lee", email: "sam@x.com", phone: "321-555-0101", division: "Women's A", ...noSeeding },
     ]);
     expect(JSON.stringify(players)).not.toContain("1990");
   });
@@ -20,13 +22,25 @@ describe("parseRoster", () => {
   it("reads a downloaded CSV with quoted fields", () => {
     const text = 'First name,Last name,Division\r\n"Mary, Jr.",Smith,"Women\'s AA"\r\n';
     expect(parseRoster(text).players).toEqual([
-      { name: "Mary, Jr. Smith", email: "", phone: "", division: "Women's AA" },
+      { name: "Mary, Jr. Smith", email: "", phone: "", division: "Women's AA", ...noSeeding },
     ]);
   });
 
   it("keeps only the latest submission from the same email", () => {
     const text = "Email,First name,Last name,Division\na@x.com,Ann,B,Women's A\nA@x.com,Ann,B,Women's AA";
-    expect(parseRoster(text).players).toEqual([{ name: "Ann B", email: "a@x.com", phone: "", division: "Women's AA" }]);
+    expect(parseRoster(text).players).toEqual([{ name: "Ann B", email: "a@x.com", phone: "", division: "Women's AA", ...noSeeding }]);
+  });
+
+  it("reads optional AVP rank, TruVolley score and junior columns", () => {
+    const text = [
+      "Name\tDivision\tAVP ranking\tTruVolley score\tJunior?",
+      "Ann B\tWomen's A\t#12\t45.5\tYes",
+      "Cat D\tWomen's A\tN/A\t\tNo",
+    ].join("\n");
+    expect(parseRoster(text).players.map(({ avpRank, truvolley, junior }) => ({ avpRank, truvolley, junior }))).toEqual([
+      { avpRank: 12, truvolley: 45.5, junior: true },
+      noSeeding,
+    ]);
   });
 
   it("explains a missing name column", () => {

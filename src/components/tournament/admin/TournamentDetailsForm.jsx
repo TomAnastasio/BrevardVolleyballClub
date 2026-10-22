@@ -95,6 +95,10 @@ export default function TournamentDetailsForm({ tournament, onSaved }) {
 
       <fieldset className="flex flex-col gap-3 rounded-xl border border-white/10 p-3">
         <legend className="px-1 text-sm font-bold">Game rules</legend>
+        <p className="m-0 text-xs text-muted">
+          Pools of 4 always play to 28 (cap 30) and pools of 5 to 21 (cap 23); finals are set up on the Finals screen.
+          These rules cover anything else (e.g. a pool of 6).
+        </p>
         <Field label="Games are played to" htmlFor="t-win">
           <input id="t-win" type="number" inputMode="numeric" className={inputClass} value={winScore} onChange={(e) => setWinScore(e.target.value)} />
         </Field>

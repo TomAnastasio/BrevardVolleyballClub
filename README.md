@@ -50,31 +50,58 @@ button. The page shows each division's pools, live standings and the fixed
 game order, highlights who's up next, and shows a signed-in player their own
 next game.
 
-How a tournament runs (admins do this from **Manage tournament**):
+How a tournament runs (admins do this from **Manage tournament**). The
+rules below are the Queen of the Court rules confirmed by the organizer for
+Queen of Paradise (2026-10-31):
 
-1. **New tournament.** Enter the name, date, location and divisions, plus the
-   game rules: target score, win by 2, optional point cap, and whether games
-   count toward Elo.
+1. **New tournament.** Enter the name, date, location and divisions, and
+   whether games count toward Elo. The game rules here only cover unusual
+   pool sizes; pools of 4 and 5 and the finals have fixed rules (below).
 2. **Import registrations.** Copy the Google Form's response sheet,
    including the header row, and paste it in. Each name is matched to an
    existing player, or a manual profile is created. You confirm every row
    first. Email and phone are kept in an admin-only table. Date of birth is
-   never stored.
-3. **Pools & schedule.** Pick a pool size and seeding (balanced by Elo, or
-   random), preview, move players by hand if needed, and save. The app
-   builds each pool's game order so everyone partners everyone once, as far
-   as the pool size allows. Then **Publish** to post it.
-4. **Players & check-in** on the day. Tap each player as they arrive. If
-   anyone didn't show, rebuild pools with checked-in players only.
-   **Start tournament** stays locked until the pools match check-in.
+   never stored. If the sheet has AVP ranking, TruVolley score or junior
+   columns, those come in too.
+3. **Players & check-in.** Tap a player for their details: AVP rank,
+   TruVolley score (used for seeding), and a **Junior** box (juniors play in
+   adult divisions but can't win cash prizes). A division under 5 players
+   shows **Merge all into…** to move everyone to the next level up or down.
+   On the day, tap each player as they arrive.
+4. **Pools & schedule, round 1.** Pools are 4s and 5s, snake-seeded by AVP
+   rank, then TruVolley, then Elo. Pools of 4 play 3 games to 28 (cap 30);
+   pools of 5 play 4 games to 21 (cap 23); always win by 2. Everyone
+   partners everyone once. Preview, move players by hand if needed, save,
+   then **Publish**. If anyone didn't show, rebuild with checked-in players
+   only; **Start tournament** stays locked until the pools match check-in.
 5. **Scoring.** Any signed-in member taps a game on the live page and keeps
    score point by point (spectators see it live) or types the final score.
    Each scored game is saved as a normal 2v2 beach game, so Elo and game
    history work as usual. A wrong score: an admin taps **undo this score**
-   on the live page, and the game can be scored again.
-6. **Finals.** Pick each division's two finalists and their partners.
-7. **Crown the winners.** The Queen (👑) and Princess (👸) badges show on
-   their player profiles, and every entrant's profile lists their
+   on the live page, and the game can be scored again. Players rank by
+   games won, then fewest points against; a tie after that is settled by a
+   mini game to 15 on the sand (the page flags it; it isn't scored in the
+   app).
+6. **Round 2.** Once every round 1 game is scored, **Preview round 2**
+   re-pools each division into Gold, Silver, Bronze and Copper pools (one
+   per round 1 pool). Two pools of 4: top 2 of each pool to Gold, bottom 2
+   to Silver. Four pools: 1st of each pool to Gold, 2nd to Silver, and so
+   on. Two pools of 5, or three pools: everyone ranked together and split
+   top to bottom. Ties at a cut line are flagged so you can move the
+   mini-game winner. Round 1 results don't carry over. A division with one
+   pool skips round 2.
+7. **Finals.** Each round 2 pool's top 2 play a final, each with a partner
+   of their choice from their division. Best 2 of 3 sets (21, 21, 15, or
+   all to 21), or one set to 21 if both teams agree; win by 2, no cap. A
+   third set that isn't needed disappears on its own. Only the Gold final
+   decides the Queen and the cash prize.
+8. **Best costume.** Open voting from the tournament's manage screen.
+   Each signed-in player gets one vote (changeable, not for themselves) on
+   the live page. Votes are private; the tally shows only to admins until
+   the tournament is finished.
+9. **Crown the winners.** Queen and Princess default to the Gold final's
+   winner and runner-up, and best costume to the most votes. The 👑, 👸
+   and 🎃 show on player profiles, and every entrant's profile lists their
    tournaments.
 
 A player imported as a manual profile who later signs up with the QR code

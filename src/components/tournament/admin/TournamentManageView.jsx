@@ -60,11 +60,24 @@ export default function TournamentManageView({ tournamentId, onDeleted }) {
   const checkedIn = entrants.filter((e) => e.checked_in).length;
   const problems = poolProblems(model);
 
+  // Fresh data before a screen opens: scores keep arriving from other phones
+  // all day, and screens like Finals and Results start from what they see.
+  async function open(next) {
+    setBusy(true);
+    await reload();
+    setBusy(false);
+    setSection(next);
+  }
+
   async function setStatus(status) {
+    await update({ status });
+  }
+
+  async function update(fields) {
     setBusy(true);
     setActionError("");
     try {
-      await updateTournament(t.id, { status });
+      await updateTournament(t.id, fields);
       await reload();
     } catch (e) {
       console.error("Failed to change tournament status:", e);
@@ -99,7 +112,7 @@ export default function TournamentManageView({ tournamentId, onDeleted }) {
           <span className="text-sm font-bold text-muted">/ {SECTION_TITLES[section]}</span>
         </div>
         {section === "details" && <TournamentDetailsForm tournament={t} onSaved={() => reload()} />}
-        {section === "players" && <EntrantsView model={model} reload={reload} onImport={() => setSection("import")} />}
+        {section === "players" && <EntrantsView model={model} reload={reload} onImport={() => open("import")} />}
         {section === "import" && <RosterImportView model={model} onDone={back} />}
         {section === "pools" && <PoolsView model={model} reload={reload} />}
         {section === "finals" && <FinalsView model={model} reload={reload} />}
@@ -126,7 +139,7 @@ export default function TournamentManageView({ tournamentId, onDeleted }) {
     live: {
       text: "Scoring is open. When finals are done, crown the winners to finish.",
       label: "Crown winners & finish",
-      action: () => setSection("results"),
+      action: () => open("results"),
     },
     complete: {
       text: "This tournament is finished. Winners show on their profiles.",
@@ -174,22 +187,41 @@ export default function TournamentManageView({ tournamentId, onDeleted }) {
         )}
       </Card>
 
-      <MenuCard icon="📝" label={SECTION_TITLES.details} subtitle="Name, date, location, scoring rules" onClick={() => setSection("details")} />
+      <MenuCard icon="📝" label={SECTION_TITLES.details} subtitle="Name, date, location, scoring rules" onClick={() => open("details")} />
       <MenuCard
         icon="✅"
         label={SECTION_TITLES.players}
         subtitle={`${entrants.length} registered · ${checkedIn} checked in`}
-        onClick={() => setSection("players")}
+        onClick={() => open("players")}
       />
-      <MenuCard icon="📥" label={SECTION_TITLES.import} subtitle="Paste the Google Form responses" onClick={() => setSection("import")} />
+      <MenuCard icon="📥" label={SECTION_TITLES.import} subtitle="Paste the Google Form responses" onClick={() => open("import")} />
       <MenuCard
         icon="🗂️"
         label={SECTION_TITLES.pools}
-        subtitle="Build pools and the game order"
-        onClick={() => setSection("pools")}
+        subtitle="Round 1 pools, then Gold/Silver/Bronze round 2"
+        onClick={() => open("pools")}
       />
-      <MenuCard icon="🏐" label={SECTION_TITLES.finals} subtitle="Set up each division's finals game" onClick={() => setSection("finals")} />
-      <MenuCard icon="👑" label={SECTION_TITLES.results} subtitle="Queen & Princess for each division" onClick={() => setSection("results")} />
+      <MenuCard icon="🏐" label={SECTION_TITLES.finals} subtitle="Top 2 of each round 2 pool, best 2 of 3" onClick={() => open("finals")} />
+      <MenuCard icon="👑" label={SECTION_TITLES.results} subtitle="Queen, Princess & best costume" onClick={() => open("results")} />
+
+      {t.status !== "draft" && (
+        <Card className="gap-2 p-3">
+          <p className="m-0 font-bold">🎃 Best costume voting: {t.costume_voting_open ? "open" : "closed"}</p>
+          <p className="m-0 text-sm text-muted">
+            {t.costume_voting_open
+              ? "Signed-in players can vote on the live page. Close it before crowning the winner."
+              : "Opens a vote on the live page; each signed-in player gets one vote."}
+          </p>
+          <Button
+            variant={t.costume_voting_open ? "outline" : "secondary"}
+            onPress={() => update({ costume_voting_open: !t.costume_voting_open })}
+            isDisabled={busy}
+            className="font-bold"
+          >
+            {t.costume_voting_open ? "Close voting" : "Open voting"}
+          </Button>
+        </Card>
+      )}
 
       {t.status === "draft" &&
         (confirmDelete ? (
