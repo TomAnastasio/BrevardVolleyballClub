@@ -5,7 +5,7 @@ import { fetchRankedProfiles } from "../hooks/useLeaderboard.js";
 
 // A player's profile opened from just their id (e.g. tapping a name in a
 // game's details), with the same Elo/tier data Rankings would hand it.
-export default function PlayerProfileById({ playerId, onBack, ...profileProps }) {
+export default function PlayerProfileById({ playerId, onBack, backLabel = "Back", ...profileProps }) {
   const [player, setPlayer] = useState(null);
   const [status, setStatus] = useState("loading");
 
@@ -23,7 +23,7 @@ export default function PlayerProfileById({ playerId, onBack, ...profileProps })
     };
   }, [playerId]);
 
-  if (status === "ready") return <PlayerProfileView player={player} onBack={onBack} backLabel="Back" {...profileProps} />;
+  if (status === "ready") return <PlayerProfileView player={player} onBack={onBack} backLabel={backLabel} {...profileProps} />;
 
   return (
     <main className="flex flex-1 flex-col overflow-y-auto">
@@ -34,10 +34,10 @@ export default function PlayerProfileById({ playerId, onBack, ...profileProps })
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back"
+          aria-label={backLabel === "Menu" ? "Back to main menu" : "Back"}
           className="rounded-lg px-2 py-2 font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
         >
-          &lsaquo; Back
+          &lsaquo; {backLabel}
         </button>
       </header>
       {status === "loading" ? (

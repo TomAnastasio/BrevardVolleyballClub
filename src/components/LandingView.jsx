@@ -1,6 +1,7 @@
 import SocialLinks from "./SocialLinks.jsx";
 import VolleyballRally from "./VolleyballRally.jsx";
 import { useAuth } from "../hooks/useAuth.js";
+import { setPendingMyProfile } from "../lib/pendingMyProfile.js";
 
 function LandingCard({ icon, label, subtitle, onClick, delay }) {
   return (
@@ -30,13 +31,55 @@ function LandingCard({ icon, label, subtitle, onClick, delay }) {
   );
 }
 
-export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard, onTournaments, onAdminPanel }) {
+// Top-right corner: your photo (opens your own profile) once signed in, or
+// "Sign in", which comes back to your profile after Google.
+function ProfileCorner({ avatarUrl, onMyProfile }) {
+  const { user, loading, isConfigured, signInWithGoogle } = useAuth();
+  if (!isConfigured || loading) return null;
+
+  const position = "animate-landing-in absolute right-3 z-10";
+  const style = { top: "calc(0.75rem + var(--safe-top))" };
+  const focus = "focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2";
+
+  if (!user) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setPendingMyProfile();
+          signInWithGoogle();
+        }}
+        style={style}
+        className={`${position} rounded-full border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-bold text-accent ${focus}`}
+      >
+        Sign in
+      </button>
+    );
+  }
+  return (
+    <button type="button" onClick={onMyProfile} aria-label="My profile" style={style} className={`${position} rounded-full ${focus}`}>
+      {avatarUrl ? (
+        <img src={avatarUrl} alt="" aria-hidden="true" className="h-11 w-11 rounded-full border-2 border-accent/50 object-cover" />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-accent/50 bg-white/5 text-xl"
+        >
+          👤
+        </span>
+      )}
+    </button>
+  );
+}
+
+export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard, onTournaments, onAdminPanel, onMyProfile }) {
   const { user, isAdmin, avatarUrl: profileAvatarUrl } = useAuth();
   const avatarUrl = profileAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const isAuthenticated = Boolean(user);
 
   return (
     <main className="relative flex flex-1 flex-col overflow-hidden">
+      <ProfileCorner avatarUrl={avatarUrl} onMyProfile={onMyProfile} />
       <div className="relative flex flex-1 flex-col items-center justify-center gap-8 p-6 text-center">
         <div
           aria-hidden="true"

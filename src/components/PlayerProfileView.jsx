@@ -165,7 +165,7 @@ export default function PlayerProfileView({
         <button
           type="button"
           onClick={onBack}
-          aria-label={backLabel === "Rankings" ? "Back to rankings" : "Back"}
+          aria-label={backLabel === "Rankings" ? "Back to rankings" : backLabel === "Menu" ? "Back to main menu" : "Back"}
           className="rounded-lg px-2 py-2 font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
         >
           &lsaquo; {backLabel}

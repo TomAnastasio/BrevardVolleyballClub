@@ -5,6 +5,7 @@ import PlayTodayView from "./components/PlayTodayView.jsx";
 import LeaderboardView from "./components/LeaderboardView.jsx";
 import PlayerProfileView from "./components/PlayerProfileView.jsx";
 import PlayerProfileById from "./components/PlayerProfileById.jsx";
+import MyProfileView from "./components/MyProfileView.jsx";
 import GameDetailView from "./components/GameDetailView.jsx";
 import EditGamePage from "./components/game/EditGamePage.jsx";
 import GameTrackingShell from "./components/game/GameTrackingShell.jsx";
@@ -17,7 +18,7 @@ import { hasPendingGameTracking } from "./lib/pendingGameTracking.js";
 
 let nextPageKey = 1;
 
-export default function App({ joinRequested, justJoined, tournamentId }) {
+export default function App({ joinRequested, justJoined, tournamentId, myProfileRequested }) {
   // A sign-up QR scan skips the splash so the visitor goes straight to Google.
   const [appReady, setAppReady] = useState(joinRequested);
   // The Google OAuth sign-in redirect reloads the page from scratch, which
@@ -27,6 +28,7 @@ export default function App({ joinRequested, justJoined, tournamentId }) {
   const [view, setView] = useState(() => {
     if (joinRequested || justJoined) return "welcome";
     if (tournamentId) return "tournaments";
+    if (myProfileRequested) return "my-profile";
     return hasPendingGameTracking() ? "game" : "landing";
   });
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -79,6 +81,15 @@ export default function App({ joinRequested, justJoined, tournamentId }) {
                 onLeaderboard={() => setView("leaderboard")}
                 onTournaments={() => setView("tournaments")}
                 onAdminPanel={() => setView("admin")}
+                onMyProfile={() => setView("my-profile")}
+              />
+            )}
+            {view === "my-profile" && (
+              <MyProfileView
+                onBack={() => setView("landing")}
+                refreshKey={gamesVersion}
+                onOpenGame={openGame}
+                onOpenTournament={openTournament}
               />
             )}
             {view === "welcome" && (

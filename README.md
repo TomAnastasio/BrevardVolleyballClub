@@ -23,6 +23,14 @@ signed-out visitors don't. Admins edit or delete a game with the **✏️ Edit
 game** button on this screen. Back always returns to the previous screen
 (`App.jsx` stacks these screens on top of the current view).
 
+### My profile
+
+Once signed in, your profile photo sits in the home screen's top-right
+corner, and tapping it opens your own profile ("‹ Menu" goes back home).
+Signed out, that corner says **Sign in**. After Google sign-in it opens your
+profile (a short-lived breadcrumb, `src/lib/pendingMyProfile.js`, survives
+the redirect).
+
 ### Profile photos
 
 A player's photo starts as their Google account photo (copied once, at

@@ -4,6 +4,7 @@ import App from "./App.jsx";
 import "./index.css";
 import { clearJoinParam, consumeJustJoined, isJoinRequested } from "./lib/joinLink.js";
 import { consumePendingTournament, readTournamentParam } from "./lib/tournamentLink.js";
+import { consumePendingMyProfile } from "./lib/pendingMyProfile.js";
 
 // Read once, outside React, since both are one-shot: `?join` is stripped from
 // the address bar and the post-sign-in breadcrumb is consumed.
@@ -13,9 +14,16 @@ const justJoined = consumeJustJoined();
 // A shared tournament link (?t=<id>), or the tournament a player was on
 // when they went to sign in with Google to keep score.
 const tournamentId = readTournamentParam(window.location.search) || consumePendingTournament();
+// Signed in from the home screen's "Sign in" button: open their own profile.
+const myProfileRequested = consumePendingMyProfile();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App joinRequested={joinRequested} justJoined={justJoined} tournamentId={tournamentId} />
+    <App
+      joinRequested={joinRequested}
+      justJoined={justJoined}
+      tournamentId={tournamentId}
+      myProfileRequested={myProfileRequested}
+    />
   </React.StrictMode>,
 );
