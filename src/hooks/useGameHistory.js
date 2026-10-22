@@ -98,6 +98,30 @@ function mapRowToRecord(row, submitterProfilesById = {}) {
   };
 }
 
+// One game, in the same shape as a Past Games record, for the game details
+// screen. Throws on a failed fetch; null if the game doesn't exist (e.g.
+// just deleted).
+export async function fetchGameRecord(gameId) {
+  const { data: row, error } = await supabase
+    .from("games")
+    .select(`*, game_players(user_id, slot, team, profiles(id, display_name, avatar_url)), ${TOURNAMENT_MATCH_EMBED}`)
+    .eq("id", gameId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!row) return null;
+  let submitterProfilesById = {};
+  if (row.user_id) {
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .eq("id", row.user_id)
+      .maybeSingle();
+    if (profileError) throw profileError;
+    if (profile) submitterProfilesById = { [profile.id]: profile };
+  }
+  return mapRowToRecord(row, submitterProfilesById);
+}
+
 export function useGameHistory() {
   const { user } = useAuth();
   const [localHistory, setLocalHistory] = useState(loadHistory);

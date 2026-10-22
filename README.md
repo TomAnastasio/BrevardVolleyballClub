@@ -11,6 +11,18 @@ and all game/profile data live in Supabase — see `supabase/README.md`.
 Built with React, Vite, Tailwind CSS, and [HeroUI](https://www.heroui.com) as
 the component/design library.
 
+### Game details
+
+Tapping any game opens its own screen, in Past Games or in a player's
+profile. It shows when it was played, the format, Ranked/Casual, the
+tournament tag if any, the score, and both rosters. Every player picked from
+player search opens their profile when tapped. Names that were typed in
+instead show as plain text. For ranked games, signed-in members also see
+each player's Elo change (e.g. +12 / −11). Elo history isn't public, so
+signed-out visitors don't. Admins edit or delete a game with the **✏️ Edit
+game** button on this screen. Back always returns to the previous screen
+(`App.jsx` stacks these screens on top of the current view).
+
 ### Profile photos
 
 A player's photo starts as their Google account photo (copied once, at

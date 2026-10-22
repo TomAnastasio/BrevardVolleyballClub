@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useScoreboardState } from "../../hooks/useScoreboardState.js";
 import { useGameHistory } from "../../hooks/useGameHistory.js";
 import { useForcedLandscape } from "../../hooks/useForcedLandscape.js";
@@ -11,7 +11,6 @@ import GameTrackingSignInGate from "./GameTrackingSignInGate.jsx";
 import NewGameForm from "./NewGameForm.jsx";
 import GameView from "./GameView.jsx";
 import HistoryView from "./HistoryView.jsx";
-import EditGameScreen from "./EditGameScreen.jsx";
 import LogPastGameScoreScreen from "./LogPastGameScoreScreen.jsx";
 import { consumePendingGameTracking, setPendingGameTracking } from "../../lib/pendingGameTracking.js";
 
@@ -24,7 +23,6 @@ const SCREEN_META = {
   new: { title: "New Game", subtitle: null },
   active: { title: null, subtitle: null },
   history: { title: "Past Games", subtitle: null },
-  "edit-game": { title: "Edit Game", subtitle: null },
   "past-score": { title: "Add Score", subtitle: null },
 };
 
@@ -35,11 +33,10 @@ const BACK_MAP = {
   new: "mode",
   active: "menu",
   history: "menu",
-  "edit-game": "history",
   "past-score": "new",
 };
 
-export default function GameTrackingShell({ onBack, onOpenTournament }) {
+export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament, gamesVersion }) {
   const scoreboard = useScoreboardState();
   const { history, addGame, logPastGame, historyLoading, refreshHistory, saveError, dismissSaveError } =
     useGameHistory();
@@ -48,26 +45,17 @@ export default function GameTrackingShell({ onBack, onOpenTournament }) {
   const [pendingFormat, setPendingFormat] = useState(null);
   const [pendingTeamSize, setPendingTeamSize] = useState(null);
   const [pendingMode, setPendingMode] = useState(null);
-  const [editingGameId, setEditingGameId] = useState(null);
   const [isLoggingPast, setIsLoggingPast] = useState(false);
   const [pastGameDraft, setPastGameDraft] = useState(null);
   const [pastGameSubmitting, setPastGameSubmitting] = useState(false);
   const [pastGameError, setPastGameError] = useState("");
 
-  function handleEditGame(gameId) {
-    setEditingGameId(gameId);
-    setScreen("edit-game");
-  }
-
-  function handleGameEdited() {
-    refreshHistory();
-    setScreen("history");
-  }
-
-  function handleGameDeleted() {
-    refreshHistory();
-    setScreen("history");
-  }
+  // Admin edits/deletes now happen from a game's details screen (App.jsx),
+  // which bumps `gamesVersion`; refetch so Past Games reflects them.
+  const firstGamesVersion = useRef(gamesVersion);
+  useEffect(() => {
+    if (gamesVersion !== firstGamesVersion.current) refreshHistory();
+  }, [gamesVersion, refreshHistory]);
 
   function handleSelectFormat(format) {
     setPendingFormat(format);
@@ -324,13 +312,9 @@ export default function GameTrackingShell({ onBack, onOpenTournament }) {
           <HistoryView
             history={history}
             historyLoading={historyLoading}
-            isAdmin={isAdmin}
-            onEditGame={handleEditGame}
+            onOpenGame={onOpenGame}
             onOpenTournament={onOpenTournament}
           />
-        )}
-        {screen === "edit-game" && (
-          <EditGameScreen gameId={editingGameId} onSaved={handleGameEdited} onDeleted={handleGameDeleted} />
         )}
       </main>
     </div>

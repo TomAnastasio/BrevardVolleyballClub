@@ -108,6 +108,13 @@ test("round 2, best-of-3 final, crowning", async ({ page, browser }) => {
     await expect(tag("Final")).toHaveCount(2, { timeout: 20_000 });
     await expect(tag("Pool play · Round 2")).toHaveCount(6);
     await expect(tag("Pool play · Round 1")).toHaveCount(6);
+    // An admin opens a game's details and finds Edit there.
+    await page.getByRole("listitem").filter({ has: tag("Final") }).first().getByRole("button", { name: /^Game details:/ }).click();
+    await expect(tag("Final")).toBeVisible();
+    await page.getByRole("button", { name: "✏️ Edit game" }).click();
+    await expect(page.getByRole("heading", { name: "Edit Game" })).toBeVisible();
+    await page.getByRole("button", { name: "Back to game" }).click();
+    await page.getByRole("button", { name: "Back", exact: true }).click();
     await tag("Final").first().click();
     await expect(page.getByRole("heading", { name })).toBeVisible({ timeout: 20_000 });
 

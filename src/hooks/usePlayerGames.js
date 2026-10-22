@@ -53,7 +53,8 @@ export function winLossRecords(games) {
 // by them or linked as a participant — newest first. `games`/`game_players`
 // are both fully public (migrations 20261002151652/20261002204815), so this
 // works for any player, not just the signed-in user, and needs no auth.
-export function usePlayerGames(playerId) {
+// `refreshKey` changing (e.g. after an admin edits or deletes a game) refetches.
+export function usePlayerGames(playerId, refreshKey) {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(Boolean(playerId));
 
@@ -107,7 +108,7 @@ export function usePlayerGames(playerId) {
     return () => {
       cancelled = true;
     };
-  }, [playerId]);
+  }, [playerId, refreshKey]);
 
   return { games, loading };
 }

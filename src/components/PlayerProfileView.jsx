@@ -18,10 +18,12 @@ function PlayerAvatar({ src }) {
   return <img src={src} alt="" aria-hidden="true" className="h-16 w-16 flex-none rounded-full border border-white/10 object-cover" />;
 }
 
-function GameRow({ game, onOpenTournament }) {
+function GameRow({ game, onOpenGame, onOpenTournament }) {
   const result = game.ownScore > game.oppScore ? "win" : game.ownScore < game.oppScore ? "loss" : "tie";
+  // Same stretched-button card as Past Games (HistoryView), so the
+  // tournament tag stays its own button.
   return (
-    <li>
+    <li className="relative">
       <Card className="gap-1 p-3">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm text-muted">{game.date}</span>
@@ -55,6 +57,12 @@ function GameRow({ game, onOpenTournament }) {
           </span>
         </div>
       </Card>
+      <button
+        type="button"
+        onClick={() => onOpenGame(game.id)}
+        aria-label={`Game details: ${game.ownScore} to ${game.oppScore}${game.oppName ? ` vs ${game.oppName}` : ""}, ${game.date}`}
+        className="absolute inset-0 rounded-2xl focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+      />
     </li>
   );
 }
@@ -129,8 +137,15 @@ function AdminDetails({ profileId }) {
   );
 }
 
-export default function PlayerProfileView({ player, onBack, onOpenTournament }) {
-  const { games, loading } = usePlayerGames(player?.id);
+export default function PlayerProfileView({
+  player,
+  onBack,
+  backLabel = "Rankings",
+  refreshKey,
+  onOpenGame,
+  onOpenTournament,
+}) {
+  const { games, loading } = usePlayerGames(player?.id, refreshKey);
   const tournaments = usePlayerTournaments(player?.id);
   const titles = tournaments.filter((e) => e.title);
   const { user, isAdmin } = useAuth();
@@ -150,10 +165,10 @@ export default function PlayerProfileView({ player, onBack, onOpenTournament }) 
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back to rankings"
+          aria-label={backLabel === "Rankings" ? "Back to rankings" : "Back"}
           className="rounded-lg px-2 py-2 font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
         >
-          &lsaquo; Rankings
+          &lsaquo; {backLabel}
         </button>
       </header>
 
@@ -247,7 +262,7 @@ export default function PlayerProfileView({ player, onBack, onOpenTournament }) 
         ) : (
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {games.map((game) => (
-              <GameRow key={game.id} game={game} onOpenTournament={onOpenTournament} />
+              <GameRow key={game.id} game={game} onOpenGame={onOpenGame} onOpenTournament={onOpenTournament} />
             ))}
           </ul>
         )}

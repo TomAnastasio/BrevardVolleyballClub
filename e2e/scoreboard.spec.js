@@ -59,4 +59,22 @@ test("play and save a casual beach game end to end", async ({ page }) => {
   await expect(savedGame).toBeVisible();
   await expect(savedGame).toContainText("21");
   await expect(savedGame).toContainText("Carla & Dana");
+
+  // Tapping the game opens its details: both rosters, each player opens
+  // their profile, and Back steps back through each screen in turn. Staging
+  // has many look-alike games from earlier runs (some from before their
+  // players were linked, and the save above finishes in the background), so
+  // this only relies on what's true of all of them: the submitter (A1) is
+  // always linked, and every name shows either way.
+  await savedGame.getByRole("button", { name: /^Game details:/ }).click();
+  await expect(page.getByRole("heading", { name: "Game", exact: true })).toBeVisible();
+  await expect(page.getByText("Team A · Won")).toBeVisible();
+  for (const name of ["Bob", "Carla", "Dana"]) await expect(page.getByText(name, { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "✏️ Edit game" })).toHaveCount(0);
+  await page.getByRole("button", { name: `View ${PLAYER_NAME}'s profile` }).click();
+  await expect(page.getByText("Overall", { exact: true })).toBeVisible({ timeout: 20_000 });
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Game", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Past Games" })).toBeVisible();
 });

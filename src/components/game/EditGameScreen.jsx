@@ -12,7 +12,7 @@ import NewGameForm from "./NewGameForm.jsx";
 // authorization gate is server-side (those RPCs raise if the caller isn't an
 // admin) — the isAdmin check here is just defense in depth / a friendlier
 // message, since the only way to reach this screen is already admin-gated
-// (HistoryView's edit affordance only renders for admins). Deleting (below)
+// (the game details screen only shows Edit to admins). Deleting (below)
 // follows the same convention via admin_delete_game (migration 20261004170100).
 export default function EditGameScreen({ gameId, onSaved, onDeleted }) {
   const { isAdmin } = useAuth();

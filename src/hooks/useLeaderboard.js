@@ -54,6 +54,24 @@ export function assignTiers(ranked) {
   return tiers;
 }
 
+// Every named profile, highest Elo first, each ranked one with its tier. A
+// tier depends on everyone else's rating, so even opening one player's
+// profile (e.g. from a game's details) loads the whole list. Null on error.
+export async function fetchRankedProfiles() {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, display_name, avatar_url, elo_rating, elo_games_played")
+    .order("elo_rating", { ascending: false });
+  if (error || !data) return null;
+  const valid = data.filter((p) => p.display_name && p.display_name.trim());
+  const ranked = valid.filter((p) => p.elo_games_played > 0);
+  const tiers = assignTiers(ranked);
+  return valid.map((p) => {
+    const assigned = tiers.get(p);
+    return assigned ? { ...p, ...assigned } : p;
+  });
+}
+
 // County-wide Elo leaderboard (TODO.md item 4), ranked games only. `profiles`
 // is readable by anyone, signed in or not (migration 0008), so this only
 // waits on `enabled` for Supabase being configured at all.
@@ -69,24 +87,11 @@ export function useLeaderboard(enabled) {
     let cancelled = false;
     setLoading(true);
 
-    supabase
-      .from("profiles")
-      .select("id, display_name, avatar_url, elo_rating, elo_games_played")
-      .order("elo_rating", { ascending: false })
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (!error && data) {
-          const valid = data.filter((p) => p.display_name && p.display_name.trim());
-          const ranked = valid.filter((p) => p.elo_games_played > 0);
-          const tiers = assignTiers(ranked);
-          const withTiers = valid.map((p) => {
-            const assigned = tiers.get(p);
-            return assigned ? { ...p, ...assigned } : p;
-          });
-          setPlayers(withTiers);
-        }
-        setLoading(false);
-      });
+    fetchRankedProfiles().then((withTiers) => {
+      if (cancelled) return;
+      if (withTiers) setPlayers(withTiers);
+      setLoading(false);
+    });
 
     return () => {
       cancelled = true;

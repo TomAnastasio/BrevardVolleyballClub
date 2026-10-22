@@ -31,7 +31,7 @@ function RosterAvatars({ players, align }) {
   );
 }
 
-function GameCardBody({ game, user, isAdmin, onOpenTournament }) {
+function GameCardBody({ game, user, onOpenTournament }) {
   const isIndoor = game.format === "indoor";
   const teamAPlayers = (game.teamAPlayers || []).slice(0, MAX_ROSTER_PHOTOS);
   const teamBPlayers = (game.teamBPlayers || []).slice(0, MAX_ROSTER_PHOTOS);
@@ -84,12 +84,11 @@ function GameCardBody({ game, user, isAdmin, onOpenTournament }) {
       {user && game.submittedByName && game.submittedByUserId !== user.id && (
         <p className="m-0 text-xs text-muted">Submitted by {game.submittedByName}</p>
       )}
-      {isAdmin && <p className="m-0 text-xs font-bold text-accent">✏️ Edit</p>}
     </>
   );
 }
 
-export default function HistoryView({ history, historyLoading, isAdmin, onEditGame, onOpenTournament }) {
+export default function HistoryView({ history, historyLoading, onOpenGame, onOpenTournament }) {
   const { user } = useAuth();
 
   return (
@@ -100,30 +99,26 @@ export default function HistoryView({ history, historyLoading, isAdmin, onEditGa
         <p className="p-6 text-center text-muted">No games saved yet. Finish a game to see it here.</p>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {history.map((game) =>
-            isAdmin ? (
-              // The Edit button is stretched over the whole card rather than
-              // wrapping it, so the card's own tournament tag button isn't a
-              // (invalid) button inside a button; the tag sits above it.
-              <li key={game.id} className="relative">
-                <Card className="gap-1 p-3">
-                  <GameCardBody game={game} user={user} isAdmin onOpenTournament={onOpenTournament} />
-                </Card>
+          {history.map((game) => (
+            // The details button is stretched over the whole card rather than
+            // wrapping it, so the card's own tournament tag button isn't a
+            // (invalid) button inside a button; the tag sits above it. A
+            // game saved only on this device ("game-…" id, never synced)
+            // has no server copy to show, so it isn't tappable.
+            <li key={game.id} className="relative">
+              <Card className="gap-1 p-3">
+                <GameCardBody game={game} user={user} onOpenTournament={onOpenTournament} />
+              </Card>
+              {!String(game.id).startsWith("game-") && (
                 <button
                   type="button"
-                  onClick={() => onEditGame(game.id)}
-                  aria-label={`Edit game: ${game.nameA} vs ${game.nameB}, ${game.date}`}
+                  onClick={() => onOpenGame(game.id)}
+                  aria-label={`Game details: ${game.nameA} vs ${game.nameB}, ${game.date}`}
                   className="absolute inset-0 rounded-2xl focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
                 />
-              </li>
-            ) : (
-              <li key={game.id}>
-                <Card className="gap-1 p-3">
-                  <GameCardBody game={game} user={user} onOpenTournament={onOpenTournament} />
-                </Card>
-              </li>
-            ),
-          )}
+              )}
+            </li>
+          ))}
         </ul>
       )}
     </div>
