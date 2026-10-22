@@ -25,9 +25,14 @@ ever change their own photo, never anyone else's — see migration
 ### Admin tools
 
 The **Admin Panel** button on the home screen only appears for admin
-accounts (`profiles.is_admin`). There's no in-app button to make someone an
-admin. It's a one-line database change matched to their sign-in email,
-either a new migration or run by hand in the Supabase SQL Editor. It
+accounts (`profiles.is_admin`). Current admins: the owner, and Julia
+Swalchick (from 2026-10-22). There's no in-app button to make someone an
+admin. It's a one-line database change, done as a new migration (see
+`20261022230000_make_julia_admin.sql`) or run by hand in the Supabase SQL
+Editor. This repo is public, so a migration matches the person by an md5 of
+their lowercase sign-in email, never the email itself. They must have
+signed in to the app at least once first, or the change matches nothing.
+Removing admin is another migration that sets `is_admin = false`. It
 contains:
 
 - **Sign-Up QR Code** — the fastest way to onboard a new player in person.
