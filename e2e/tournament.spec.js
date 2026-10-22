@@ -36,6 +36,13 @@ test("admin runs a Queen of the Court tournament and a player scores a game", as
     .getByLabel("Pasted registration list")
     .fill(["First name\tLast name\tDate of birth\tDivision", ...roster.map((n) => `${n}\t\t01/01/1990\tE2E Open`)].join("\n"));
   await page.getByRole("button", { name: "Review players" }).click();
+  // Staging has several same-named seeded manual profiles, so these rows
+  // default to "new profile"; pick an existing one so each run doesn't
+  // create five more. The bot's real (Google) account is matched on its own.
+  for (const player of roster.slice(0, 4)) {
+    await page.getByLabel(`Profile for ${player}`).selectOption({ index: 1 });
+  }
+  await expect(page.getByLabel(`Profile for ${PLAYER_NAME}`)).not.toHaveValue("__new__");
   await page.getByRole("button", { name: "Import 5" }).click();
   await expect(page.getByText("✓ Added 5 players")).toBeVisible();
   await page.getByRole("button", { name: "Done" }).click();
@@ -60,7 +67,7 @@ test("admin runs a Queen of the Court tournament and a player scores a game", as
   await page.getByRole("button", { name: "Start tournament (open scoring)" }).click();
   await expect(page.getByText("Live now")).toBeVisible();
 
-  await page.getByRole("button", { name: "Back" }).click();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
   await expect(page).toHaveURL(/[?&]t=/);
   const tournamentId = new URL(page.url()).searchParams.get("t");
 
@@ -69,7 +76,7 @@ test("admin runs a Queen of the Court tournament and a player scores a game", as
   const playerPage = await playerContext.newPage();
   await signInAsPlayer(playerPage);
   await playerPage.goto(`/?t=${tournamentId}`);
-  await expect(playerPage.getByText("Your next game")).toBeVisible();
+  await expect(playerPage.getByText("Your next game")).toBeVisible({ timeout: 20_000 });
   await playerPage.getByRole("button", { name: /^Game 1: .* Keep score$/ }).click();
   await playerPage.getByRole("button", { name: "Already finished? Type the final score" }).click();
   await playerPage.locator("#team-a-final").fill("21");

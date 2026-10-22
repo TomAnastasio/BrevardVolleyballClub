@@ -75,7 +75,7 @@ function DivisionFinals({ model, division, directory, reload }) {
   const finalistSelect = (key, label) => (
     <label className="flex flex-col gap-1 text-sm font-bold">
       {label}
-      <select value={slots[key]} onChange={(e) => setSlots((s) => ({ ...s, [key]: e.target.value }))} className={`${inputClass} py-1`}>
+      <select aria-label={`${division.name}: ${label}`} value={slots[key]} onChange={(e) => setSlots((s) => ({ ...s, [key]: e.target.value }))} className={`${inputClass} py-1`}>
         <option value="">Choose a player</option>
         {division.entrants.map((e) => (
           <option key={e.id} value={e.profile_id}>
@@ -94,7 +94,7 @@ function DivisionFinals({ model, division, directory, reload }) {
         value={slots[`${key}Name`]}
         onChange={(name, _avatar, id) => setSlots((s) => ({ ...s, [`${key}Name`]: name, [key]: id }))}
         placeholder="Search any player"
-        ariaLabel={label}
+        ariaLabel={`${division.name}: ${label}`}
         directory={directory}
         excludeIds={chosen.filter(Boolean)}
         inputClassName={`${inputClass} py-1`}

@@ -57,7 +57,7 @@ function TeamScorer({ names, score, color, onInc, onDec, label, winning }) {
           onPress={onInc}
           aria-label={`Add point to ${label}`}
           style={{ "--button-bg": color, "--button-fg": colorForeground(color), backgroundColor: color, color: colorForeground(color) }}
-          className="min-h-0 flex-[3_0_0%] rounded-xl text-3xl font-extrabold"
+          className="min-h-0 w-full flex-[3_0_0%] rounded-xl text-3xl font-extrabold"
         >
           +1
         </Button>
@@ -65,7 +65,7 @@ function TeamScorer({ names, score, color, onInc, onDec, label, winning }) {
           variant="outline"
           onPress={onDec}
           aria-label={`Remove point from ${label}, fix a mistake`}
-          className="min-h-0 flex-[1_0_0%] rounded-xl border-2 border-danger text-lg font-extrabold"
+          className="min-h-0 w-full flex-[1_0_0%] rounded-xl border-2 border-danger text-lg font-extrabold"
         >
           −1
         </Button>

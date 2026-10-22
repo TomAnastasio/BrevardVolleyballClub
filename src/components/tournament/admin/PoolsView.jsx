@@ -116,8 +116,8 @@ function DivisionPools({ model, division, reload }) {
           <input type="checkbox" checked={checkedInOnly} onChange={(e) => setCheckedInOnly(e.target.checked)} className="h-5 w-5" />
           Checked-in players only ({division.entrants.filter((e) => e.checked_in).length} of {division.entrants.length})
         </label>
-        <div className="flex gap-2">
-          <label className="flex flex-1 flex-col gap-1 text-sm font-bold">
+        <div className="flex flex-col gap-2">
+          <label className="flex flex-col gap-1 text-sm font-bold">
             Pool size
             <select value={targetSize} onChange={(e) => setTargetSize(Number(e.target.value))} className={`${inputClass} py-1`}>
               {[4, 5, 6, 7, 8].map((n) => (
@@ -127,7 +127,7 @@ function DivisionPools({ model, division, reload }) {
               ))}
             </select>
           </label>
-          <label className="flex flex-1 flex-col gap-1 text-sm font-bold">
+          <label className="flex flex-col gap-1 text-sm font-bold">
             Seeding
             <select value={method} onChange={(e) => setMethod(e.target.value)} className={`${inputClass} py-1`}>
               <option value="elo">Balanced by Elo</option>

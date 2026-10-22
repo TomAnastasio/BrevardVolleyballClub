@@ -111,7 +111,12 @@ export function matchToProfiles(players, profiles) {
           fuzzyFilter(p.name.split(" ")[0], profiles, (pr) => pr.display_name || "", 3),
         );
     const unique = [...new Map(suggestions.map((s) => [s.id, s])).values()].slice(0, 4);
-    return { ...p, suggestions: unique, profileId: exact.length === 1 ? exact[0].id : null };
+    // Several profiles with the same name: if exactly one is a real (Google)
+    // account, that's almost certainly the person; otherwise make the admin
+    // choose rather than guess.
+    const real = exact.filter((pr) => !pr.is_manual);
+    const profileId = exact.length === 1 ? exact[0].id : real.length === 1 ? real[0].id : null;
+    return { ...p, suggestions: unique, profileId };
   });
 }
 

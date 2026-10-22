@@ -64,6 +64,7 @@ export default function ResultsView({ model, onDone }) {
             <label key={key} className="flex flex-col gap-1 text-sm font-bold">
               {label}
               <select
+                aria-label={`${d.name} ${key}`}
                 value={picks[d.id][key]}
                 onChange={(e) => setPicks((p) => ({ ...p, [d.id]: { ...p[d.id], [key]: e.target.value } }))}
                 className={`${inputClass} py-1`}

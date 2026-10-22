@@ -47,6 +47,19 @@ describe("matchToProfiles", () => {
     expect(renee.profileId).toBe("3");
   });
 
+  it("prefers the one real account among same-named profiles, else asks", () => {
+    const dupes = [
+      { id: "m1", display_name: "Sam Lee", is_manual: true },
+      { id: "g1", display_name: "Sam Lee", is_manual: false },
+      { id: "m2", display_name: "Kim Ray", is_manual: true },
+      { id: "m3", display_name: "Kim Ray", is_manual: true },
+    ];
+    const [sam, kim] = matchToProfiles([{ name: "Sam Lee" }, { name: "Kim Ray" }], dupes);
+    expect(sam.profileId).toBe("g1");
+    expect(kim.profileId).toBeNull();
+    expect(kim.suggestions.map((s) => s.id)).toEqual(["m2", "m3"]);
+  });
+
   it("offers suggestions but defaults to a new profile when unsure", () => {
     const [row] = matchToProfiles([{ name: "Jan Doe" }], profiles);
     expect(row.profileId).toBeNull();

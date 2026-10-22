@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Card } from "@heroui/react";
-import { usePlayerDirectory } from "../../../hooks/usePlayerDirectory.js";
+import { supabase } from "../../../lib/supabaseClient.js";
 import { importEntrants } from "../../../lib/tournamentApi.js";
 import { matchDivision, matchToProfiles, parseRoster } from "../../../lib/rosterImport.js";
 import { inputClass } from "./TournamentDetailsForm.jsx";
@@ -10,7 +10,24 @@ const NEW_PROFILE = "__new__";
 // Step 1: paste the Google Form response sheet. Step 2: confirm each row's
 // profile match and division. Step 3: import.
 export default function RosterImportView({ model, onDone }) {
-  const directory = usePlayerDirectory(true);
+  // Loaded here (not via usePlayerDirectory) to know when it's finished:
+  // matching against a not-yet-loaded list would make every player look new
+  // and create duplicate profiles.
+  const [directory, setDirectory] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url, is_manual")
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) console.error("Failed to load profiles for import:", error);
+        setDirectory((data || []).filter((p) => p.display_name && p.display_name.trim()));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const { divisions } = model;
   const enteredIds = new Set(divisions.flatMap((d) => d.entrants.map((e) => e.profile_id)));
   const [text, setText] = useState("");
@@ -89,8 +106,8 @@ export default function RosterImportView({ model, onDone }) {
             {parseError}
           </p>
         )}
-        <Button variant="primary" onPress={handleReview} isDisabled={!text.trim()} className="font-bold">
-          Review players
+        <Button variant="primary" onPress={handleReview} isDisabled={!text.trim() || !directory} className="font-bold">
+          {directory ? "Review players" : "Loading players…"}
         </Button>
       </div>
     );
@@ -129,6 +146,9 @@ export default function RosterImportView({ model, onDone }) {
                   </option>
                 ))}
               </select>
+              {!r.profileId && r.suggestions.length > 0 && (
+                <p className="m-0 text-xs text-warning">Similar names already exist. Pick one if it's the same person.</p>
+              )}
               <select
                 value={r.divisionId}
                 onChange={(e) => update(i, { divisionId: e.target.value })}
