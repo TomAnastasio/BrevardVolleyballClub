@@ -1,5 +1,6 @@
 import { Card } from "@heroui/react";
 import { useAuth } from "../../hooks/useAuth.js";
+import TournamentGameTag from "../TournamentGameTag.jsx";
 
 // Capped at 8 per team (two rows of 4) to keep a big indoor roster from
 // blowing up the card's height — see HistoryView's goal of compact cards.
@@ -30,7 +31,7 @@ function RosterAvatars({ players, align }) {
   );
 }
 
-function GameCardBody({ game, user, isAdmin }) {
+function GameCardBody({ game, user, isAdmin, onOpenTournament }) {
   const isIndoor = game.format === "indoor";
   const teamAPlayers = (game.teamAPlayers || []).slice(0, MAX_ROSTER_PHOTOS);
   const teamBPlayers = (game.teamBPlayers || []).slice(0, MAX_ROSTER_PHOTOS);
@@ -56,6 +57,7 @@ function GameCardBody({ game, user, isAdmin }) {
           {game.mode === "ranked" ? "🏆 Ranked" : "🎲 Casual"}
         </span>
       </div>
+      <TournamentGameTag tag={game.tournament} onOpen={onOpenTournament} />
       <div className="flex items-center justify-between gap-2 font-bold">
         <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
           {!isIndoor && (
@@ -87,7 +89,7 @@ function GameCardBody({ game, user, isAdmin }) {
   );
 }
 
-export default function HistoryView({ history, historyLoading, isAdmin, onEditGame }) {
+export default function HistoryView({ history, historyLoading, isAdmin, onEditGame, onOpenTournament }) {
   const { user } = useAuth();
 
   return (
@@ -100,22 +102,24 @@ export default function HistoryView({ history, historyLoading, isAdmin, onEditGa
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {history.map((game) =>
             isAdmin ? (
-              <li key={game.id}>
+              // The Edit button is stretched over the whole card rather than
+              // wrapping it, so the card's own tournament tag button isn't a
+              // (invalid) button inside a button; the tag sits above it.
+              <li key={game.id} className="relative">
+                <Card className="gap-1 p-3">
+                  <GameCardBody game={game} user={user} isAdmin onOpenTournament={onOpenTournament} />
+                </Card>
                 <button
                   type="button"
                   onClick={() => onEditGame(game.id)}
                   aria-label={`Edit game: ${game.nameA} vs ${game.nameB}, ${game.date}`}
-                  className="block w-full rounded-2xl text-left focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
-                >
-                  <Card className="gap-1 p-3">
-                    <GameCardBody game={game} user={user} isAdmin />
-                  </Card>
-                </button>
+                  className="absolute inset-0 rounded-2xl focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+                />
               </li>
             ) : (
               <li key={game.id}>
                 <Card className="gap-1 p-3">
-                  <GameCardBody game={game} user={user} />
+                  <GameCardBody game={game} user={user} onOpenTournament={onOpenTournament} />
                 </Card>
               </li>
             ),

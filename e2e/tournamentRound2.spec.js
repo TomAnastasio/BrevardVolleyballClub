@@ -97,6 +97,30 @@ test("round 2, best-of-3 final, crowning", async ({ page, browser }) => {
     await expect(page.getByText("Final results")).toBeVisible();
     await page.goto(`/?t=${tid}`);
     await expect(page.getByText(/👑 Queen · /)).toBeVisible({ timeout: 20_000 });
+
+    // Its games are tagged by stage in Past Games (as the admin, whose
+    // full-card Edit button must not swallow the tag's tap) and the tag
+    // opens the tournament.
+    const tag = (label) => page.getByRole("button", { name: `Open tournament: ${name} · ${label}` });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Game tracking" }).click();
+    await page.getByRole("button", { name: "Past Games" }).click();
+    await expect(tag("Final")).toHaveCount(2, { timeout: 20_000 });
+    await expect(tag("Pool play · Round 2")).toHaveCount(6);
+    await expect(tag("Pool play · Round 1")).toHaveCount(6);
+    await tag("Final").first().click();
+    await expect(page.getByRole("heading", { name })).toBeVisible({ timeout: 20_000 });
+
+    // And on a player's profile.
+    await page.goto("/");
+    await page.getByRole("button", { name: "Rankings" }).click();
+    await expect(page.getByText("Loading rankings…")).toHaveCount(0, { timeout: 20_000 });
+    const unranked = page.getByRole("button", { name: /Unranked players/ });
+    if (await unranked.count()) await unranked.click();
+    await page.getByRole("button", { name: `View ${PLAYER_NAME}'s profile` }).click();
+    await expect(tag("Pool play · Round 1")).toHaveCount(3, { timeout: 20_000 });
+    await tag("Pool play · Round 1").first().click();
+    await expect(page.getByRole("heading", { name })).toBeVisible({ timeout: 20_000 });
   } finally {
     const scored = await rest(`tournament_matches?tournament_id=eq.${tid}&game_id=not.is.null&select=game_id`);
     for (const m of scored) await rest("rpc/admin_delete_game", { method: "POST", body: { p_game_id: m.game_id } });

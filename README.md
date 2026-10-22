@@ -124,6 +124,14 @@ Queen of Paradise (2026-10-31):
 A player imported as a manual profile who later signs up with the QR code
 keeps their tournament history when you merge the profiles.
 
+Tournament games show up in Past Games and on player profiles like any
+other game. They also get a tag with the tournament's name and stage, e.g.
+"👑 Queen of Paradise · Pool play" or "· Final". The pool letter isn't shown.
+"Pool play" gets a round number ("Pool play · Round 2") only when the
+division had a second round of pools. Tapping the tag opens the tournament.
+This needs no extra database column. The link already exists as
+`tournament_matches.game_id` (see `src/lib/tournamentGameTag.js`).
+
 ### Local development
 
 ```bash

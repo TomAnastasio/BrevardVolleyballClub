@@ -9,6 +9,7 @@ import { formatEventDate, placeLabel, TITLE_LABELS } from "./tournament/tourname
 import { useAuth } from "../hooks/useAuth.js";
 import { supabase } from "../lib/supabaseClient.js";
 import CopyableText from "./CopyableText.jsx";
+import TournamentGameTag from "./TournamentGameTag.jsx";
 
 function PlayerAvatar({ src }) {
   if (!src) {
@@ -17,7 +18,7 @@ function PlayerAvatar({ src }) {
   return <img src={src} alt="" aria-hidden="true" className="h-16 w-16 flex-none rounded-full border border-white/10 object-cover" />;
 }
 
-function GameRow({ game }) {
+function GameRow({ game, onOpenTournament }) {
   const result = game.ownScore > game.oppScore ? "win" : game.ownScore < game.oppScore ? "loss" : "tie";
   return (
     <li>
@@ -32,6 +33,7 @@ function GameRow({ game }) {
             <span>{game.oppScore}</span>
           </span>
         </div>
+        <TournamentGameTag tag={game.tournament} onOpen={onOpenTournament} />
         <div className="flex items-center justify-between gap-2">
           {game.oppName ? (
             <p className="m-0 min-w-0 truncate text-xs text-muted">vs {game.oppName}</p>
@@ -127,7 +129,7 @@ function AdminDetails({ profileId }) {
   );
 }
 
-export default function PlayerProfileView({ player, onBack }) {
+export default function PlayerProfileView({ player, onBack, onOpenTournament }) {
   const { games, loading } = usePlayerGames(player?.id);
   const tournaments = usePlayerTournaments(player?.id);
   const titles = tournaments.filter((e) => e.title);
@@ -227,7 +229,7 @@ export default function PlayerProfileView({ player, onBack }) {
         ) : (
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {games.map((game) => (
-              <GameRow key={game.id} game={game} />
+              <GameRow key={game.id} game={game} onOpenTournament={onOpenTournament} />
             ))}
           </ul>
         )}

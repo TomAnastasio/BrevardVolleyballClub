@@ -28,6 +28,12 @@ export default function App({ joinRequested, justJoined, tournamentId }) {
   // Only the first visit to Tournaments opens the linked tournament directly.
   const [linkedTournamentId, setLinkedTournamentId] = useState(tournamentId);
 
+  // A tournament game's 👑 tag (Past Games, profiles) opens that tournament.
+  function openTournament(id) {
+    setLinkedTournamentId(id);
+    setView("tournaments");
+  }
+
   return (
     <AuthProvider>
       {!joinRequested && <SplashScreen onReveal={() => setAppReady(true)} />}
@@ -65,9 +71,15 @@ export default function App({ joinRequested, justJoined, tournamentId }) {
             />
           )}
           {view === "profile" && selectedPlayer && (
-            <PlayerProfileView player={selectedPlayer} onBack={() => setView("leaderboard")} />
+            <PlayerProfileView
+              player={selectedPlayer}
+              onBack={() => setView("leaderboard")}
+              onOpenTournament={openTournament}
+            />
           )}
-          {view === "game" && <GameTrackingShell onBack={() => setView("landing")} />}
+          {view === "game" && (
+            <GameTrackingShell onBack={() => setView("landing")} onOpenTournament={openTournament} />
+          )}
           {view === "admin" && <AdminPanelView onBack={() => setView("landing")} />}
           {view === "tournaments" && (
             <TournamentsShell

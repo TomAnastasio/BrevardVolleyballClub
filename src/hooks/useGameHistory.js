@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./useAuth.js";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 import { normalizeMode } from "../lib/gameMode.js";
+import { TOURNAMENT_MATCH_EMBED, tournamentTagFor } from "../lib/tournamentGameTag.js";
 
 const HISTORY_KEY = "bvc-game-history-v1";
 
@@ -87,6 +88,7 @@ function mapRowToRecord(row, submitterProfilesById = {}) {
     submittedByName: row.submitted_by_name,
     format: row.format,
     teamSize: row.team_size ?? null,
+    tournament: tournamentTagFor(row),
     teamAPlayers: usesRoster
       ? mapTeamPlayers(row.game_players, "a")
       : mapBeachTeamPlayers(row.game_players, "a", row.user_id, submitterProfilesById),
@@ -133,7 +135,7 @@ export function useGameHistory() {
       // optimistic inserts tied to the new session correctly.
       const { data, error } = await supabase
         .from("games")
-        .select("*, game_players(user_id, slot, team, profiles(id, display_name, avatar_url))")
+        .select(`*, game_players(user_id, slot, team, profiles(id, display_name, avatar_url)), ${TOURNAMENT_MATCH_EMBED}`)
         .order("created_at", { ascending: false });
       if (error) throw error;
       if (requestId !== latestRequestRef.current) return;

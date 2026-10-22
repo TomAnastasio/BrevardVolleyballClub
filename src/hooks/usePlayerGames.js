@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
+import { TOURNAMENT_MATCH_EMBED, tournamentTagFor } from "../lib/tournamentGameTag.js";
 
 // Which side of a game a given player was on. 2v2 beach's submitter (a1)
 // never gets a game_players row of their own (see migration
@@ -29,6 +30,7 @@ export function mapGameForPlayer(game, playerId, gpByGameId) {
     mode: game.mode,
     format: game.format,
     teamSize: game.team_size ?? null,
+    tournament: tournamentTagFor(game),
     ownScore: side === "a" ? game.score_a : game.score_b,
     oppScore: side === "a" ? game.score_b : game.score_a,
     oppName: side === "a" ? game.name_b : game.name_a,
@@ -73,7 +75,7 @@ export function usePlayerGames(playerId) {
 
         const { data: rows, error: gamesError } = await supabase
           .from("games")
-          .select("*")
+          .select(`*, ${TOURNAMENT_MATCH_EMBED}`)
           .or(filters.join(","))
           .order("created_at", { ascending: false });
         if (gamesError) throw gamesError;

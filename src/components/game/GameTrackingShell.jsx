@@ -39,7 +39,7 @@ const BACK_MAP = {
   "past-score": "new",
 };
 
-export default function GameTrackingShell({ onBack }) {
+export default function GameTrackingShell({ onBack, onOpenTournament }) {
   const scoreboard = useScoreboardState();
   const { history, addGame, logPastGame, historyLoading, refreshHistory, saveError, dismissSaveError } =
     useGameHistory();
@@ -326,6 +326,7 @@ export default function GameTrackingShell({ onBack }) {
             historyLoading={historyLoading}
             isAdmin={isAdmin}
             onEditGame={handleEditGame}
+            onOpenTournament={onOpenTournament}
           />
         )}
         {screen === "edit-game" && (
