@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { Card } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
 import RankBadge from "./RankBadge.jsx";
+import ProfilePhotoEditor from "./ProfilePhotoEditor.jsx";
 import { usePlayerGames } from "../hooks/usePlayerGames.js";
+import { useAuth } from "../hooks/useAuth.js";
 
 function PlayerAvatar({ src }) {
   if (!src) {
-    return <span aria-hidden="true" className="h-12 w-12 flex-none rounded-full border border-white/10 bg-white/5" />;
+    return <span aria-hidden="true" className="h-16 w-16 flex-none rounded-full border border-white/10 bg-white/5" />;
   }
-  return <img src={src} alt="" aria-hidden="true" className="h-12 w-12 flex-none rounded-full border border-white/10 object-cover" />;
+  return <img src={src} alt="" aria-hidden="true" className="h-16 w-16 flex-none rounded-full border border-white/10 object-cover" />;
 }
 
 function GameRow({ game }) {
@@ -52,6 +55,10 @@ function GameRow({ game }) {
 
 export default function PlayerProfileView({ player, onBack }) {
   const { games, loading } = usePlayerGames(player?.id);
+  const { user } = useAuth();
+  const isOwnProfile = Boolean(user) && user.id === player.id;
+  const [avatarUrl, setAvatarUrl] = useState(player.avatar_url);
+  const [photoSaved, setPhotoSaved] = useState(false);
 
   const wins = games.filter((g) => g.ownScore > g.oppScore).length;
   const losses = games.filter((g) => g.ownScore < g.oppScore).length;
@@ -74,10 +81,26 @@ export default function PlayerProfileView({ player, onBack }) {
 
       <div className="flex flex-col gap-3 px-3 pb-6">
         <div className="flex items-center gap-3">
-          <PlayerAvatar src={player.avatar_url} />
+          {isOwnProfile ? (
+            <ProfilePhotoEditor
+              avatarUrl={avatarUrl}
+              onSaved={(url) => {
+                setAvatarUrl(url);
+                setPhotoSaved(true);
+              }}
+            />
+          ) : (
+            <PlayerAvatar src={avatarUrl} />
+          )}
           <span className="min-w-0 flex-1 truncate text-lg font-bold">{player.display_name}</span>
           {player.tier && <RankBadge tier={player.tier} division={player.division} size={38} />}
         </div>
+
+        {photoSaved && (
+          <p role="status" className="m-0 text-sm font-semibold text-success">
+            ✓ Profile photo updated
+          </p>
+        )}
 
         {player.elo_games_played > 0 && (
           <p className="m-0 text-sm text-muted">

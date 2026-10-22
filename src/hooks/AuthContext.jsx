@@ -5,6 +5,10 @@ function useAuthState() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [isAdmin, setIsAdmin] = useState(false);
+  // The player's own profiles.avatar_url, which (unlike the Google photo in
+  // user_metadata) reflects a photo they changed from their profile page.
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [profileVersion, setProfileVersion] = useState(0);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -33,10 +37,13 @@ function useAuthState() {
 
   // Drives the admin-only UI (4th landing-page button, admin panel):
   // `profiles.is_admin` is only ever true for the one designated account
-  // (migration 0003), set by hand in Supabase, not user-editable.
+  // (migration 0003), set by hand in Supabase, not user-editable. Also
+  // loads the player's own avatar_url; refreshProfile() re-runs this after
+  // they change their photo.
   useEffect(() => {
     if (!isSupabaseConfigured || !user) {
       setIsAdmin(false);
+      setAvatarUrl(null);
       return;
     }
 
@@ -44,17 +51,19 @@ function useAuthState() {
 
     supabase
       .from("profiles")
-      .select("is_admin")
+      .select("is_admin, avatar_url")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (!cancelled) setIsAdmin(Boolean(data?.is_admin));
+        if (cancelled) return;
+        setIsAdmin(Boolean(data?.is_admin));
+        setAvatarUrl(data?.avatar_url || null);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, profileVersion]);
 
   function signInWithGoogle() {
     if (!isSupabaseConfigured) {
@@ -69,7 +78,20 @@ function useAuthState() {
     supabase.auth.signOut();
   }
 
-  return { user, loading, isConfigured: isSupabaseConfigured, isAdmin, signInWithGoogle, signOut };
+  function refreshProfile() {
+    setProfileVersion((v) => v + 1);
+  }
+
+  return {
+    user,
+    loading,
+    isConfigured: isSupabaseConfigured,
+    isAdmin,
+    avatarUrl,
+    refreshProfile,
+    signInWithGoogle,
+    signOut,
+  };
 }
 
 export const AuthContext = createContext(null);

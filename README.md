@@ -11,6 +11,17 @@ and all game/profile data live in Supabase — see `supabase/README.md`.
 Built with React, Vite, Tailwind CSS, and [HeroUI](https://www.heroui.com) as
 the component/design library.
 
+### Profile photos
+
+A player's photo starts as their Google account photo (copied once, at
+first sign-in). On their own profile page, tapping their photo opens a
+bottom sheet to **Take photo** with the camera or **Choose from library**,
+then preview and save it. The phone center-crops it to a square, shrinks it
+to 512px, and strips its metadata (e.g. GPS location) before uploading to
+their own folder in the `profile-photos` storage bucket. Players can only
+ever change their own photo, never anyone else's — see migration
+`20261022120000_players_set_own_profile_photo.sql`.
+
 ### Admin tools
 
 The **Admin Panel** button on the home screen only appears for the admin

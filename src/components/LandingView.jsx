@@ -31,8 +31,8 @@ function LandingCard({ icon, label, subtitle, onClick, delay }) {
 }
 
 export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard, onAdminPanel }) {
-  const { user, isAdmin } = useAuth();
-  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+  const { user, isAdmin, avatarUrl: profileAvatarUrl } = useAuth();
+  const avatarUrl = profileAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const isAuthenticated = Boolean(user);
 
   return (
