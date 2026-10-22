@@ -83,6 +83,10 @@ full recovery steps):
   must never be done with the service-role key).
 - `e2e/seedStaging.js` seeds fixture player profiles via the admin bot's own
   normal API access — never the service-role key or DB password.
+- `e2e/seedStagingGames.js` (same access path) gives staging permanent
+  demo data for testing by hand: 24 named players (ranked with up to 20
+  games, casual-only, and no games) and ~67 games. Leave it in place — don't
+  delete those players or games when cleaning up after a test.
 - As of 2026-10-22, staging's schema is kept in sync with
   `supabase/migrations/` automatically by
   `.github/workflows/apply-migrations-staging.yml` (its own `staging`
