@@ -9,10 +9,9 @@ import { PLAYER_NAME, signInAsPlayer } from "./signInAsTestUser.js";
 // from a real search of known profiles (98738b4, 2026-10-04) -- the staging
 // project is seeded with three manual profiles named Bob/Carla/Dana for
 // that (see seedStaging.js, run via the admin test bot), and the bot itself
-// fills the 4th slot (A1), same as a real member recording their own game --
-// deliberately NOT some unrelated identity, which would trip the "new A1
-// player must already be linked to this game" guard in assign_beach_game_a1
-// (20261004180000), a real safety check, just not one a real user ever hits.
+// fills the 4th slot (A1), same as a real member recording their own game.
+// The logger in other slots, or not playing at all, is covered by
+// beachSlots.spec.js.
 // Admin-only flows get their own spec, signed in as the admin bot instead.
 async function pickPlayer(page, label, name) {
   await page.getByLabel(label).fill(name);

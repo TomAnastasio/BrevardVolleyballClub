@@ -312,10 +312,11 @@ export function useGameHistory() {
             // Classic 2v2 beach has no game_players row for A1 — that slot's
             // identity is implicit via games.user_id, which the insert above
             // always sets to the submitter. If a different real player was
-            // actually picked for A1 (self-service correction, scoped to
-            // "only the submitter, only to someone already linked to this
-            // game" — see migration 20261004180000), reassign it here so
-            // the real A1 gets Elo/history credit instead of the submitter.
+            // actually picked for A1 — the submitter can be in any other
+            // slot, or not playing at all — reassign it here so the real A1
+            // gets Elo/history credit instead of the submitter (only the
+            // submitter may, and only to someone not already in another
+            // slot — see migration 20261023120000).
             let reassignedA1 = false;
             if (data && !usesRoster && game.playerIdA1 && game.playerIdA1 !== user.id) {
               try {
