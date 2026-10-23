@@ -86,7 +86,10 @@ full recovery steps):
 - `e2e/seedStagingGames.js` (same access path) gives staging permanent
   demo data for testing by hand: 24 named players (ranked with up to 20
   games, casual-only, and no games) and ~67 games. Leave it in place — don't
-  delete those players or games when cleaning up after a test.
+  delete those players or games when cleaning up after a test. Staging must
+  always have these ranked games: `e2e/profileEloChange.spec.js` tests real
+  Elo history against them (e.g. Sam Whitaker), so if it fails with no Elo
+  pills found, re-run this seed (it's safe to re-run) before suspecting code.
 - `e2e/seedStagingTournaments.js` (run after the games seed) adds three
   permanent demo tournaments — "Fall Classic 2026" (complete), "Halloween
   Bash" (live) and "Winter Wahine Invitational…" (published) — each built

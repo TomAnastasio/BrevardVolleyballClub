@@ -38,8 +38,10 @@ test("coming back from that sign-in opens your own profile", async ({ page }) =>
 });
 
 test("profile shows partners & rivals, and the Elo chart for a ranked player", async ({ page }) => {
-  // Staging has no ranked games (they'd move Elo), so the profile and its
-  // Elo history are faked at the network layer: the bot "has" 3 ranked games.
+  // The test bot itself has no ranked games (giving it some would move the
+  // demo players' Elo), so its profile and Elo history are faked at the
+  // network layer: the bot "has" 3 ranked games. Real staging ranked games
+  // are covered by profileEloChange.spec.js.
   await signInAsPlayer(page);
   await page.route("**/rest/v1/profiles?select=id%2Cdisplay_name%2Cavatar_url%2Celo_rating%2Celo_games_played*", async (route) => {
     const res = await route.fetch();
