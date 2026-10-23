@@ -11,7 +11,7 @@ import { PLAYER_NAME, signInAsPlayer } from "./signInAsTestUser.js";
 // that (see seedStaging.js, run via the admin test bot), and the bot itself
 // fills the 4th slot (A1), same as a real member recording their own game.
 // The logger in other slots, or not playing at all, is covered by
-// beachSlots.spec.js.
+// gameSlots.spec.js.
 // Admin-only flows get their own spec, signed in as the admin bot instead.
 async function pickPlayer(page, label, name) {
   await page.getByLabel(label).fill(name);
