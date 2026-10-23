@@ -28,6 +28,7 @@ test("play and save a casual beach game end to end", async ({ page }) => {
 
   await page.getByRole("button", { name: "Game tracking" }).click();
   await page.getByRole("button", { name: "New Game" }).click();
+  await page.getByRole("button", { name: "Live Scoreboard" }).click();
   await page.getByRole("button", { name: "Beach" }).click();
   await page.getByRole("button", { name: "2v2 Beach" }).click();
   await page.getByRole("button", { name: "Casual" }).click();
@@ -77,4 +78,36 @@ test("play and save a casual beach game end to end", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Game", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Back", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Past Games" })).toBeVisible();
+});
+
+// "Enter Final Score": same setup screens, but the result is typed in
+// instead of tracked point by point -- open to every signed-in player, not
+// just admins (this runs as the ordinary player bot on purpose).
+test("enter a just-finished game's final score as a regular player", async ({ page }) => {
+  await signInAsPlayer(page);
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Game tracking" }).click();
+  await expect(page.getByRole("button", { name: "Log Past Game" })).toHaveCount(0);
+  await page.getByRole("button", { name: "New Game" }).click();
+  await page.getByRole("button", { name: "Enter Final Score" }).click();
+  await page.getByRole("button", { name: "Beach" }).click();
+  await page.getByRole("button", { name: "2v2 Beach" }).click();
+  await page.getByRole("button", { name: "Casual" }).click();
+
+  await pickPlayer(page, "First side, player 1 name", PLAYER_NAME);
+  await pickPlayer(page, "First side, player 2 name", "Carla");
+  await pickPlayer(page, "Second side, player 1 name", "Bob");
+  await pickPlayer(page, "Second side, player 2 name", "Dana");
+
+  await page.getByRole("button", { name: "Add Score" }).click();
+  await page.getByLabel(`${PLAYER_NAME} & Carla final score`).fill("25");
+  await page.getByLabel("Bob & Dana final score").fill("23");
+  await page.getByRole("button", { name: "Save Game" }).click();
+
+  // Lands straight on Past Games, with the new game in it.
+  const savedGame = page.getByRole("listitem").filter({ hasText: `${PLAYER_NAME} & Carla` }).first();
+  await expect(savedGame).toBeVisible();
+  await expect(savedGame).toContainText("25");
+  await expect(page.getByRole("alert")).toHaveCount(0);
 });

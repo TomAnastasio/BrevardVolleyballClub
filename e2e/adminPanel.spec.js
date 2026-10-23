@@ -26,6 +26,7 @@ test("admin can add a manual profile and it's searchable afterward", async ({ pa
   await page.getByRole("button", { name: "Back to main menu" }).click();
   await page.getByRole("button", { name: "Game tracking" }).click();
   await page.getByRole("button", { name: "New Game" }).click();
+  await page.getByRole("button", { name: "Live Scoreboard" }).click();
   await page.getByRole("button", { name: "Beach" }).click();
   await page.getByRole("button", { name: "2v2 Beach" }).click();
   await page.getByRole("button", { name: "Casual" }).click();

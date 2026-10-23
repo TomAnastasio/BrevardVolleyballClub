@@ -11,44 +11,47 @@ import GameTrackingSignInGate from "./GameTrackingSignInGate.jsx";
 import NewGameForm from "./NewGameForm.jsx";
 import GameView from "./GameView.jsx";
 import HistoryView from "./HistoryView.jsx";
-import LogPastGameScoreScreen from "./LogPastGameScoreScreen.jsx";
+import FinalScoreScreen from "./FinalScoreScreen.jsx";
+import GameEntryMenu from "./GameEntryMenu.jsx";
 import { consumePendingGameTracking, setPendingGameTracking } from "../../lib/pendingGameTracking.js";
 
 const SCREEN_META = {
   menu: { title: "Beach Volleyball Scoreboard", subtitle: "Brevard Volleyball Club" },
   signin: { title: "Sign In Required", subtitle: null },
+  entry: { title: "How Do You Want to Log It?", subtitle: null },
   format: { title: "Select Game Type", subtitle: null },
   "beach-size": { title: "Beach Team Size", subtitle: null },
   mode: { title: "Ranked or Casual?", subtitle: null },
   new: { title: "New Game", subtitle: null },
   active: { title: null, subtitle: null },
   history: { title: "Past Games", subtitle: null },
-  "past-score": { title: "Add Score", subtitle: null },
+  "final-score": { title: "Final Score", subtitle: null },
 };
 
 const BACK_MAP = {
   signin: "menu",
-  format: "menu",
+  entry: "menu",
+  format: "entry",
   "beach-size": "format",
   new: "mode",
   active: "menu",
   history: "menu",
-  "past-score": "new",
+  "final-score": "new",
 };
 
 export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament, gamesVersion }) {
   const scoreboard = useScoreboardState();
-  const { history, addGame, logPastGame, historyLoading, refreshHistory, saveError, dismissSaveError } =
+  const { history, addGame, historyLoading, refreshHistory, saveError, dismissSaveError } =
     useGameHistory();
-  const { user, loading, isConfigured, isAdmin, signInWithGoogle } = useAuth();
+  const { user, loading, isConfigured, signInWithGoogle } = useAuth();
   const [screen, setScreen] = useState("menu");
   const [pendingFormat, setPendingFormat] = useState(null);
   const [pendingTeamSize, setPendingTeamSize] = useState(null);
   const [pendingMode, setPendingMode] = useState(null);
-  const [isLoggingPast, setIsLoggingPast] = useState(false);
-  const [pastGameDraft, setPastGameDraft] = useState(null);
-  const [pastGameSubmitting, setPastGameSubmitting] = useState(false);
-  const [pastGameError, setPastGameError] = useState("");
+  // "Enter Final Score" (vs. the live scoreboard): same setup screens, then
+  // the score is typed in at the end instead of tracked point by point.
+  const [isFinalScoreEntry, setIsFinalScoreEntry] = useState(false);
+  const [finalScoreDraft, setFinalScoreDraft] = useState(null);
 
   // Admin edits/deletes now happen from a game's details screen (App.jsx),
   // which bumps `gamesVersion`; refetch so Past Games reflects them.
@@ -75,19 +78,17 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
 
   // Anyone can browse the menu and Past Games, but recording a game still
   // needs a signed-in account — checked right when "New Game" is pressed,
-  // not buried after format/mode selection. ("Log Past Game" needs no
-  // separate check here: it only ever renders for an admin, and isAdmin is
-  // never true without a signed-in user already.)
+  // not buried after format/mode selection.
   function needsSignInFirst() {
     return isConfigured && !user;
   }
 
   // Once sign-in completes (including after the OAuth redirect round trip
-  // below), carry on into format selection automatically instead of
-  // stranding the user on the sign-in screen.
+  // below), carry on into the live-vs-final-score choice automatically
+  // instead of stranding the user on the sign-in screen.
   useEffect(() => {
     if (screen === "signin" && user) {
-      setScreen("format");
+      setScreen("entry");
     }
   }, [screen, user]);
 
@@ -109,10 +110,9 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
   }
 
   function handleStartGame(payload) {
-    if (isLoggingPast) {
-      setPastGameDraft(payload);
-      setPastGameError("");
-      setScreen("past-score");
+    if (isFinalScoreEntry) {
+      setFinalScoreDraft(payload);
+      setScreen("final-score");
       return;
     }
     scoreboard.startGame({ ...payload, mode: pendingMode });
@@ -120,65 +120,48 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
   }
 
   function handleEraseAndStartNew() {
-    setIsLoggingPast(false);
     scoreboard.clearActiveGame();
-    setScreen(needsSignInFirst() ? "signin" : "format");
+    setScreen(needsSignInFirst() ? "signin" : "entry");
   }
 
-  function handleLogPastGame() {
-    setIsLoggingPast(true);
+  function handleSelectEntry(entry) {
+    setIsFinalScoreEntry(entry === "final");
     setScreen("format");
   }
 
-  async function handlePastGameSubmit({ a, b, date }) {
-    if (!pastGameDraft) return;
-    setPastGameSubmitting(true);
-    setPastGameError("");
-    const payload =
-      pastGameDraft.format === "indoor"
-        ? {
-            format: "indoor",
-            mode: pendingMode,
-            a,
-            b,
-            playedDate: date,
-            teamAPlayers: pastGameDraft.teamAPlayers,
-            teamBPlayers: pastGameDraft.teamBPlayers,
-          }
-        : pastGameDraft.teamSize
-          ? {
-              format: "beach",
-              teamSize: pastGameDraft.teamSize,
-              mode: pendingMode,
-              a,
-              b,
-              playedDate: date,
-              teamAPlayers: pastGameDraft.teamAPlayers,
-              teamBPlayers: pastGameDraft.teamBPlayers,
-            }
-          : {
-              format: "beach",
-              mode: pendingMode,
-              a,
-              b,
-              playedDate: date,
-              nameA1: pastGameDraft.nameA1,
-              nameA2: pastGameDraft.nameA2,
-              nameB1: pastGameDraft.nameB1,
-              nameB2: pastGameDraft.nameB2,
-              a1: pastGameDraft.playerIdA1,
-              a2: pastGameDraft.playerIdA2,
-              b1: pastGameDraft.playerIdB1,
-              b2: pastGameDraft.playerIdB2,
-            };
-    const { error } = await logPastGame(payload);
-    setPastGameSubmitting(false);
-    if (error) {
-      setPastGameError(error);
-      return;
-    }
-    setIsLoggingPast(false);
-    setPastGameDraft(null);
+  // Saves through the exact same path as a finished live game (same
+  // player linking, same Elo update, dated now), just with the score typed
+  // in instead of tracked point by point — so it works for every signed-in
+  // player, not only admins.
+  function handleFinalScoreSubmit({ a, b }) {
+    const draft = finalScoreDraft;
+    if (!draft) return;
+    const usesRoster = draft.format === "indoor" || Boolean(draft.teamSize);
+    addGame({
+      nameA: draftTeamName(draft, "a"),
+      nameB: draftTeamName(draft, "b"),
+      a,
+      b,
+      mode: pendingMode,
+      participants: usesRoster
+        ? [
+            ...draft.teamAPlayers.map((p) => ({ team: "a", userId: p.id })),
+            ...draft.teamBPlayers.map((p) => ({ team: "b", userId: p.id })),
+          ]
+        : [
+            { slot: "a2", userId: draft.playerIdA2 },
+            { slot: "b1", userId: draft.playerIdB1 },
+            { slot: "b2", userId: draft.playerIdB2 },
+          ].filter((p) => p.userId),
+      format: draft.format,
+      teamSize: draft.teamSize ?? null,
+      teamAPlayers: usesRoster ? draft.teamAPlayers : undefined,
+      teamBPlayers: usesRoster ? draft.teamBPlayers : undefined,
+      playerIdA1: usesRoster ? undefined : draft.playerIdA1,
+    });
+    if (navigator.vibrate) navigator.vibrate(20);
+    setFinalScoreDraft(null);
+    setIsFinalScoreEntry(false);
     setScreen("history");
   }
 
@@ -201,7 +184,7 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
     setScreen("menu");
   }
 
-  const meta = screen === "new" && isLoggingPast ? { title: "Log Past Game", subtitle: null } : SCREEN_META[screen];
+  const meta = SCREEN_META[screen];
   const isMenu = screen === "menu";
   const { forced, width: effectiveWidth, height: effectiveHeight } = useForcedLandscape(screen === "active");
   const isPhoneLandscape = effectiveHeight <= 520;
@@ -259,18 +242,14 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
         {screen === "menu" && (
           <GameMenu
             hasActiveGame={scoreboard.hasActiveGame}
-            onNewGame={() => {
-              setIsLoggingPast(false);
-              setScreen(needsSignInFirst() ? "signin" : "format");
-            }}
+            onNewGame={() => setScreen(needsSignInFirst() ? "signin" : "entry")}
             onEraseAndStartNew={handleEraseAndStartNew}
             onResumeGame={() => setScreen("active")}
             onPastGames={() => setScreen("history")}
-            onLogPastGame={handleLogPastGame}
-            isAdmin={isAdmin}
           />
         )}
         {screen === "signin" && <GameTrackingSignInGate onSignIn={handleSignIn} loading={loading} />}
+        {screen === "entry" && <GameEntryMenu onSelectEntry={handleSelectEntry} />}
         {screen === "format" && <GameFormatMenu onSelectFormat={handleSelectFormat} />}
         {screen === "beach-size" && <BeachSizeMenu onSelectSize={handleSelectBeachSize} />}
         {screen === "mode" && <GameModeMenu onSelectMode={handleSelectMode} isSupabaseConfigured={isConfigured} />}
@@ -278,26 +257,16 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
           <NewGameForm
             format={pendingFormat}
             teamSize={pendingFormat === "beach" ? pendingTeamSize : null}
-            loggingPast={isLoggingPast}
+            enteringFinalScore={isFinalScoreEntry}
             onStart={handleStartGame}
           />
         )}
-        {screen === "past-score" && pastGameDraft && (
-          <LogPastGameScoreScreen
-            format={pastGameDraft.format}
-            teamAName={
-              pastGameDraft.format === "indoor" || pastGameDraft.teamSize
-                ? pastGameDraft.teamAPlayers.map((p) => p.name).join(", ")
-                : `${pastGameDraft.nameA1} & ${pastGameDraft.nameA2}`
-            }
-            teamBName={
-              pastGameDraft.format === "indoor" || pastGameDraft.teamSize
-                ? pastGameDraft.teamBPlayers.map((p) => p.name).join(", ")
-                : `${pastGameDraft.nameB1} & ${pastGameDraft.nameB2}`
-            }
-            onSubmit={handlePastGameSubmit}
-            submitting={pastGameSubmitting}
-            error={pastGameError}
+        {screen === "final-score" && finalScoreDraft && (
+          <FinalScoreScreen
+            format={finalScoreDraft.format}
+            teamAName={draftTeamName(finalScoreDraft, "a")}
+            teamBName={draftTeamName(finalScoreDraft, "b")}
+            onSubmit={handleFinalScoreSubmit}
           />
         )}
         {screen === "active" && scoreboard.state && (
@@ -319,4 +288,10 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
       </main>
     </div>
   );
+}
+
+function draftTeamName(draft, team) {
+  const usesRoster = draft.format === "indoor" || Boolean(draft.teamSize);
+  if (usesRoster) return (team === "a" ? draft.teamAPlayers : draft.teamBPlayers).map((p) => p.name).join(", ");
+  return team === "a" ? `${draft.nameA1} & ${draft.nameA2}` : `${draft.nameB1} & ${draft.nameB2}`;
 }

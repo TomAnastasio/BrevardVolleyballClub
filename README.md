@@ -11,6 +11,14 @@ and all game/profile data live in Supabase — see `supabase/README.md`.
 Built with React, Vite, Tailwind CSS, and [HeroUI](https://www.heroui.com) as
 the component/design library.
 
+### Logging a game
+
+Any signed-in player taps **New Game** and picks either **Live Scoreboard**
+(keep score point by point) or **Enter Final Score** (for a game that just
+finished: pick the players, then type in the final score). Both save the
+same way, dated now, with the same Elo update. There's no way to backdate a
+game. Admins fix a game's details afterward with **✏️ Edit** (below).
+
 ### Game details
 
 Tapping any game opens its own screen, in Past Games or in a player's

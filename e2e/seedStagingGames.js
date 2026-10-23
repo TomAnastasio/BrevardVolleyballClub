@@ -10,9 +10,9 @@
 //
 // Same access path as seedStaging.js: the admin test bot's own session
 // (anon key + password auth, never the service-role key), inserting games
-// exactly like the app's admin "Log a past game" flow does (insert, then
+// exactly like the app's old admin "Log a past game" flow did (insert, then
 // admin_update_beach_game_players to set the real 4 players and replay
-// Elo -- see logPastGame in useGameHistory.js).
+// Elo; that flow has since been replaced by "Enter Final Score").
 //
 // Safe to re-run: profiles are only created if missing, and games are only
 // seeded if none of these players have any games yet. Nothing here deletes

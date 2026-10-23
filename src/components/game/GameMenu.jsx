@@ -7,8 +7,6 @@ export default function GameMenu({
   onEraseAndStartNew,
   onResumeGame,
   onPastGames,
-  onLogPastGame,
-  isAdmin,
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
@@ -16,7 +14,7 @@ export default function GameMenu({
         {hasActiveGame ? (
           <AlertDialog>
             <AlertDialog.Trigger className={`${cardClass} ${interactiveClass}`} aria-label="New Game">
-              <MenuCardContent icon="🆕" label="New Game" subtitle="Set up teams and start scoring" showChevron />
+              <MenuCardContent icon="🆕" label="New Game" subtitle="Score it live or enter the final result" showChevron />
             </AlertDialog.Trigger>
             <AlertDialog.Backdrop>
               <AlertDialog.Container>
@@ -43,7 +41,7 @@ export default function GameMenu({
             </AlertDialog.Backdrop>
           </AlertDialog>
         ) : (
-          <MenuCard icon="🆕" label="New Game" subtitle="Set up teams and start scoring" onClick={onNewGame} />
+          <MenuCard icon="🆕" label="New Game" subtitle="Score it live or enter the final result" onClick={onNewGame} />
         )}
 
         <MenuCard
@@ -55,15 +53,6 @@ export default function GameMenu({
         />
 
         <MenuCard icon="🕘" label="Past Games" subtitle="Review completed matches" onClick={onPastGames} />
-
-        {isAdmin && (
-          <MenuCard
-            icon="📅"
-            label="Log Past Game"
-            subtitle="Add a game that already happened"
-            onClick={onLogPastGame}
-          />
-        )}
       </div>
     </div>
   );

@@ -2,22 +2,14 @@ import { useState } from "react";
 import { Button } from "@heroui/react";
 import { WIN_SCORE_BY_FORMAT } from "../../hooks/useScoreboardState.js";
 
-function pad2(n) {
-  return n < 10 ? "0" + n : String(n);
-}
-
-function todayISODate() {
-  const now = new Date();
-  return now.getFullYear() + "-" + pad2(now.getMonth() + 1) + "-" + pad2(now.getDate());
-}
-
 const inputClass =
   "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center text-2xl font-extrabold text-foreground focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-accent";
 
-export default function LogPastGameScoreScreen({ format, teamAName, teamBName, onSubmit, submitting, error }) {
+// For a game that just finished without the live scoreboard: type in the
+// final score and it's saved exactly like a live game would be (dated now).
+export default function FinalScoreScreen({ format, teamAName, teamBName, onSubmit }) {
   const [scoreA, setScoreA] = useState("");
   const [scoreB, setScoreB] = useState("");
-  const [date, setDate] = useState(todayISODate());
 
   const winScore = WIN_SCORE_BY_FORMAT[format] ?? 21;
   const parsedA = Number(scoreA);
@@ -31,11 +23,10 @@ export default function LogPastGameScoreScreen({ format, teamAName, teamBName, o
     parsedB >= 0 &&
     Math.max(parsedA, parsedB) >= winScore &&
     Math.abs(parsedA - parsedB) >= 2;
-  const canSubmit = isValidPair && Boolean(date) && !submitting;
 
   function handleSubmit() {
-    if (!canSubmit) return;
-    onSubmit({ a: parsedA, b: parsedB, date });
+    if (!isValidPair) return;
+    onSubmit({ a: parsedA, b: parsedB });
   }
 
   return (
@@ -76,32 +67,16 @@ export default function LogPastGameScoreScreen({ format, teamAName, teamBName, o
             Score must reach {winScore}, with at least a 2-point lead.
           </p>
         )}
-
-        <label className="flex flex-col gap-1">
-          <span className="text-center text-sm font-semibold text-muted">Date played</span>
-          <input
-            type="date"
-            value={date}
-            max={todayISODate()}
-            onChange={(e) => setDate(e.target.value)}
-            className={`${inputClass} text-base font-bold`}
-          />
-        </label>
       </div>
 
       <div className="flex-none p-3" style={{ paddingBottom: "calc(0.75rem + var(--safe-bottom))" }}>
-        {error && (
-          <p role="alert" className="mb-2 text-center text-sm font-semibold text-red-400">
-            {error}
-          </p>
-        )}
         <Button
           variant="primary"
           onPress={handleSubmit}
-          isDisabled={!canSubmit}
+          isDisabled={!isValidPair}
           className="min-h-14 w-full text-lg font-extrabold"
         >
-          {submitting ? "Saving…" : "Submit Game"}
+          Save Game
         </Button>
       </div>
     </div>

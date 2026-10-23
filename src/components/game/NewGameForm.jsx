@@ -188,7 +188,7 @@ export default function NewGameForm({
   editing = false,
   initialGame = null,
   onSave,
-  loggingPast = false,
+  enteringFinalScore = false,
 }) {
   const isIndoor = format === "indoor";
   // "Squad" beach (3v3/4v4) reuses indoor's roster-picker UI and variable-
@@ -199,9 +199,9 @@ export default function NewGameForm({
   // Beach now matches indoor: every player, on both sides, ranked or
   // casual, always comes from the real player directory — no free-typed
   // guest names and no self-prefill of the submitter into A1. "editing" and
-  // "loggingPast" only still matter for things unrelated to player
+  // "enteringFinalScore" only still matter for things unrelated to player
   // selection (hiding colors, which button/callback to use).
-  const isPastOrEdit = editing || loggingPast;
+  const isPastOrEdit = editing || enteringFinalScore;
   const directory = usePlayerDirectory(true);
 
   const [nameA1, setNameA1] = useState(editing ? initialGame?.a1?.name ?? "" : "");
@@ -406,7 +406,7 @@ export default function NewGameForm({
           isDisabled={hasDuplicateNames || hasUnlinkedPlayers || hasUndersizedRoster}
           className="min-h-14 w-full text-lg font-extrabold"
         >
-          {editing ? "Save Changes" : loggingPast ? "Add Score" : "Start Game"}
+          {editing ? "Save Changes" : enteringFinalScore ? "Add Score" : "Start Game"}
         </Button>
       </div>
     </div>
