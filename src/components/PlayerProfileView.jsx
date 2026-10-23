@@ -24,7 +24,7 @@ function PlayerAvatar({ src }) {
   return <img src={src} alt="" aria-hidden="true" className="h-16 w-16 flex-none rounded-full border border-white/10 object-cover" />;
 }
 
-function GameRow({ game, index, onOpenGame, onOpenTournament }) {
+function GameRow({ game, index, eloDelta, onOpenGame, onOpenTournament }) {
   const result = game.ownScore > game.oppScore ? "win" : game.ownScore < game.oppScore ? "loss" : "tie";
   // Same stretched-button card as Past Games (HistoryView), so the
   // tournament tag stays its own button.
@@ -60,6 +60,17 @@ function GameRow({ game, index, onOpenGame, onOpenTournament }) {
             <span className={game.mode === "ranked" ? "text-accent" : ""}>
               {game.mode === "ranked" ? "🏆 Ranked" : "🎲 Casual"}
             </span>
+            {/* This player's Elo change for the game; signed-in viewers only
+                (elo_history is members-only), ranked games only. */}
+            {eloDelta != null && (
+              <span
+                className={`rounded-full px-1.5 py-0.5 [font-variant-numeric:tabular-nums] ${
+                  eloDelta > 0 ? "bg-success/15 text-success" : eloDelta < 0 ? "bg-danger/15 text-danger" : "bg-white/10 text-muted"
+                }`}
+              >
+                {eloDelta > 0 ? `+${eloDelta}` : eloDelta} Elo
+              </span>
+            )}
           </span>
         </div>
       </Card>
@@ -157,6 +168,7 @@ export default function PlayerProfileView({
   const titles = tournaments.filter((e) => e.title);
   const { user, isAdmin } = useAuth();
   const { series: eloSeries } = usePlayerElo(player?.id, Boolean(user), refreshKey);
+  const eloDeltaByGame = new Map(eloSeries.map((p) => [p.gameId, p.delta]));
   const isOwnProfile = Boolean(user) && user.id === player.id;
   const [avatarUrl, setAvatarUrl] = useState(player.avatar_url);
   const [photoSaved, setPhotoSaved] = useState(false);
@@ -287,7 +299,7 @@ export default function PlayerProfileView({
         ) : (
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {games.map((game, index) => (
-              <GameRow key={game.id} game={game} index={index} onOpenGame={onOpenGame} onOpenTournament={onOpenTournament} />
+              <GameRow key={game.id} game={game} index={index} eloDelta={eloDeltaByGame.get(game.id)} onOpenGame={onOpenGame} onOpenTournament={onOpenTournament} />
             ))}
           </ul>
         )}
