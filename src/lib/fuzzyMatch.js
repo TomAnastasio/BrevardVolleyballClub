@@ -1,5 +1,5 @@
 // Lightweight fuzzy matching: no dependency needed at this app's scale
-// (100-500 profiles, see TODO.md). Scores prefix/substring matches highest,
+// (100-500 profiles). Scores prefix/substring matches highest,
 // falls back to an in-order character subsequence match (typos/skipped
 // letters still match), and rejects anything that isn't a subsequence at all.
 function fuzzyScore(query, target) {

@@ -2,7 +2,7 @@ name: Apply database migrations
 
 # Pushes any new file(s) in supabase/migrations/ to the live Supabase
 # database automatically whenever they land on main — see supabase/README.md
-# ("Automatic migrations") for the one-time setup this depends on and what
+# ("How migrations work") for how this works and what
 # to do if a run fails.
 #
 # Reuses the same SUPABASE_DB_URL secret as the nightly backup workflow — no
@@ -17,7 +17,7 @@ name: Apply database migrations
 # Decided 2026-10-03: the user has accepted that a bad
 # migration can cause app downtime until fixed with a follow-up migration
 # (and, if data itself is damaged, a restore from the nightly backups repo)
-# — see TODO.md's Architecture Decisions.
+# — see supabase/README.md and CLAUDE.md.
 
 on:
   push:

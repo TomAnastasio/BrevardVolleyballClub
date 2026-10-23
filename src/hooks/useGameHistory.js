@@ -134,7 +134,7 @@ export function useGameHistory() {
   const [remoteLoading, setRemoteLoading] = useState(false);
   // Set when a background Supabase write in addGame() fails, so the UI can
   // surface it instead of only logging to console (the pre-0007 outage went
-  // unnoticed for exactly this reason — see TODO.md item 1).
+  // unnoticed for exactly this reason).
   const [saveError, setSaveError] = useState(null);
   // Games inserted via addGame() while a fetch is still in flight, keyed by
   // id. A fetch that was already in flight when the insert happened can read

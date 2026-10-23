@@ -77,6 +77,26 @@ Below the Overall/Ranked records, a profile shows:
   someone they've lost to). Best and toughest need at least 3 games. All
   games count, ranked and casual, beach and indoor. Typed-in names that
   aren't linked to a profile don't count. Tap one to open their profile.
+- **Their games.** Each ranked game's card shows that player's Elo change
+  as a green **+15 Elo** or red **−22 Elo** pill, for signed-in members
+  only (same reason as the chart). Casual games show none.
+
+### Motion
+
+Small animations give the app a livelier feel. With "reduce motion" on in
+the phone's settings, they're all skipped and everything just appears.
+
+- The Elo chart waits until it's on screen, pauses a moment, then draws its
+  line left to right; the soft fill and end dot follow.
+- The scoreboard number kicks up on +1 and dips on −1. The win and
+  switch-sides banners spring in, and the serve marker pops in.
+- Screens ease in when opened, list rows rise in one after another, and
+  tappable cards shrink slightly while pressed.
+- The profile Elo ticks up to its value, and the loading meteor floats
+  while its stars twinkle.
+
+The shared animations live in `src/index.css` (the "App-wide motion"
+section); `stagger()` in `src/lib/motion.js` spaces out list rows.
 
 ### Rank titles
 
@@ -224,10 +244,9 @@ npm test           # unit tests (Vitest), no backend needed
 npm run test:e2e   # browser tests (Playwright) against the staging backend
 ```
 
-The serve and side-switch rules have unit tests in
-`src/lib/serveAndSwitch.test.js`. `e2e/scoreboard.spec.js` plays a game in
-both layouts: a full game saved to Past Games, and a phone-sized upright game
-that checks the serving marker, −1 and the switch banner (not saved).
+Unit tests sit next to the code they cover (`src/**/*.test.js`). Each
+`e2e/*.spec.js` says what it covers in its test names; what isn't covered
+yet is listed in `TODO.md`.
 
 The browser tests run against a separate **staging** Supabase project, never
 the real club data. They sign in as two test-only bot accounts whose
@@ -236,9 +255,10 @@ credentials live in the gitignored `.env.local` (see `CLAUDE.md`).
 Staging also holds permanent fake data for trying things by hand. Leave it
 in place, since nothing recreates it automatically:
 
-- **Players and games** (`node e2e/seedStagingGames.js`): 16 ranked players
-  (20, 12 or about 5 ranked games each, covering every rank badge), 4 with
-  only casual games, and 4 with no games.
+- **Players and games** (`node e2e/seedStagingGames.js`): ranked players
+  covering every rank badge (e.g. Sam Whitaker, Maya Torres), players with
+  only casual games, and players with no games. `e2e/profileEloChange.spec.js`
+  relies on these ranked games, so they must always be there.
 - **Tournaments** (`node e2e/seedStagingTournaments.js`, run after the one
   above):
   - **Fall Classic 2026** is finished: round 2, finals of 3 sets, 2–0 and
@@ -255,30 +275,13 @@ in place, since nothing recreates it automatically:
 
 ### Hosting: GitHub Pages
 
-Every push to `main` auto-deploys via `.github/workflows/deploy.yml`.
-
-One-time setup in the GitHub repo:
-1. Settings → Pages → Source: set to **GitHub Actions**.
-2. Settings → Pages → Custom domain: enter `brevardvolleyballclub.com` (the
-   `CNAME` file in this repo already declares it, but GitHub also needs it set
-   here) → Save. Check **Enforce HTTPS** once the certificate is issued
-   (can take up to ~24h after DNS is correct).
-
-### DNS setup (at your domain registrar)
-
-Point the apex domain at GitHub Pages with these four **A** records for `@`:
-
-```
-185.199.108.153
-185.199.109.153
-185.199.110.153
-185.199.111.153
-```
-
-If you also want `www.brevardvolleyballclub.com` to work, add a **CNAME**
-record: `www` → `TomAnastasio.github.io`.
-
-DNS changes can take anywhere from a few minutes to a few hours to propagate.
+Every push to `main` auto-deploys via `.github/workflows/deploy.yml`. The
+custom domain is set in the repo's Settings → Pages (Source: **GitHub
+Actions**, **Enforce HTTPS** on) and in the `CNAME` file. If the domain
+ever stops resolving, the registrar needs four **A** records for `@`:
+`185.199.108.153`, `185.199.109.153`, `185.199.110.153`,
+`185.199.111.153` (and optionally a `www` CNAME to
+`TomAnastasio.github.io`).
 
 ## Running Claude Code (sandboxed)
 
@@ -296,9 +299,8 @@ The first time, it'll ask you to log in (follow the printed link in your
 browser). After that, login and settings are remembered automatically.
 
 Claude pushes its work straight to `main`, which auto-deploys within a
-couple minutes — there's no pull request or review step (by the owner's
-choice, made 2026-10-20, trading that checkpoint for speed). Ask Claude to
-switch back to a review-first branch + PR workflow any time you want it.
+couple of minutes, with no review step (owner's choice; see `CLAUDE.md`).
+Ask Claude to switch back to branch + pull request review any time.
 
 On the Windows PC, the container is started from a launch config kept
 *outside* this repo (so Claude can't change what the container is allowed to

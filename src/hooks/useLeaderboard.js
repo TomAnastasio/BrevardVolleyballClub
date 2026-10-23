@@ -72,7 +72,7 @@ export async function fetchRankedProfiles() {
   });
 }
 
-// County-wide Elo leaderboard (TODO.md item 4), ranked games only. `profiles`
+// County-wide Elo leaderboard, ranked games only. `profiles`
 // is readable by anyone, signed in or not (migration 0008), so this only
 // waits on `enabled` for Supabase being configured at all.
 export function useLeaderboard(enabled) {

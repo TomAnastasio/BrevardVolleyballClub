@@ -7,9 +7,9 @@ import { fuzzyFilter } from "../../lib/fuzzyMatch.js";
 // back via onChange's 2nd/3rd arguments, so the caller can show the avatar
 // (like the signed-in submitter's own) and keep the same profile from being
 // picked into more than one player slot. It's still plain text underneath,
-// matching every other player-name field in the app (see TODO.md item 6:
-// "every participant must have a known profile" is a still-open rule this
-// doesn't enforce, it just makes picking a known name easier).
+// matching every other player-name field in the app ("every participant
+// must have a known profile" is a still-open rule this doesn't enforce;
+// it just makes picking a known name easier).
 export default function PlayerSearchField({ value, onChange, placeholder, ariaLabel, directory, excludeIds, inputClassName }) {
   const [isOpen, setIsOpen] = useState(false);
   const listId = useId();
