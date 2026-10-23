@@ -109,8 +109,11 @@ sits behind the +1/−1 buttons.
 
 The rank badges change for the theme too (same ranks and titles, only the
 pictures): pumpkins for Bronze, ghosts for Gold, skulls for Diamond,
-Frankenstein (#3), a witch (#2) and a crowned vampire (#1), a mummy 💩 for
-last place and a tombstone for unranked. They live in
+Frankenstein (#3), a witch (#2) and a crowned vampire (#1), a cracked RIP
+tombstone with a zombie hand for last place and a plain tombstone for
+unranked. The top three and last place are animated: the vampire's bats,
+the witch's sparkles, Frankenstein's stomp and blink, and the RIP stone's
+green glow and fog (phones set to reduce motion get still pictures). They live in
 `src/themes/halloween/badges/`; the classic badges in `src/assets/badges/`
 are untouched and come back with the classic look.
 

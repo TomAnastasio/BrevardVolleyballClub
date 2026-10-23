@@ -18,8 +18,8 @@ import lastplace from "./badges/lastplace.svg";
 import unranked from "./badges/unranked.svg";
 
 // Pumpkins (Bronze), ghosts (Gold), skulls (Diamond); Frankenstein (#3),
-// Witch (#2) and Vampire king (#1); a mummy for last place; a tombstone
-// for unranked.
+// Witch (#2) and Vampire king (#1); a haunted RIP tombstone with a zombie
+// hand for last place; a plain tombstone for unranked.
 export const HALLOWEEN_BADGES = {
   bronze: { 1: bronze1, 2: bronze2, 3: bronze3 },
   gold: { 1: gold1, 2: gold2, 3: gold3 },
