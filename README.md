@@ -117,13 +117,19 @@ are untouched and come back with the classic look.
 - **Preview either look any day:** add `?theme=classic` or
   `?theme=halloween` to the address. It lasts until you reload without it.
 - **Turn it off early or change the dates:** edit the `from`/`until`
-  dates in `src/themes/activeTheme.js`.
+  dates in `src/themes/activeTheme.js`. If something looks wrong during
+  Halloween, `?theme=classic` is the instant workaround; turning the theme
+  off is a one-line push, live in about a minute.
 - **The classic look is untouched.** Every Halloween rule only applies while
   the theme is on, and with it off the app is pixel-for-pixel what it was
-  before (checked on 9 screens). The exact pre-Halloween code is also kept
-  under the git tag `classic-theme-2026`.
-- **Remove it for good:** delete `src/themes/halloween/`, the Halloween
-  entry in `activeTheme.js`, and its two imports (`main.jsx`, `App.jsx`).
+  before (checked screen by screen, including Rankings and profiles). The
+  exact pre-Halloween code is also kept under the git tag
+  `classic-theme-2026` (on GitHub under Tags).
+- **Remove it for good:** delete `src/themes/halloween/` and the Halloween
+  entry in `activeTheme.js`, then the lines that use them: the CSS import
+  and `applyTheme` call in `main.jsx`, the `HalloweenDecor` line in
+  `App.jsx`, and the `halloween`/`ART` swap in `RankBadge.jsx`
+  (`BADGES` and `UnrankedBadge` are the classic ones).
 
 Everything for the theme lives in `src/themes/`. Its fonts (Pixelify Sans,
 Press Start 2P) are free under the SIL Open Font License.

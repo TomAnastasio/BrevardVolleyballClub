@@ -73,6 +73,20 @@ is lower-stakes, not a place these get relaxed):
   staging migrations workflow's latest run before assuming the code is
   wrong.
 
+## Seasonal themes stay additive
+
+Temporary skins (README "Seasonal themes") must never change the classic
+look:
+- Put theme work in `src/themes/<name>/`, with CSS scoped under
+  `html.theme-<name>`. Never edit classic styles or assets
+  (`src/index.css`, `src/assets/badges/`) for a theme.
+- Before pushing theme work, screenshot key screens with `?theme=classic`
+  and compare them pixel for pixel with an untouched copy of `main`
+  (`git archive HEAD` served on a second port). Animated art can differ
+  frame to frame, so mask it out. Show the owner before/after screenshots
+  of the themed look first.
+- Tag the commit before a new theme lands (e.g. `classic-theme-2026`).
+
 ## Keeping the docs useful
 
 - `README.md`: how the app works *now*. Update it in the same push as any
