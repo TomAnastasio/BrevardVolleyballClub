@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import SplashScreen from "./components/SplashScreen.jsx";
 import LandingView from "./components/LandingView.jsx";
 import PlayTodayView from "./components/PlayTodayView.jsx";
@@ -15,6 +15,7 @@ import TournamentsShell from "./components/tournament/TournamentsShell.jsx";
 import VersionBadge from "./components/VersionBadge.jsx";
 import HalloweenDecor from "./themes/halloween/HalloweenDecor.jsx";
 import { activeTheme } from "./themes/activeTheme.js";
+import { letterPhotoChecksVersion, subscribeLetterPhotoChecks } from "./themes/halloween/googleLetterPhotos.js";
 import { AuthProvider } from "./hooks/AuthContext.jsx";
 import { hasPendingGameTracking } from "./lib/pendingGameTracking.js";
 
@@ -34,6 +35,9 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
     return hasPendingGameTracking() ? "game" : "landing";
   });
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  // Redraw once a Google letter-circle "photo" is spotted, so it turns into
+  // a Halloween monster (themes/halloween/googleLetterPhotos.js).
+  useSyncExternalStore(subscribeLetterPhotoChecks, letterPhotoChecksVersion);
   // Only the first visit to Tournaments opens the linked tournament directly.
   const [linkedTournamentId, setLinkedTournamentId] = useState(tournamentId);
 

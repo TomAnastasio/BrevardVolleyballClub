@@ -31,3 +31,23 @@ describe("playerPhoto", () => {
     expect(picks.size).toBeGreaterThan(70);
   });
 });
+
+describe("playerPhoto with Google letter circles", () => {
+  const letter = (url) => url === "https://lh3.googleusercontent.com/a/letter=s96-c";
+
+  it("swaps a Google letter circle for a monster during Halloween", () => {
+    expect(HALLOWEEN_AVATARS).toContain(playerPhoto("https://lh3.googleusercontent.com/a/letter=s96-c", "p1", "halloween", letter));
+  });
+
+  it("keeps real Google photos", () => {
+    expect(playerPhoto("https://lh3.googleusercontent.com/a/face=s96-c", "p1", "halloween", letter)).toBe(
+      "https://lh3.googleusercontent.com/a/face=s96-c",
+    );
+  });
+
+  it("keeps the letter circle when no theme is on", () => {
+    expect(playerPhoto("https://lh3.googleusercontent.com/a/letter=s96-c", "p1", null, letter)).toBe(
+      "https://lh3.googleusercontent.com/a/letter=s96-c",
+    );
+  });
+});

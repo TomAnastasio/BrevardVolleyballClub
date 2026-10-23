@@ -122,8 +122,13 @@ photo circle instead of the blank one: 100 of them (vampires, witches,
 zombies, ghosts, skeletons, werewolves, mummies, jack-o'-lanterns,
 Frankensteins and black cats, each in 10 goofy versions). Each player
 always gets the same one (picked from their profile id), on every screen.
-Nothing is saved to anyone's profile: anyone with a Google or uploaded
-photo keeps it, uploading a photo replaces the monster right away, and
+Players whose Google "photo" is just Google's coloured circle with their
+first initial get one too: each phone looks at every Google picture once
+(`src/themes/halloween/googleLetterPhotos.js`) and remembers which are
+plain letters, so on a first visit the letter can show for a moment before
+the monster replaces it. Nothing is saved to anyone's profile: anyone with
+a real Google or uploaded photo keeps it, uploading a photo replaces the
+monster right away, and
 everyone goes back to the blank circle when the theme ends. Typed-in names
 with no profile stay blank, and the admin screens always show the real
 photo (or none). The pictures are in `src/themes/halloween/avatars/`,
@@ -146,7 +151,8 @@ redraws them after an edit).
   and `applyTheme` call in `main.jsx`, the `HalloweenDecor` line in
   `App.jsx`, the `halloween`/`ART` swap in `RankBadge.jsx`
   (`BADGES` and `UnrankedBadge` are the classic ones), and the Halloween
-  import and line in `src/themes/playerPhoto.js` (plus its test).
+  imports and line in `src/themes/playerPhoto.js` (plus its test) and the
+  letter-photo `useSyncExternalStore` line in `App.jsx`.
 
 Everything for the theme lives in `src/themes/`. Its fonts (Pixelify Sans,
 Press Start 2P) are free under the SIL Open Font License.
