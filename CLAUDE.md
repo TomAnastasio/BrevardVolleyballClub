@@ -87,6 +87,10 @@ full recovery steps):
   demo data for testing by hand: 24 named players (ranked with up to 20
   games, casual-only, and no games) and ~67 games. Leave it in place — don't
   delete those players or games when cleaning up after a test.
+- `e2e/seedStagingTournaments.js` (run after the games seed) adds three
+  permanent demo tournaments — "Fall Classic 2026" (complete), "Halloween
+  Bash" (live) and "Winter Wahine Invitational…" (published) — each built
+  to show specific edge cases (see its header). Same rule: leave them.
 - As of 2026-10-22, staging's schema is kept in sync with
   `supabase/migrations/` automatically by
   `.github/workflows/apply-migrations-staging.yml` (its own `staging`
