@@ -12,6 +12,8 @@ import top3_2 from "../assets/badges/top3-2.png";
 import top3_3 from "../assets/badges/top3-3.png";
 import lastplaceArt from "../assets/badges/lastplace.svg";
 import { rankTitle } from "../lib/rankTitle.js";
+import { activeTheme } from "../themes/activeTheme.js";
+import { HALLOWEEN_BADGES, HALLOWEEN_UNRANKED } from "../themes/halloween/badges.js";
 
 // Badge artwork (not Riot's), one PNG per tier/division. Bronze, Gold, and
 // Diamond divisions mark a player's bottom-30%/middle-40%/top-30% position
@@ -25,6 +27,10 @@ const BADGES = {
   top3: { 1: top3_1, 2: top3_2, 3: top3_3 },
   lastplace: { 1: lastplaceArt, 2: lastplaceArt, 3: lastplaceArt },
 };
+
+// While the Halloween theme is on, its own art stands in for every badge.
+const halloween = activeTheme === "halloween";
+const ART = halloween ? HALLOWEEN_BADGES : BADGES;
 
 // Bronze/Gold/Diamond art is a tall 200x280 diamond; top3 and lastplace art
 // are square.
@@ -65,9 +71,14 @@ function UnrankedBadge({ size, className }) {
 }
 
 export default function RankBadge({ tier, division = 3, size = 40, className = "" }) {
-  if (tier === "unranked") return <UnrankedBadge size={size} className={className} />;
+  if (tier === "unranked") {
+    if (halloween) {
+      return <img src={HALLOWEEN_UNRANKED} alt="Unranked" width={size} height={(size * 280) / 200} className={className} />;
+    }
+    return <UnrankedBadge size={size} className={className} />;
+  }
 
-  const src = BADGES[tier]?.[division];
+  const src = ART[tier]?.[division];
   if (!src) return null;
 
   const alt = tier === "lastplace" ? "Platinum rank (last place)" : `${rankTitle(tier, division)} rank`;

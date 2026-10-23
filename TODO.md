@@ -5,6 +5,12 @@ shape future work. How things work today lives in `README.md`; history lives
 in `git log`. When something here ships or gets confirmed, shrink it to a
 one-line decision (or delete it) rather than leaving the old detail.
 
+## Halloween theme (auto-off 2026-11-01)
+
+After Halloween, ask the owner whether to delete `src/themes/halloween/`
+(steps in README "Seasonal themes") or keep it for next October with new
+dates.
+
 ## Open: tournaments (Queen of Paradise, Sat 2026-10-31)
 
 Live in production; how it runs is in README "Tournaments", the rules are

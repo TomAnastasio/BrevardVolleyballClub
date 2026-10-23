@@ -98,6 +98,36 @@ the phone's settings, they're all skipped and everything just appears.
 The shared animations live in `src/index.css` (the "App-wide motion"
 section); `stagger()` in `src/lib/motion.js` spaces out list rows.
 
+### Seasonal themes (Halloween)
+
+The app can wear a temporary skin without changing its normal look. The
+**Halloween** theme (pixel font, purple night sky, orange accents, moon,
+stars, bats, a ghost and a graveyard) is on from Oct 1 through Oct 31,
+2026, by the phone's own clock, and switches itself off at midnight going
+into Nov 1. On the live scoreboard only the stars and bats show, so nothing
+sits behind the +1/−1 buttons.
+
+The rank badges change for the theme too (same ranks and titles, only the
+pictures): pumpkins for Bronze, ghosts for Gold, skulls for Diamond,
+Frankenstein (#3), a witch (#2) and a crowned vampire (#1), a mummy 💩 for
+last place and a tombstone for unranked. They live in
+`src/themes/halloween/badges/`; the classic badges in `src/assets/badges/`
+are untouched and come back with the classic look.
+
+- **Preview either look any day:** add `?theme=classic` or
+  `?theme=halloween` to the address. It lasts until you reload without it.
+- **Turn it off early or change the dates:** edit the `from`/`until`
+  dates in `src/themes/activeTheme.js`.
+- **The classic look is untouched.** Every Halloween rule only applies while
+  the theme is on, and with it off the app is pixel-for-pixel what it was
+  before (checked on 9 screens). The exact pre-Halloween code is also kept
+  under the git tag `classic-theme-2026`.
+- **Remove it for good:** delete `src/themes/halloween/`, the Halloween
+  entry in `activeTheme.js`, and its two imports (`main.jsx`, `App.jsx`).
+
+Everything for the theme lives in `src/themes/`. Its fonts (Pixelify Sans,
+Press Start 2P) are free under the SIL Open Font License.
+
 ### Rank titles
 
 Each rank badge has a title, shown under the player's name in Rankings and

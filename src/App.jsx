@@ -13,6 +13,8 @@ import WelcomeView from "./components/WelcomeView.jsx";
 import AdminPanelView from "./components/admin/AdminPanelView.jsx";
 import TournamentsShell from "./components/tournament/TournamentsShell.jsx";
 import VersionBadge from "./components/VersionBadge.jsx";
+import HalloweenDecor from "./themes/halloween/HalloweenDecor.jsx";
+import { activeTheme } from "./themes/activeTheme.js";
 import { AuthProvider } from "./hooks/AuthContext.jsx";
 import { hasPendingGameTracking } from "./lib/pendingGameTracking.js";
 
@@ -71,8 +73,9 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
     <AuthProvider>
       {!joinRequested && <SplashScreen onReveal={() => setAppReady(true)} />}
       {appReady && (
-        <div className="flex min-h-dvh flex-col bg-background text-foreground [font-family:system-ui,-apple-system,'Segoe_UI',Roboto,sans-serif]">
+        <div data-app-shell className="flex min-h-dvh flex-col bg-background text-foreground [font-family:system-ui,-apple-system,'Segoe_UI',Roboto,sans-serif]">
           <VersionBadge />
+          {activeTheme === "halloween" && <HalloweenDecor />}
           <div className={topPage ? "hidden" : "contents"}>
             {view === "landing" && (
               <LandingView
