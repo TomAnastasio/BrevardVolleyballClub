@@ -140,7 +140,8 @@ Press Start 2P) are free under the SIL Open Font License.
 ### Rank titles
 
 Each rank badge has a title, shown under the player's name in Rankings and
-next to their Elo on their profile: **Bronze I–III**, **Gold I–III**,
+next to their Elo on their profile (where the badge shows 3× bigger in the
+top-right corner, its top level with the profile photo): **Bronze I–III**, **Gold I–III**,
 **Diamond I–III** (III is the top of each tier), then **Emerald** (#3),
 **Amethyst** (#2) and **Champion** (#1). The lowest-ranked player is
 **Platinum** (the stink badge — it's a joke). Names live in

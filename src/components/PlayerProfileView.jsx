@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button, Card } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
-import RankBadge from "./RankBadge.jsx";
+import RankBadge, { rankBadgeHeight } from "./RankBadge.jsx";
 import { rankTitle } from "../lib/rankTitle.js";
 import ProfilePhotoEditor from "./ProfilePhotoEditor.jsx";
 import { partnerStats, usePlayerGames, winLossRecords } from "../hooks/usePlayerGames.js";
@@ -270,6 +270,9 @@ export default function PlayerProfileView({
   // count from zero.
   const shownElo = useCountUp(player.elo_rating, { from: Math.round((player.elo_rating ?? 0) * 0.9) });
   const hasRanked = player.elo_games_played > 0;
+  // 3x the Rankings badge (owner's pick).
+  const badgeSize = 114;
+  const badgeHeight = player.tier ? rankBadgeHeight(player.tier, badgeSize) : 0;
 
   return (
     <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">
@@ -288,63 +291,74 @@ export default function PlayerProfileView({
       </header>
 
       <div className="flex flex-col gap-3 px-3 pb-6">
-        <div className="flex items-center gap-3">
-          {isOwnProfile ? (
-            <ProfilePhotoEditor
-              avatarUrl={avatarUrl}
-              onSaved={(url) => {
-                setAvatarUrl(url);
-                setPhotoSaved(true);
-              }}
-            />
-          ) : (
-            <PlayerAvatar src={avatarUrl} />
+        {/* The rank badge sits big in the top-right corner, its top level
+            with the profile photo's; the name and stats keep clear of it. */}
+        <div
+          className="relative flex flex-col gap-3"
+          style={player.tier ? { paddingRight: badgeSize + 8, minHeight: badgeHeight } : undefined}
+        >
+          {player.tier && (
+            <div className="absolute top-0 right-0 flex">
+              <RankBadge tier={player.tier} division={player.division} size={badgeSize} />
+            </div>
           )}
-          <span className="min-w-0 flex-1 truncate text-lg font-bold">
-            {displayName}
-            {titles.length > 0 && (
-              <span className="ml-1" aria-label={titles.map((e) => `${e.title} of ${e.tournament.name}`).join(", ")}>
-                {titles.map((e) => (e.title === "queen" ? "👑" : "👸")).join("")}
-              </span>
+          <div className="flex items-center gap-3">
+            {isOwnProfile ? (
+              <ProfilePhotoEditor
+                avatarUrl={avatarUrl}
+                onSaved={(url) => {
+                  setAvatarUrl(url);
+                  setPhotoSaved(true);
+                }}
+              />
+            ) : (
+              <PlayerAvatar src={avatarUrl} />
             )}
-          </span>
-          {player.tier && <RankBadge tier={player.tier} division={player.division} size={38} />}
-        </div>
-
-        {photoSaved && (
-          <p role="status" className="animate-pop-in m-0 origin-left text-sm font-semibold text-success">
-            ✓ Profile photo updated
-          </p>
-        )}
-
-        {(hasRanked || (!loading && games.length > 0)) && (
-          <div className="flex flex-col gap-0.5 text-sm text-muted">
-            {hasRanked && (
-              <p className="m-0 font-semibold text-foreground">
-                <span className="[font-variant-numeric:tabular-nums]">{shownElo}</span> Elo
-                {player.tier && <span className="font-normal text-muted"> · {rankTitle(player.tier, player.division)}</span>}
-              </p>
-            )}
-            {/* Overall first, ranked right under it (owner's call). The
-                ranked line only appears once they've played a ranked game. */}
-            {!loading && games.length > 0 && (
-              <dl className="m-0 grid w-max grid-cols-[auto_auto] gap-x-4 [font-variant-numeric:tabular-nums]">
-                <dt>Overall</dt>
-                <dd className="m-0">
-                  {records.overall.wins}W – {records.overall.losses}L
-                </dd>
-                {hasRanked && (
-                  <>
-                    <dt>Ranked</dt>
-                    <dd className="m-0">
-                      {records.ranked.wins}W – {records.ranked.losses}L
-                    </dd>
-                  </>
-                )}
-              </dl>
-            )}
+            <span className="min-w-0 flex-1 truncate text-lg font-bold">
+              {displayName}
+              {titles.length > 0 && (
+                <span className="ml-1" aria-label={titles.map((e) => `${e.title} of ${e.tournament.name}`).join(", ")}>
+                  {titles.map((e) => (e.title === "queen" ? "👑" : "👸")).join("")}
+                </span>
+              )}
+            </span>
           </div>
-        )}
+
+          {photoSaved && (
+            <p role="status" className="animate-pop-in m-0 origin-left text-sm font-semibold text-success">
+              ✓ Profile photo updated
+            </p>
+          )}
+
+          {(hasRanked || (!loading && games.length > 0)) && (
+            <div className="flex flex-col gap-0.5 text-sm text-muted">
+              {hasRanked && (
+                <p className="m-0 font-semibold text-foreground">
+                  <span className="[font-variant-numeric:tabular-nums]">{shownElo}</span> Elo
+                  {player.tier && <span className="font-normal text-muted"> · {rankTitle(player.tier, player.division)}</span>}
+                </p>
+              )}
+              {/* Overall first, ranked right under it (owner's call). The
+                  ranked line only appears once they've played a ranked game. */}
+              {!loading && games.length > 0 && (
+                <dl className="m-0 grid w-max grid-cols-[auto_auto] gap-x-4 [font-variant-numeric:tabular-nums]">
+                  <dt>Overall</dt>
+                  <dd className="m-0">
+                    {records.overall.wins}W – {records.overall.losses}L
+                  </dd>
+                  {hasRanked && (
+                    <>
+                      <dt>Ranked</dt>
+                      <dd className="m-0">
+                        {records.ranked.wins}W – {records.ranked.losses}L
+                      </dd>
+                    </>
+                  )}
+                </dl>
+              )}
+            </div>
+          )}
+        </div>
 
         {hasRanked &&
           (user ? (

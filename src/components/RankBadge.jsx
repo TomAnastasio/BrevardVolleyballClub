@@ -42,6 +42,12 @@ const ASPECT = {
   lastplace: 1,
 };
 
+// Rendered height of a badge at a given width, for layouts that make room
+// for one.
+export function rankBadgeHeight(tier, size) {
+  return size * (ASPECT[tier] ?? 280 / 200);
+}
+
 function UnrankedBadge({ size, className }) {
   return (
     <svg
