@@ -102,9 +102,9 @@ section); `stagger()` in `src/lib/motion.js` spaces out list rows.
 
 The app can wear a temporary skin without changing its normal look. The
 **Halloween** theme (pixel font, purple night sky, orange accents, moon,
-stars, bats, a ghost and a graveyard) is on from Oct 1 through Oct 31,
+stars, bats, a ghost and a graveyard) is on from Oct 1 through Nov 20,
 2026, by the phone's own clock, and switches itself off at midnight going
-into Nov 1. On the live scoreboard only the stars and bats show, so nothing
+into Nov 21. On the live scoreboard only the stars and bats show, so nothing
 sits behind the +1/−1 buttons.
 
 The rank badges change for the theme too (same ranks and titles, only the

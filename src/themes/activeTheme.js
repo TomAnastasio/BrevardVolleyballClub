@@ -2,7 +2,7 @@
 // its CSS only matches while <html> carries its `theme-<name>` class, so with
 // no theme active the app looks exactly like the classic black-and-yellow
 // design. Dates are the phone's local time; `until` is exclusive.
-export const SEASONAL_THEMES = [{ name: "halloween", from: "2026-10-01T00:00", until: "2026-11-01T00:00" }];
+export const SEASONAL_THEMES = [{ name: "halloween", from: "2026-10-01T00:00", until: "2026-11-21T00:00" }];
 
 // `?theme=classic` or `?theme=halloween` in the address bar previews a look
 // regardless of the date (it lasts until the page is reloaded without it).
