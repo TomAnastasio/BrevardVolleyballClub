@@ -127,6 +127,11 @@ needs redoing with the new connection string.
 A failed staging run has no effect on production or the live site; it only
 means e2e tests may run against an out-of-date staging schema until fixed.
 
+Staging also holds permanent fake players, games and tournaments for
+testing (see "Testing" in the main `README.md`). They're created through
+the admin test bot's normal access, never the service-role key or DB
+password, and don't affect production.
+
 ### What a failed run looks like, and what to do
 
 `supabase db push` stops at the first migration that errors (e.g. "relation

@@ -184,6 +184,37 @@ npm run build      # production build to dist/
 npm run preview    # preview the production build locally
 ```
 
+### Testing
+
+```bash
+npm test           # unit tests (Vitest), no backend needed
+npm run test:e2e   # browser tests (Playwright) against the staging backend
+```
+
+The browser tests run against a separate **staging** Supabase project, never
+the real club data. They sign in as two test-only bot accounts whose
+credentials live in the gitignored `.env.local` (see `CLAUDE.md`).
+
+Staging also holds permanent fake data for trying things by hand. Leave it
+in place, since nothing recreates it automatically:
+
+- **Players and games** (`node e2e/seedStagingGames.js`): 16 ranked players
+  (20, 12 or about 5 ranked games each, covering every rank badge), 4 with
+  only casual games, and 4 with no games.
+- **Tournaments** (`node e2e/seedStagingTournaments.js`, run after the one
+  above):
+  - **Fall Classic 2026** is finished: round 2, finals of 3 sets, 2–0 and
+    1 set, a junior finalist, ties, and two players with the same name.
+  - **Halloween Bash** is live: partly scored, with a game in progress, a
+    pool of 7, and a division too small for a pool.
+  - **Winter Wahine Invitational…** is published: an 80-character name,
+    mixed pool sizes, and an empty division.
+
+  Each script's header lists everything it covers. Re-running either one
+  skips whatever already exists and never deletes. Both refuse to run
+  against anything but staging. `DRY_RUN=1` previews the tournament script
+  without writing anything.
+
 ### Hosting: GitHub Pages
 
 Every push to `main` auto-deploys via `.github/workflows/deploy.yml`.
