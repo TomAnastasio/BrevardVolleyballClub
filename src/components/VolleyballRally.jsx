@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { activeTheme } from "../themes/activeTheme.js";
+import { drawPumpkin, drawSkeleton, drawSpookyCourt } from "../themes/halloween/rally.js";
 
 // Tunable parameters for the endless rally animation.
 const MIN_FLIGHT_SECONDS = 0.85;
@@ -12,6 +14,10 @@ const NET_SKEW_PX = 13; // horizontal spread between the two net posts (the angl
 const GROUND_MARGIN_PX = 16; // gap between the ground line and the bottom of the canvas
 const TOM_AVATAR_URL = "/Tom.jpg"; // always worn by the right-side figure once anyone is signed in
 const BALL_RADIUS_PX = 3;
+
+// While the Halloween theme is on: skeletons, a pumpkin and a spooky net
+// (themes/halloween/rally.js). Same motion either way.
+const halloween = activeTheme === "halloween";
 
 // Tunable parameters for the rare "spiked rally" sequence: a slow high set, a jump, a hard
 // spike straight at the other player, an off-the-body bounce, a dribble, and a knockdown.
@@ -263,6 +269,10 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
     };
 
     const drawCourt = (groundY) => {
+      if (halloween) {
+        drawSpookyCourt(ctx, { width, groundY, netHeight: NET_HEIGHT_PX, netSkew: NET_SKEW_PX });
+        return;
+      }
       ctx.strokeStyle = "rgba(255,255,255,0.15)";
       ctx.beginPath();
       ctx.moveTo(0, groundY + 0.5);
@@ -352,7 +362,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
         const idleAmplitude = isMoving ? 1.6 : 0.6;
         const hop = Math.abs(Math.sin(nowSeconds * 5 + (side === "left" ? 0 : Math.PI))) * idleAmplitude;
         const avatarImg = side === "left" ? avatarImageRef.current : tomAvatarImageRef.current;
-        drawPlayer(ctx, { x, groundY, squash, hop, avatarImg });
+        (halloween ? drawSkeleton : drawPlayer)(ctx, { x, groundY, squash, hop, avatarImg });
       };
       drawSide("left");
       drawSide("right");
@@ -364,6 +374,10 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       ctx.fill();
 
       const ballSquash = contactSquash;
+      if (halloween) {
+        drawPumpkin(ctx, ballX, ballY, 1 + ballSquash * 0.6, 1 - ballSquash * 0.5);
+        return;
+      }
       ctx.fillStyle = "#facc15";
       ctx.beginPath();
       ctx.ellipse(ballX, ballY, 3 * (1 + ballSquash * 0.6), 3 * (1 - ballSquash * 0.5), 0, 0, Math.PI * 2);
@@ -396,7 +410,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
             ? 0
             : Math.abs(Math.sin(nowSeconds * 5 + (side === "left" ? 0 : Math.PI))) * 0.5;
         const avatarImg = side === "left" ? avatarImageRef.current : tomAvatarImageRef.current;
-        drawPlayer(ctx, {
+        (halloween ? drawSkeleton : drawPlayer)(ctx, {
           x: positions[side],
           groundY,
           squash: 0,
@@ -432,6 +446,10 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
         ctx.ellipse(ballX, groundY, 4, 1.5, 0, 0, Math.PI * 2);
         ctx.fill();
 
+        if (halloween) {
+          drawPumpkin(ctx, ballX, ballY);
+          return;
+        }
         ctx.fillStyle = "#facc15";
         ctx.beginPath();
         ctx.ellipse(ballX, ballY, BALL_RADIUS_PX, BALL_RADIUS_PX, 0, 0, Math.PI * 2);

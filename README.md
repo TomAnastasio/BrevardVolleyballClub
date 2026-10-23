@@ -117,6 +117,13 @@ green glow and fog (phones set to reduce motion get still pictures). They live i
 `src/themes/halloween/badges/`; the classic badges in `src/assets/badges/`
 are untouched and come back with the classic look.
 
+The rally at the bottom of the home screen gets the same treatment: two
+pixel skeletons hit a jack-o'-lantern over a cobweb net on bone posts (with
+a little spider). It moves exactly like the classic rally, spike and
+knockdown included; only the drawings change (`src/themes/halloween/rally.js`).
+The skeletons keep their skulls even when you're signed in; the photo heads
+come back with the classic look.
+
 Players with no profile photo get a pixel-art Halloween monster in their
 photo circle instead of the blank one: 100 of them (vampires, witches,
 zombies, ghosts, skeletons, werewolves, mummies, jack-o'-lanterns,
@@ -152,7 +159,8 @@ redraws them after an edit).
   `App.jsx`, the `halloween`/`ART` swap in `RankBadge.jsx`
   (`BADGES` and `UnrankedBadge` are the classic ones), and the Halloween
   imports and line in `src/themes/playerPhoto.js` (plus its test) and the
-  letter-photo `useSyncExternalStore` line in `App.jsx`.
+  letter-photo `useSyncExternalStore` line in `App.jsx`, and the
+  `halloween` lines in `VolleyballRally.jsx`.
 
 Everything for the theme lives in `src/themes/`. Its fonts (Pixelify Sans,
 Press Start 2P) are free under the SIL Open Font License.
