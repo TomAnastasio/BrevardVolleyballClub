@@ -154,6 +154,13 @@ from tournament registration forms, and the profile ID. A profile marked
 (`20261022220000_admin_profile_details.sql`); players never see the box or
 the data.
 
+The box also lets an admin rename the player: **✏️ Edit** next to "Display
+name" (up to 24 characters). The new name shows everywhere straight away
+(rankings, profiles, player search, game details, tournaments), except the
+team names on games already played, which keep the name used at the time.
+Saved by the admin-only `admin_set_display_name()` function
+(`20261023180000_admin_set_display_name.sql`).
+
 Anywhere the app lets you copy something (those details, a tournament's
 share link), it shows a copy icon, and tapping the text or the icon copies
 it. The icon briefly turns into a ✓. New copyable text should use

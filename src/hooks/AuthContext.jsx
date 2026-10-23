@@ -8,6 +8,9 @@ function useAuthState() {
   // The player's own profiles.avatar_url, which (unlike the Google photo in
   // user_metadata) reflects a photo they changed from their profile page.
   const [avatarUrl, setAvatarUrl] = useState(null);
+  // Their own profiles.display_name, which an admin may have changed from
+  // the Google name in user_metadata.
+  const [displayName, setDisplayName] = useState(null);
   const [profileVersion, setProfileVersion] = useState(0);
 
   useEffect(() => {
@@ -44,6 +47,7 @@ function useAuthState() {
     if (!isSupabaseConfigured || !user) {
       setIsAdmin(false);
       setAvatarUrl(null);
+      setDisplayName(null);
       return;
     }
 
@@ -51,13 +55,14 @@ function useAuthState() {
 
     supabase
       .from("profiles")
-      .select("is_admin, avatar_url")
+      .select("is_admin, avatar_url, display_name")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled) return;
         setIsAdmin(Boolean(data?.is_admin));
         setAvatarUrl(data?.avatar_url || null);
+        setDisplayName(data?.display_name || null);
       });
 
     return () => {
@@ -88,6 +93,7 @@ function useAuthState() {
     isConfigured: isSupabaseConfigured,
     isAdmin,
     avatarUrl,
+    displayName,
     refreshProfile,
     signInWithGoogle,
     signOut,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card } from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
 import RankBadge from "./RankBadge.jsx";
 import { rankTitle } from "../lib/rankTitle.js";
@@ -16,6 +16,7 @@ import CopyableText from "./CopyableText.jsx";
 import TournamentGameTag from "./TournamentGameTag.jsx";
 import { stagger } from "../lib/motion.js";
 import { useCountUp } from "../hooks/useCountUp.js";
+import { sanitizeName } from "../lib/sanitizeName.js";
 
 function PlayerAvatar({ src }) {
   if (!src) {
@@ -88,9 +89,98 @@ function formatWhen(value) {
   return value ? new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Never";
 }
 
+// Admin-only: rename this player. admin_set_display_name() re-checks admin
+// and cleans the name server-side too. Old games keep the name they were
+// saved with (see that migration).
+function AdminNameEditor({ profileId, name, onRenamed }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const cleaned = sanitizeName(draft, "");
+
+  async function handleSave(e) {
+    e.preventDefault();
+    if (!cleaned || saving) return;
+    if (cleaned === name) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const { data, error: err } = await supabase.rpc("admin_set_display_name", {
+      p_profile_id: profileId,
+      p_display_name: cleaned,
+    });
+    setSaving(false);
+    if (err) {
+      console.error("Failed to rename player:", err);
+      setError("Couldn't save the new name. Please try again.");
+      return;
+    }
+    onRenamed(data);
+    setEditing(false);
+  }
+
+  if (!editing) {
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex-none text-xs font-bold text-muted">Display name</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="min-w-0 truncate">{name || "—"}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            onPress={() => {
+              setDraft(name || "");
+              setError("");
+              setEditing(true);
+            }}
+            aria-label="Edit display name"
+            className="flex-none font-bold"
+          >
+            ✏️ Edit
+          </Button>
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSave} className="flex flex-col gap-2">
+      <span className="text-xs font-bold text-muted">Display name</span>
+      <input
+        type="text"
+        value={draft}
+        maxLength={24}
+        autoFocus
+        aria-label="New display name"
+        onChange={(e) => setDraft(e.target.value)}
+        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-base font-bold text-foreground focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-accent"
+      />
+      <p className="m-0 text-xs text-muted">
+        Changes their name everywhere, except the team names on games already played.
+      </p>
+      {error && (
+        <p role="alert" className="m-0 text-xs font-semibold text-red-400">
+          {error}
+        </p>
+      )}
+      <div className="flex justify-end gap-2">
+        <Button size="sm" variant="secondary" onPress={() => setEditing(false)} isDisabled={saving}>
+          Cancel
+        </Button>
+        <Button size="sm" variant="primary" type="submit" isDisabled={!cleaned || saving} className="font-bold">
+          {saving ? "Saving…" : "Save name"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 // Admin-only: the sign-in email and everything else on file for this player
 // (admin_profile_details() refuses anyone who isn't an admin).
-function AdminDetails({ profileId }) {
+function AdminDetails({ profileId, name, onRenamed }) {
   const [details, setDetails] = useState(null);
   const [error, setError] = useState("");
 
@@ -126,6 +216,7 @@ function AdminDetails({ profileId }) {
       <p className="m-0 text-xs font-bold uppercase tracking-wide text-warning">Admin only · not visible to players</p>
       {error && <p className="m-0 text-red-400">{error}</p>}
       {!details && !error && <p className="m-0 text-muted">Loading…</p>}
+      <AdminNameEditor profileId={profileId} name={name} onRenamed={onRenamed} />
       {details && (
         <>
           {details.is_manual ? (
@@ -166,12 +257,13 @@ export default function PlayerProfileView({
   const { games, loading } = usePlayerGames(player?.id, refreshKey);
   const tournaments = usePlayerTournaments(player?.id);
   const titles = tournaments.filter((e) => e.title);
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, refreshProfile } = useAuth();
   const { series: eloSeries } = usePlayerElo(player?.id, Boolean(user), refreshKey);
   const eloDeltaByGame = new Map(eloSeries.map((p) => [p.gameId, p.delta]));
   const isOwnProfile = Boolean(user) && user.id === player.id;
   const [avatarUrl, setAvatarUrl] = useState(player.avatar_url);
   const [photoSaved, setPhotoSaved] = useState(false);
+  const [displayName, setDisplayName] = useState(player.display_name);
 
   const records = winLossRecords(games);
   // Starts most of the way there: a quick tick up to their rating, not a
@@ -209,7 +301,7 @@ export default function PlayerProfileView({
             <PlayerAvatar src={avatarUrl} />
           )}
           <span className="min-w-0 flex-1 truncate text-lg font-bold">
-            {player.display_name}
+            {displayName}
             {titles.length > 0 && (
               <span className="ml-1" aria-label={titles.map((e) => `${e.title} of ${e.tournament.name}`).join(", ")}>
                 {titles.map((e) => (e.title === "queen" ? "👑" : "👸")).join("")}
@@ -263,7 +355,16 @@ export default function PlayerProfileView({
 
         {!loading && <PartnersAndRivals stats={partnerStats(games)} onOpenPlayer={onOpenPlayer} />}
 
-        {isAdmin && <AdminDetails profileId={player.id} />}
+        {isAdmin && (
+          <AdminDetails
+            profileId={player.id}
+            name={displayName}
+            onRenamed={(name) => {
+              setDisplayName(name);
+              if (isOwnProfile) refreshProfile();
+            }}
+          />
+        )}
 
         {tournaments.length > 0 && (
           <section className="flex flex-col gap-2">

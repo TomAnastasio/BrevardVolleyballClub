@@ -123,7 +123,7 @@ export async function fetchGameRecord(gameId) {
 }
 
 export function useGameHistory() {
-  const { user } = useAuth();
+  const { user, displayName } = useAuth();
   const [localHistory, setLocalHistory] = useState(loadHistory);
   const [remoteHistory, setRemoteHistory] = useState(null);
   // True only while the current user's fetch is actually in flight — distinct
@@ -257,7 +257,7 @@ export function useGameHistory() {
         (async () => {
           try {
             const submittedByName =
-              user.user_metadata?.full_name || user.user_metadata?.name || user.email || "A player";
+              displayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email || "A player";
 
             const { data, error } = await supabase
               .from("games")
@@ -352,7 +352,7 @@ export function useGameHistory() {
                   { ...data, game_players: insertedPlayers },
                   {
                     [user.id]: {
-                      display_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+                      display_name: displayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email,
                       avatar_url: user.user_metadata?.avatar_url || null,
                     },
                   },
@@ -373,7 +373,7 @@ export function useGameHistory() {
         })();
       }
     },
-    [user, fetchRemoteHistory],
+    [user, displayName, fetchRemoteHistory],
   );
 
   // Local games saved while signed out never reach `games` (its insert

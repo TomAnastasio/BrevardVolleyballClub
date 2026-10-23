@@ -11,7 +11,7 @@ import { setJustJoined } from "../lib/joinLink.js";
 // `onProfileReady` so the app can open their profile page. The welcome
 // screen below is only a fallback if that lookup fails.
 export default function WelcomeView({ joinRequested, onProfileReady, onRankings, onHome }) {
-  const { user, loading, isConfigured, signInWithGoogle } = useAuth();
+  const { user, loading, isConfigured, signInWithGoogle, displayName } = useAuth();
   const redirectStarted = useRef(false);
   const shouldRedirect = joinRequested && isConfigured && !loading && !user;
   const [profileLookup, setProfileLookup] = useState("pending"); // pending | failed
@@ -49,7 +49,7 @@ export default function WelcomeView({ joinRequested, onProfileReady, onRankings,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldRedirect]);
 
-  const firstName = (user?.user_metadata?.full_name || "").split(" ")[0];
+  const firstName = (displayName || user?.user_metadata?.full_name || "").split(" ")[0];
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
 
   let content;
