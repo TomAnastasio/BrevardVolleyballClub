@@ -19,11 +19,30 @@ finished: pick the players, then type in the final score). Both save the
 same way, dated now, with the same Elo update. There's no way to backdate a
 game. Admins fix a game's details afterward with **✏️ Edit** (below).
 
-The live scoreboard has two layouts. Held sideways it's the original
-side-by-side board. Held upright it stacks Team A over Team B, marks who's
-serving (whoever won the last rally), and in beach games pops up a
-**Switch sides** reminder every 7 points. The order points were scored in
-is kept only on the scorekeeper's phone, not saved with the game.
+### Live scoreboard
+
+The scoreboard picks its layout from how the phone is held:
+
+- **Sideways (landscape):** the original side-by-side board, Team A on the
+  left and Team B on the right.
+- **Upright (portrait):** Team A on top, Team B below. Each team has its
+  score, a full-width **+1** in the team's color and a red **−1** beside it.
+
+The upright layout also shows:
+
+- **Who's serving:** a volleyball and "SERVING" under whichever team won
+  the last rally. Nothing shows at 0–0, since the coin toss isn't tracked.
+- **Switch sides (beach only):** a yellow banner at every 7 combined points
+  (7, 14, 21…). **Done** hides it until the next one. The line between the
+  teams counts down ("Switch sides in 3"). Indoor games don't switch.
+
+**−1** takes back that team's most recent point, so the serving marker
+stays right after a correction. The order points were scored in is kept
+only on the scorekeeper's phone. It isn't saved with the game.
+
+In either layout, when a team reaches the winning score (21 beach, 25
+indoor) with a 2-point lead, a green banner offers **Save Game** or
+**Keep Playing**.
 
 ### Game details
 
@@ -204,6 +223,11 @@ npm run preview    # preview the production build locally
 npm test           # unit tests (Vitest), no backend needed
 npm run test:e2e   # browser tests (Playwright) against the staging backend
 ```
+
+The serve and side-switch rules have unit tests in
+`src/lib/serveAndSwitch.test.js`. `e2e/scoreboard.spec.js` plays a game in
+both layouts: a full game saved to Past Games, and a phone-sized upright game
+that checks the serving marker, −1 and the switch banner (not saved).
 
 The browser tests run against a separate **staging** Supabase project, never
 the real club data. They sign in as two test-only bot accounts whose
