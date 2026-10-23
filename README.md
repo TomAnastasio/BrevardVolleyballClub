@@ -117,6 +117,19 @@ green glow and fog (phones set to reduce motion get still pictures). They live i
 `src/themes/halloween/badges/`; the classic badges in `src/assets/badges/`
 are untouched and come back with the classic look.
 
+Players with no profile photo get a pixel-art Halloween monster in their
+photo circle instead of the blank one: 100 of them (vampires, witches,
+zombies, ghosts, skeletons, werewolves, mummies, jack-o'-lanterns,
+Frankensteins and black cats, each in 10 goofy versions). Each player
+always gets the same one (picked from their profile id), on every screen.
+Nothing is saved to anyone's profile: anyone with a Google or uploaded
+photo keeps it, uploading a photo replaces the monster right away, and
+everyone goes back to the blank circle when the theme ends. Typed-in names
+with no profile stay blank, and the admin screens always show the real
+photo (or none). The pictures are in `src/themes/halloween/avatars/`,
+drawn by `generate.mjs` there (`node src/themes/halloween/avatars/generate.mjs`
+redraws them after an edit).
+
 - **Preview either look any day:** add `?theme=classic` or
   `?theme=halloween` to the address. It lasts until you reload without it.
 - **Turn it off early or change the dates:** edit the `from`/`until`
@@ -131,8 +144,9 @@ are untouched and come back with the classic look.
 - **Remove it for good:** delete `src/themes/halloween/` and the Halloween
   entry in `activeTheme.js`, then the lines that use them: the CSS import
   and `applyTheme` call in `main.jsx`, the `HalloweenDecor` line in
-  `App.jsx`, and the `halloween`/`ART` swap in `RankBadge.jsx`
-  (`BADGES` and `UnrankedBadge` are the classic ones).
+  `App.jsx`, the `halloween`/`ART` swap in `RankBadge.jsx`
+  (`BADGES` and `UnrankedBadge` are the classic ones), and the Halloween
+  import and line in `src/themes/playerPhoto.js` (plus its test).
 
 Everything for the theme lives in `src/themes/`. Its fonts (Pixelify Sans,
 Press Start 2P) are free under the SIL Open Font License.

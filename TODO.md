@@ -11,6 +11,10 @@ After Halloween, ask the owner whether to delete `src/themes/halloween/`
 (steps in README "Seasonal themes") or keep it for next October with new
 dates.
 
+Unconfirmed: players whose Google photo is just Google's coloured
+first-initial circle count as having a photo, so they don't get a Halloween
+monster. Asked the owner 2026-10-23, no answer yet.
+
 ## Open: tournaments (Queen of Paradise, Sat 2026-10-31)
 
 Live in production; how it runs is in README "Tournaments", the rules are

@@ -1,10 +1,12 @@
 import { PARTNER_MIN_GAMES } from "../hooks/usePlayerGames.js";
 import { stagger } from "../lib/motion.js";
+import { playerPhoto } from "../themes/playerPhoto.js";
 
 function StatRow({ label, stat, versus, index, onOpenPlayer }) {
   const { player, games, wins, losses } = stat;
-  const photo = player.avatarUrl ? (
-    <img src={player.avatarUrl} alt="" aria-hidden="true" className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover" />
+  const photoUrl = playerPhoto(player.avatarUrl, player.id);
+  const photo = photoUrl ? (
+    <img src={photoUrl} alt="" aria-hidden="true" className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover" />
   ) : (
     <span aria-hidden="true" className="h-9 w-9 flex-none rounded-full border border-white/10 bg-white/5" />
   );

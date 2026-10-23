@@ -6,6 +6,7 @@ import { rankTitle } from "../lib/rankTitle.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { useLeaderboard } from "../hooks/useLeaderboard.js";
 import { stagger } from "../lib/motion.js";
+import { playerPhoto } from "../themes/playerPhoto.js";
 
 function PlayerAvatar({ src }) {
   if (!src) {
@@ -70,7 +71,7 @@ export default function LeaderboardView({ onBack, onSelectPlayer }) {
                         <Card className={`gap-1 p-3 ${isSelf ? "border border-accent/60 bg-accent/5" : ""}`}>
                           <div className="flex items-center gap-3">
                             <span className="w-6 flex-none text-center font-bold text-muted">{index + 1}</span>
-                            <PlayerAvatar src={player.avatar_url} />
+                            <PlayerAvatar src={playerPhoto(player.avatar_url, player.id)} />
                             <span className="min-w-0 flex-1">
                               <span className="block truncate font-bold">
                                 {player.display_name}
@@ -125,7 +126,7 @@ export default function LeaderboardView({ onBack, onSelectPlayer }) {
                           >
                             <Card className={`gap-1 p-3 opacity-75 ${isSelf ? "border border-accent/60 bg-accent/5" : ""}`}>
                               <div className="flex items-center gap-3">
-                                <PlayerAvatar src={player.avatar_url} />
+                                <PlayerAvatar src={playerPhoto(player.avatar_url, player.id)} />
                                 <span className="min-w-0 flex-1 truncate font-bold">
                                   {player.display_name}
                                   {isSelf && <span className="ml-1 font-normal text-muted">(you)</span>}

@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { fuzzyFilter } from "../../lib/fuzzyMatch.js";
+import { playerPhoto } from "../../themes/playerPhoto.js";
 
 // Chip-thumbnail broken-image fallback, mirroring the local PlayerAvatar
 // helper in NewGameForm.jsx and the dropdown-row handling in
@@ -102,7 +103,7 @@ export default function TeamRosterPicker({ label, roster, onAdd, onRemove, direc
                   onClick={() => handleSelect(player)}
                   className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold hover:bg-white/10"
                 >
-                  <DropdownAvatar src={player.avatar_url} />
+                  <DropdownAvatar src={playerPhoto(player.avatar_url, player.id)} />
                   {player.display_name}
                 </button>
               </li>
@@ -122,7 +123,7 @@ export default function TeamRosterPicker({ label, roster, onAdd, onRemove, direc
               key={p.id}
               className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 py-1 pl-1 pr-2"
             >
-              <ChipAvatar src={p.avatarUrl} />
+              <ChipAvatar src={playerPhoto(p.avatarUrl, p.id)} />
               <span className="max-w-[8rem] truncate text-sm font-semibold">{p.name}</span>
               <button
                 type="button"

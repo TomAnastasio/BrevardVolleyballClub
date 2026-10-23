@@ -2,6 +2,7 @@ import { Card } from "@heroui/react";
 import { useAuth } from "../../hooks/useAuth.js";
 import TournamentGameTag from "../TournamentGameTag.jsx";
 import { stagger } from "../../lib/motion.js";
+import { playerPhoto } from "../../themes/playerPhoto.js";
 
 // Capped at 8 per team (two rows of 4) to keep a big indoor roster from
 // blowing up the card's height — see HistoryView's goal of compact cards.
@@ -12,11 +13,11 @@ function RosterAvatars({ players, align }) {
   if (!players?.length) return null;
   return (
     <div className={`flex flex-wrap gap-1 ${align === "right" ? "justify-end" : ""}`}>
-      {players.map((p) =>
-        p.avatarUrl ? (
+      {players.map((p) => ({ ...p, photoUrl: playerPhoto(p.avatarUrl, p.id) })).map((p) =>
+        p.photoUrl ? (
           <img
             key={p.id}
-            src={p.avatarUrl}
+            src={p.photoUrl}
             alt=""
             aria-hidden="true"
             onError={(e) => {

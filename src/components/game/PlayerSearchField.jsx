@@ -1,5 +1,6 @@
 import { useId, useMemo, useState } from "react";
 import { fuzzyFilter } from "../../lib/fuzzyMatch.js";
+import { playerPhoto } from "../../themes/playerPhoto.js";
 
 // Free-text name input with a fuzzy-matched dropdown of known players
 // (accounts that have signed in at least once) layered on top. Selecting a
@@ -54,7 +55,7 @@ export default function PlayerSearchField({ value, onChange, placeholder, ariaLa
           aria-label={`${ariaLabel} suggestions`}
           className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-lg border border-white/10 bg-background shadow-lg"
         >
-          {matches.map((player) => (
+          {matches.map((player) => ({ ...player, photoUrl: playerPhoto(player.avatar_url, player.id) })).map((player) => (
             <li key={player.id} role="option" aria-selected="false">
               <button
                 type="button"
@@ -62,9 +63,9 @@ export default function PlayerSearchField({ value, onChange, placeholder, ariaLa
                 onClick={() => handleSelect(player)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold hover:bg-white/10"
               >
-                {player.avatar_url ? (
+                {player.photoUrl ? (
                   <img
-                    src={player.avatar_url}
+                    src={player.photoUrl}
                     alt=""
                     aria-hidden="true"
                     onError={(e) => {

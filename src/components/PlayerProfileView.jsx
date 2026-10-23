@@ -17,6 +17,7 @@ import TournamentGameTag from "./TournamentGameTag.jsx";
 import { stagger } from "../lib/motion.js";
 import { useCountUp } from "../hooks/useCountUp.js";
 import { sanitizeName } from "../lib/sanitizeName.js";
+import { playerPhoto } from "../themes/playerPhoto.js";
 
 function PlayerAvatar({ src }) {
   if (!src) {
@@ -305,14 +306,14 @@ export default function PlayerProfileView({
           <div className="flex items-center gap-3">
             {isOwnProfile ? (
               <ProfilePhotoEditor
-                avatarUrl={avatarUrl}
+                avatarUrl={playerPhoto(avatarUrl, player.id)}
                 onSaved={(url) => {
                   setAvatarUrl(url);
                   setPhotoSaved(true);
                 }}
               />
             ) : (
-              <PlayerAvatar src={avatarUrl} />
+              <PlayerAvatar src={playerPhoto(avatarUrl, player.id)} />
             )}
             <span className="min-w-0 flex-1 truncate text-lg font-bold">
               {displayName}

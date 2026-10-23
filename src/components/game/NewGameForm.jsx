@@ -5,6 +5,7 @@ import { TEAM_COLORS, DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../../lib/teamCol
 import { usePlayerDirectory } from "../../hooks/usePlayerDirectory.js";
 import PlayerSearchField from "./PlayerSearchField.jsx";
 import TeamRosterPicker from "./TeamRosterPicker.jsx";
+import { playerPhoto } from "../../themes/playerPhoto.js";
 
 const MIN_ROSTER_SIZE = 4;
 
@@ -348,8 +349,8 @@ export default function NewGameForm({
           onName1={handleNameA1}
           name2={nameA2}
           onName2={handleNameA2}
-          avatar1={avatarA1}
-          avatar2={avatarA2}
+          avatar1={playerPhoto(avatarA1, playerIdA1)}
+          avatar2={playerPhoto(avatarA2, playerIdA2)}
           error1={duplicateNameKeys.has("a1")}
           error2={duplicateNameKeys.has("a2")}
           directory={directory}
@@ -371,8 +372,8 @@ export default function NewGameForm({
           onName1={handleNameB1}
           name2={nameB2}
           onName2={handleNameB2}
-          avatar1={avatarB1}
-          avatar2={avatarB2}
+          avatar1={playerPhoto(avatarB1, playerIdB1)}
+          avatar2={playerPhoto(avatarB2, playerIdB2)}
           error1={duplicateNameKeys.has("b1")}
           error2={duplicateNameKeys.has("b2")}
           directory={directory}

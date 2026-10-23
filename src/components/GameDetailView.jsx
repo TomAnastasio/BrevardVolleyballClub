@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth.js";
 import { fetchGameRecord } from "../hooks/useGameHistory.js";
 import { supabase } from "../lib/supabaseClient.js";
 import { formatPlayedAt, rosterForSide } from "../lib/gameDetail.js";
+import { playerPhoto } from "../themes/playerPhoto.js";
 
 function formatLabel(game) {
   if (game.format === "indoor") return "🏐 Indoor";
@@ -13,8 +14,9 @@ function formatLabel(game) {
 }
 
 function PlayerLine({ player, delta, onOpenPlayer }) {
-  const photo = player.avatarUrl ? (
-    <img src={player.avatarUrl} alt="" aria-hidden="true" className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover" />
+  const photoUrl = playerPhoto(player.avatarUrl, player.id);
+  const photo = photoUrl ? (
+    <img src={photoUrl} alt="" aria-hidden="true" className="h-9 w-9 flex-none rounded-full border border-white/10 object-cover" />
   ) : (
     <span aria-hidden="true" className="h-9 w-9 flex-none rounded-full border border-white/10 bg-white/5" />
   );

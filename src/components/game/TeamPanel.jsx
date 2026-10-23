@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@heroui/react";
 import { sanitizeName } from "../../lib/sanitizeName.js";
 import { colorForeground } from "../../lib/teamColors.js";
+import { playerPhoto } from "../../themes/playerPhoto.js";
 
 function selectAllText(el) {
   const range = document.createRange();
@@ -57,14 +58,15 @@ export function EditableTeamName({ id, name, fallback, label, onCommit, fontSize
 // just swaps in a placeholder rather than collapsing the grid.
 export function RosterAvatar({ player, size }) {
   const [broken, setBroken] = useState(false);
-  useEffect(() => setBroken(false), [player.avatarUrl]);
+  const photoUrl = playerPhoto(player.avatarUrl, player.id);
+  useEffect(() => setBroken(false), [photoUrl]);
 
   const style = { height: size, width: size };
 
-  if (player.avatarUrl && !broken) {
+  if (photoUrl && !broken) {
     return (
       <img
-        src={player.avatarUrl}
+        src={photoUrl}
         alt={player.name}
         onError={() => setBroken(true)}
         style={style}
