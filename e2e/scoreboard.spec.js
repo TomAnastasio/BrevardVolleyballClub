@@ -111,3 +111,60 @@ test("enter a just-finished game's final score as a regular player", async ({ pa
   await expect(savedGame).toContainText("25");
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
+
+// Held upright, the scoreboard uses its own portrait layout (not a rotated
+// landscape one): serve marker follows whoever won the last rally, −1 takes
+// back that team's latest point, and beach games get a "Switch sides"
+// banner every 7 points. Doesn't save, so it leaves nothing on staging.
+test("portrait scoreboard shows the server and side switches", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signInAsPlayer(page);
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Game tracking" }).click();
+  await page.getByRole("button", { name: "New Game" }).click();
+  await page.getByRole("button", { name: "Live Scoreboard" }).click();
+  await page.getByRole("button", { name: "Beach" }).click();
+  await page.getByRole("button", { name: "2v2 Beach" }).click();
+  await page.getByRole("button", { name: "Casual" }).click();
+
+  await pickPlayer(page, "First side, player 1 name", PLAYER_NAME);
+  await pickPlayer(page, "First side, player 2 name", "Bob");
+  await pickPlayer(page, "Second side, player 1 name", "Carla");
+  await pickPlayer(page, "Second side, player 2 name", "Dana");
+  await page.getByRole("button", { name: "Start Game" }).click();
+
+  const panelA = page.getByRole("region", { name: "Team A scoring panel" });
+  const panelB = page.getByRole("region", { name: "Team B scoring panel" });
+  const addA = page.getByRole("button", { name: "Add point to Team A" });
+  const addB = page.getByRole("button", { name: "Add point to Team B" });
+
+  // Not rotated: Team A sits above Team B on screen.
+  const boxA = await panelA.boundingBox();
+  const boxB = await panelB.boundingBox();
+  expect(boxA.y + boxA.height).toBeLessThanOrEqual(boxB.y + 1);
+  expect(boxA.width).toBeGreaterThan(300);
+
+  await expect(page.getByText("SERVING")).toHaveCount(0);
+  await addA.click();
+  await expect(panelA.getByText("SERVING")).toBeVisible();
+  await addB.click();
+  await expect(panelB.getByText("SERVING")).toBeVisible();
+  await expect(panelA.getByText("SERVING")).toHaveCount(0);
+
+  // −1 on Team B hands the serve back to Team A (who won the rally before).
+  await page.getByRole("button", { name: "Remove point from Team B, fix a mistake" }).click();
+  await expect(panelA.getByText("SERVING")).toBeVisible();
+
+  // 1-0 → 4-3 is 7 points played.
+  const switchBanner = page.getByRole("status").filter({ hasText: "Switch sides" });
+  for (let i = 0; i < 3; i++) await addA.click();
+  for (let i = 0; i < 2; i++) await addB.click();
+  await expect(switchBanner).toHaveCount(0);
+  await addB.click();
+  await expect(switchBanner).toContainText("7 points played");
+  await switchBanner.getByRole("button", { name: "Done" }).click();
+  await expect(switchBanner).toHaveCount(0);
+  await addA.click();
+  await expect(switchBanner).toHaveCount(0);
+});

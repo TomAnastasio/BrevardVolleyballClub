@@ -1,5 +1,5 @@
-import { Button, Card } from "@heroui/react";
 import TeamPanel from "./TeamPanel.jsx";
+import WinBanner from "./WinBanner.jsx";
 
 export default function GameView({ scoreboard, onSaveGame, effectiveWidth, effectiveHeight }) {
   const { state, usesRoster, aWins, bWins, winnerName, showBanner, changeScore, setName, dismissBanner } = scoreboard;
@@ -51,30 +51,12 @@ export default function GameView({ scoreboard, onSaveGame, effectiveWidth, effec
       </div>
 
       {showBanner && (
-        <Card
-          role="alert"
-          className="mx-3 mt-2 flex flex-col items-center gap-2 bg-success p-4 text-center text-success-foreground shadow-lg phone-landscape:mx-2 phone-landscape:mt-1 phone-landscape:flex-row phone-landscape:flex-wrap phone-landscape:gap-2 phone-landscape:p-2"
-        >
-          <p className="m-0 font-extrabold phone-landscape:text-sm">{winnerName} wins!</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onPress={onSaveGame}
-              className="rounded-full bg-success-foreground text-success"
-            >
-              Save Game
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onPress={dismissBanner}
-              className="rounded-full border-2 border-success-foreground text-success-foreground"
-            >
-              Keep Playing
-            </Button>
-          </div>
-        </Card>
+        <WinBanner
+          winnerName={winnerName}
+          onSaveGame={onSaveGame}
+          onKeepPlaying={dismissBanner}
+          className="mx-3 mt-2 phone-landscape:mx-2 phone-landscape:mt-1"
+        />
       )}
     </div>
   );

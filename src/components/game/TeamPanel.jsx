@@ -11,7 +11,7 @@ function selectAllText(el) {
   sel.addRange(range);
 }
 
-function EditableTeamName({ id, name, fallback, label, onCommit, fontSize }) {
+export function EditableTeamName({ id, name, fallback, label, onCommit, fontSize, align = "center" }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ function EditableTeamName({ id, name, fallback, label, onCommit, fontSize }) {
       aria-label={label}
       tabIndex={0}
       style={{ fontSize }}
-      className="m-0 max-w-full cursor-text break-words rounded-lg px-2 py-0.5 text-center font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+      className={`m-0 max-w-full cursor-text break-words rounded-lg px-2 py-0.5 ${align === "left" ? "text-left" : "text-center"} font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2`}
       onFocus={(e) => selectAllText(e.currentTarget)}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
@@ -55,7 +55,7 @@ function EditableTeamName({ id, name, fallback, label, onCommit, fontSize }) {
 
 // Reserves a fixed circular slot whether the photo loads or not, so a 404
 // just swaps in a placeholder rather than collapsing the grid.
-function RosterAvatar({ player, size }) {
+export function RosterAvatar({ player, size }) {
   const [broken, setBroken] = useState(false);
   useEffect(() => setBroken(false), [player.avatarUrl]);
 
@@ -84,11 +84,7 @@ function RosterAvatar({ player, size }) {
 }
 
 // Mirrors the same clamp(min, val, max) formulas the scoreboard always used,
-// but evaluated against the *effective* width/height (see
-// useForcedLandscape.js) instead of raw vw/vh — those units read the real,
-// unrotated viewport, which is wrong while the forced-landscape rotation is
-// active, so relying on them made portrait-forced text/buttons render
-// smaller than true landscape.
+// evaluated against useViewport's width/height (effectiveWidth/Height).
 function clampPx(min, value, max) {
   return Math.min(Math.max(value, min), max);
 }

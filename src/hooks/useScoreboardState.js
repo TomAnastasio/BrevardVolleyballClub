@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../lib/teamColors.js";
 import { normalizeMode } from "../lib/gameMode.js";
+import {
+  addPoint,
+  isSwitchPoint,
+  pointsUntilSwitch,
+  removePoint,
+  sanitizePoints,
+  servingTeam as servingTeamFor,
+} from "../lib/serveAndSwitch.js";
 
 const STORAGE_KEY = "bvc-scoreboard-v1";
 const DEFAULT_FORMAT = "beach";
@@ -50,7 +58,7 @@ function loadState() {
 
     const format = normalizeFormat(saved.format);
     const teamSize = normalizeTeamSize(format, saved.teamSize);
-    const state = { a: saved.a, b: saved.b, format, teamSize };
+    const state = { a: saved.a, b: saved.b, format, teamSize, points: sanitizePoints(saved.points, saved.a, saved.b) };
 
     if (usesRosterFor(format, teamSize)) {
       state.teamAPlayers = sanitizeRoster(saved.teamAPlayers);
@@ -89,6 +97,9 @@ function vibrate(pattern) {
 export function useScoreboardState() {
   const [state, setState] = useState(loadState);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  // Combined point total the side-switch banner was last dismissed at, so
+  // "Done" hides it until the next multiple of 7 (session-only).
+  const [switchDismissedAt, setSwitchDismissedAt] = useState(null);
 
   useEffect(() => {
     if (state === null) {
@@ -105,7 +116,9 @@ export function useScoreboardState() {
   const changeScore = useCallback((team, delta) => {
     setState((prev) => {
       const next = Math.max(0, prev[team] + delta);
-      return { ...prev, [team]: next };
+      if (next === prev[team]) return prev;
+      const points = prev.points ?? [];
+      return { ...prev, [team]: next, points: delta > 0 ? addPoint(points, team) : removePoint(points, team) };
     });
     setBannerDismissed(false);
     vibrate(delta > 0 ? 15 : [10, 30, 10]);
@@ -122,7 +135,16 @@ export function useScoreboardState() {
   const startGame = useCallback((payload) => {
     const format = normalizeFormat(payload.format);
     const teamSize = normalizeTeamSize(format, payload.teamSize);
-    const next = { a: 0, b: 0, format, teamSize, colorA: payload.colorA, colorB: payload.colorB, mode: payload.mode };
+    const next = {
+      a: 0,
+      b: 0,
+      points: [],
+      format,
+      teamSize,
+      colorA: payload.colorA,
+      colorB: payload.colorB,
+      mode: payload.mode,
+    };
     if (usesRosterFor(format, teamSize)) {
       next.teamAPlayers = sanitizeRoster(payload.teamAPlayers);
       next.teamBPlayers = sanitizeRoster(payload.teamBPlayers);
@@ -138,16 +160,24 @@ export function useScoreboardState() {
     }
     setState(next);
     setBannerDismissed(false);
+    setSwitchDismissedAt(null);
   }, []);
 
   const clearActiveGame = useCallback(() => {
     setState(null);
     setBannerDismissed(false);
+    setSwitchDismissedAt(null);
   }, []);
 
   const dismissBanner = useCallback(() => {
     setBannerDismissed(true);
   }, []);
+
+  const totalPoints = state ? state.a + state.b : 0;
+
+  const dismissSwitch = useCallback(() => {
+    setSwitchDismissedAt(totalPoints);
+  }, [totalPoints]);
 
   const format = state ? normalizeFormat(state.format) : DEFAULT_FORMAT;
   const teamSize = state?.teamSize ?? null;
@@ -188,6 +218,12 @@ export function useScoreboardState() {
         ].filter((p) => p.userId);
   const winnerName = aWins ? teamAName : bWins ? teamBName : null;
   const showBanner = Boolean(winnerName) && !bannerDismissed;
+  const servingTeam = state ? servingTeamFor(state.points ?? []) : null;
+  // Beach only (2v2 and squads alike) — indoor doesn't switch mid-set.
+  const switchesSides = format === "beach";
+  const showSwitchBanner =
+    Boolean(state) && switchesSides && !winnerName && isSwitchPoint(totalPoints) && switchDismissedAt !== totalPoints;
+  const switchIn = switchesSides ? pointsUntilSwitch(totalPoints) : null;
 
   return {
     state,
@@ -204,11 +240,17 @@ export function useScoreboardState() {
     participants,
     winnerName,
     showBanner,
+    servingTeam,
+    switchesSides,
+    showSwitchBanner,
+    switchIn,
+    totalPoints,
     changeScore,
     setName,
     startGame,
     clearActiveGame,
     dismissBanner,
+    dismissSwitch,
   };
 }
 

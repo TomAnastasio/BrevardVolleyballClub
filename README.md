@@ -19,6 +19,12 @@ finished: pick the players, then type in the final score). Both save the
 same way, dated now, with the same Elo update. There's no way to backdate a
 game. Admins fix a game's details afterward with **✏️ Edit** (below).
 
+The live scoreboard has two layouts. Held sideways it's the original
+side-by-side board. Held upright it stacks Team A over Team B, marks who's
+serving (whoever won the last rally), and in beach games pops up a
+**Switch sides** reminder every 7 points. The order points were scored in
+is kept only on the scorekeeper's phone, not saved with the game.
+
 ### Game details
 
 Tapping any game opens its own screen, in Past Games or in a player's

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useScoreboardState } from "../../hooks/useScoreboardState.js";
 import { useGameHistory } from "../../hooks/useGameHistory.js";
-import { useForcedLandscape } from "../../hooks/useForcedLandscape.js";
+import { useViewport } from "../../hooks/useViewport.js";
 import { useAuth } from "../../hooks/useAuth.js";
 import GameMenu from "./GameMenu.jsx";
 import GameFormatMenu from "./GameFormatMenu.jsx";
@@ -10,6 +10,7 @@ import GameModeMenu from "./GameModeMenu.jsx";
 import GameTrackingSignInGate from "./GameTrackingSignInGate.jsx";
 import NewGameForm from "./NewGameForm.jsx";
 import GameView from "./GameView.jsx";
+import PortraitGameView from "./PortraitGameView.jsx";
 import HistoryView from "./HistoryView.jsx";
 import FinalScoreScreen from "./FinalScoreScreen.jsx";
 import GameEntryMenu from "./GameEntryMenu.jsx";
@@ -186,14 +187,12 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
 
   const meta = SCREEN_META[screen];
   const isMenu = screen === "menu";
-  const { forced, width: effectiveWidth, height: effectiveHeight } = useForcedLandscape(screen === "active");
+  const { isPortrait, width: effectiveWidth, height: effectiveHeight } = useViewport();
   const isPhoneLandscape = effectiveHeight <= 520;
 
   return (
     <div
-      className={`flex min-h-0 flex-1 flex-col ${forced ? "force-landscape" : ""} ${
-        isPhoneLandscape ? "is-phone-landscape" : ""
-      }`}
+      className={`flex min-h-0 flex-1 flex-col ${isPhoneLandscape ? "is-phone-landscape" : ""}`}
     >
       <header
         className="flex items-center gap-2 px-2 pb-1 phone-landscape:pb-0"
@@ -269,7 +268,10 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
             onSubmit={handleFinalScoreSubmit}
           />
         )}
-        {screen === "active" && scoreboard.state && (
+        {screen === "active" && scoreboard.state && isPortrait && (
+          <PortraitGameView scoreboard={scoreboard} onSaveGame={handleSaveGame} />
+        )}
+        {screen === "active" && scoreboard.state && !isPortrait && (
           <GameView
             scoreboard={scoreboard}
             onSaveGame={handleSaveGame}
