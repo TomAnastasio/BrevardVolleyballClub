@@ -4,7 +4,7 @@ export default function WinBanner({ winnerName, onSaveGame, onKeepPlaying, class
   return (
     <Card
       role="alert"
-      className={`flex flex-col items-center gap-2 bg-success p-4 text-center text-success-foreground shadow-lg phone-landscape:flex-row phone-landscape:flex-wrap phone-landscape:gap-2 phone-landscape:p-2 ${className}`}
+      className={`animate-banner-in flex flex-col items-center gap-2 bg-success p-4 text-center text-success-foreground shadow-lg phone-landscape:flex-row phone-landscape:flex-wrap phone-landscape:gap-2 phone-landscape:p-2 ${className}`}
     >
       <p className="m-0 font-extrabold phone-landscape:text-sm">{winnerName} wins!</p>
       <div className="flex flex-wrap justify-center gap-2">

@@ -97,7 +97,7 @@ function MatchRow({ match, label, profilesById, isNext, highlightId, canScore, o
           type="button"
           onClick={onPress}
           aria-label={`${label}: ${teamNames(profilesById, [match.a1, match.a2])} vs ${teamNames(profilesById, [match.b1, match.b2])}. Keep score`}
-          className={`${cls} focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2`}
+          className={`${cls} transition-transform duration-150 active:scale-[0.98] focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2`}
         >
           {content}
         </button>

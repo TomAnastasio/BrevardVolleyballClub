@@ -4,7 +4,7 @@ import EditGameScreen from "./EditGameScreen.jsx";
 // (Past Games or a profile), with the same header as the rest of the app.
 export default function EditGamePage({ gameId, onBack, onSaved, onDeleted }) {
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto">
+    <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">
       <header
         className="relative flex flex-none items-center px-3 pb-2"
         style={{ paddingTop: "calc(0.5rem + var(--safe-top))" }}

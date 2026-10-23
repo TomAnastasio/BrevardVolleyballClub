@@ -1,6 +1,7 @@
 import { Card } from "@heroui/react";
 import { useAuth } from "../../hooks/useAuth.js";
 import TournamentGameTag from "../TournamentGameTag.jsx";
+import { stagger } from "../../lib/motion.js";
 
 // Capped at 8 per team (two rows of 4) to keep a big indoor roster from
 // blowing up the card's height — see HistoryView's goal of compact cards.
@@ -99,13 +100,13 @@ export default function HistoryView({ history, historyLoading, onOpenGame, onOpe
         <p className="p-6 text-center text-muted">No games saved yet. Finish a game to see it here.</p>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {history.map((game) => (
+          {history.map((game, index) => (
             // The details button is stretched over the whole card rather than
             // wrapping it, so the card's own tournament tag button isn't a
             // (invalid) button inside a button; the tag sits above it. A
             // game saved only on this device ("game-…" id, never synced)
             // has no server copy to show, so it isn't tappable.
-            <li key={game.id} className="relative">
+            <li key={game.id} className={`animate-rise-in relative transition-transform duration-150 has-[>button:active]:scale-[0.98]`} style={stagger(index)}>
               <Card className="gap-1 p-3">
                 <GameCardBody game={game} user={user} onOpenTournament={onOpenTournament} />
               </Card>

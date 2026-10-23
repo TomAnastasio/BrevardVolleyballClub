@@ -83,6 +83,24 @@ export function RosterAvatar({ player, size }) {
   );
 }
 
+// The big score number. Re-keyed on every change so it replays a quick
+// kick up on +1 or dip on −1; the first render (game start) stays still.
+// Sits inside the aria-live span, so screen readers aren't affected.
+export function AnimatedScore({ score }) {
+  // Remembers the direction until the score changes again, so a re-render
+  // from the other team scoring doesn't cut this one's animation short.
+  const last = useRef({ score, direction: null });
+  if (last.current.score !== score) {
+    last.current = { score, direction: score > last.current.score ? "up" : "down" };
+  }
+  const { direction } = last.current;
+  return (
+    <span key={score} className={`inline-block ${direction ? `animate-score-${direction}` : ""}`}>
+      {score}
+    </span>
+  );
+}
+
 // Mirrors the same clamp(min, val, max) formulas the scoreboard always used,
 // evaluated against useViewport's width/height (effectiveWidth/Height).
 function clampPx(min, value, max) {
@@ -175,7 +193,7 @@ export default function TeamPanel({
           style={{ fontSize: scoreFontSize }}
           className="font-extrabold leading-none [font-variant-numeric:tabular-nums]"
         >
-          {score}
+          <AnimatedScore score={score} />
         </span>
       </div>
     </div>

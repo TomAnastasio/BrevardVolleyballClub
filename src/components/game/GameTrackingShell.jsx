@@ -237,7 +237,7 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
         </p>
       )}
 
-      <main className="flex min-h-0 flex-1 flex-col">
+      <main className="animate-view-in flex min-h-0 flex-1 flex-col">
         {screen === "menu" && (
           <GameMenu
             hasActiveGame={scoreboard.hasActiveGame}

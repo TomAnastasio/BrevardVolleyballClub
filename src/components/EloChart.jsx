@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { useInView } from "../hooks/useInView.js";
 
 const HEIGHT = 150;
 const PAD = { top: 12, right: 12, bottom: 22, left: 40 };
@@ -24,8 +25,12 @@ function niceTicks(min, max) {
 // (owner's call, 2026-10-22: by game, all time), starting from their rating
 // before their first ranked game. One series, so no legend: the heading
 // names it. Touch, hover or arrow keys move a crosshair with a readout.
+// The first time it scrolls into view, the line draws itself left to right
+// (see "Elo chart" in index.css).
 export default function EloChart({ series }) {
   const wrapRef = useRef(null);
+  const [svgRef, inView] = useInView();
+  const fillId = useId();
   const [width, setWidth] = useState(320);
   const [active, setActive] = useState(null);
 
@@ -54,6 +59,7 @@ export default function EloChart({ series }) {
   const y = (v) => PAD.top + (1 - (v - lo) / (hi - lo || 1)) * plotH;
   const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.rating).toFixed(1)}`).join(" ");
   const last = points.length - 1;
+  const area = `${path} L${x(last).toFixed(1)},${PAD.top + plotH} L${x(0).toFixed(1)},${PAD.top + plotH} Z`;
   const shown = active ?? null;
 
   function indexFromPointer(e) {
@@ -88,7 +94,7 @@ export default function EloChart({ series }) {
         {readout && (
           <div
             role="status"
-            className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-white/10 bg-surface px-2 py-1 text-xs shadow-lg [font-variant-numeric:tabular-nums]"
+            className="animate-fade-in pointer-events-none absolute top-0 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-white/10 bg-surface px-2 py-1 text-xs shadow-lg [font-variant-numeric:tabular-nums]"
             style={{ left: tipLeft }}
           >
             <span className="text-muted">{readout.label}</span>
@@ -101,21 +107,30 @@ export default function EloChart({ series }) {
           </div>
         )}
         <svg
+          ref={svgRef}
           width={width}
           height={HEIGHT}
           viewBox={`0 0 ${width} ${HEIGHT}`}
           role="img"
           tabIndex={0}
           aria-label={`Elo over ${series.length} ranked games, from ${first} to ${current}. Use the arrow keys to step through games.`}
-          className="block touch-pan-y rounded-lg focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+          className={`block touch-pan-y rounded-lg focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2 ${
+            inView ? "chart-in-view" : ""
+          }`}
           onPointerMove={(e) => setActive(indexFromPointer(e))}
           onPointerDown={(e) => setActive(indexFromPointer(e))}
           onPointerLeave={(e) => e.pointerType === "mouse" && setActive(null)}
           onKeyDown={handleKey}
           onBlur={() => setActive(null)}
         >
+          <defs>
+            <linearGradient id={fillId} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" style={{ stopColor: "var(--accent)", stopOpacity: 0.22 }} />
+              <stop offset="100%" style={{ stopColor: "var(--accent)", stopOpacity: 0 }} />
+            </linearGradient>
+          </defs>
           {ticks.map((t) => (
-            <g key={t}>
+            <g key={t} className="chart-grid">
               <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} className="stroke-white/10" strokeWidth="1" />
               <text x={PAD.left - 6} y={y(t)} dy="0.32em" textAnchor="end" className="fill-muted text-[10px] [font-variant-numeric:tabular-nums]">
                 {t}
@@ -128,7 +143,16 @@ export default function EloChart({ series }) {
           <text x={width - PAD.right} y={HEIGHT - 6} textAnchor="end" className="fill-muted text-[10px]">
             Game {series.length}
           </text>
-          <path d={path} fill="none" className="stroke-accent" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          <path d={area} fill={`url(#${fillId})`} className="chart-area" />
+          <path
+            d={path}
+            pathLength="1"
+            fill="none"
+            className="chart-line stroke-accent"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
           {shown != null && (
             <line x1={x(shown)} x2={x(shown)} y1={PAD.top} y2={PAD.top + plotH} className="stroke-white/30" strokeWidth="1" />
           )}
@@ -136,7 +160,7 @@ export default function EloChart({ series }) {
             cx={x(shown ?? last)}
             cy={y(points[shown ?? last].rating)}
             r="4.5"
-            className="fill-accent stroke-background"
+            className="chart-dot fill-accent stroke-background"
             strokeWidth="2"
           />
         </svg>

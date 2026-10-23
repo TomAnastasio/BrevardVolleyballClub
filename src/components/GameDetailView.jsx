@@ -114,7 +114,7 @@ export default function GameDetailView({ gameId, refreshKey, onBack, onOpenPlaye
   }, [gameId, refreshKey, signedIn]);
 
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto">
+    <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">
       <header
         className="relative flex flex-none items-center px-3 pb-2"
         style={{ paddingTop: "calc(0.5rem + var(--safe-top))" }}
@@ -154,7 +154,7 @@ export default function GameDetailView({ gameId, refreshKey, onBack, onOpenPlaye
               <TournamentGameTag tag={game.tournament} onOpen={onOpenTournament} />
             </div>
 
-            <Card className="gap-3 p-3">
+            <Card className="animate-rise-in gap-3 p-3" style={{ "--rise-delay": "60ms" }}>
               <p className="m-0 text-center text-3xl font-bold [font-variant-numeric:tabular-nums]">
                 <span className={game.a > game.b ? "text-success" : ""}>{game.a}</span>
                 <span className="text-muted"> – </span>

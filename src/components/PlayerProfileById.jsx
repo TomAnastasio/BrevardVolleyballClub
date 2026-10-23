@@ -26,7 +26,7 @@ export default function PlayerProfileById({ playerId, onBack, backLabel = "Back"
   if (status === "ready") return <PlayerProfileView player={player} onBack={onBack} backLabel={backLabel} {...profileProps} />;
 
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto">
+    <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">
       <header
         className="relative flex flex-none items-center px-3 pb-2"
         style={{ paddingTop: "calc(0.5rem + var(--safe-top))" }}

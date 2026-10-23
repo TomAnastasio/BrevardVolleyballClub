@@ -5,6 +5,7 @@ import RankBadge from "./RankBadge.jsx";
 import { rankTitle } from "../lib/rankTitle.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { useLeaderboard } from "../hooks/useLeaderboard.js";
+import { stagger } from "../lib/motion.js";
 
 function PlayerAvatar({ src }) {
   if (!src) {
@@ -22,7 +23,7 @@ export default function LeaderboardView({ onBack, onSelectPlayer }) {
   const unranked = players.filter((p) => !p.elo_games_played);
 
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto">
+    <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">
       <header
         className="relative flex flex-none items-center px-3 pb-2"
         style={{ paddingTop: "calc(0.5rem + var(--safe-top))" }}
@@ -59,12 +60,12 @@ export default function LeaderboardView({ onBack, onSelectPlayer }) {
                 {ranked.map((player, index) => {
                   const isSelf = player.id === user?.id;
                   return (
-                    <li key={player.id}>
+                    <li key={player.id} className="animate-rise-in" style={stagger(index)}>
                       <button
                         type="button"
                         onClick={() => onSelectPlayer(player)}
                         aria-label={`View ${player.display_name}'s profile`}
-                        className="block w-full rounded-2xl text-left focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+                        className="block w-full rounded-2xl text-left transition-transform duration-150 active:scale-[0.98] focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
                       >
                         <Card className={`gap-1 p-3 ${isSelf ? "border border-accent/60 bg-accent/5" : ""}`}>
                           <div className="flex items-center gap-3">
@@ -112,15 +113,15 @@ export default function LeaderboardView({ onBack, onSelectPlayer }) {
 
                 {showUnranked && (
                   <ul id="unranked-players" className="m-0 mt-2 flex list-none flex-col gap-2 p-0">
-                    {unranked.map((player) => {
+                    {unranked.map((player, index) => {
                       const isSelf = player.id === user?.id;
                       return (
-                        <li key={player.id}>
+                        <li key={player.id} className="animate-rise-in" style={stagger(index, 30)}>
                           <button
                             type="button"
                             onClick={() => onSelectPlayer(player)}
                             aria-label={`View ${player.display_name}'s profile`}
-                            className="block w-full rounded-2xl text-left focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+                            className="block w-full rounded-2xl text-left transition-transform duration-150 active:scale-[0.98] focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
                           >
                             <Card className={`gap-1 p-3 opacity-75 ${isSelf ? "border border-accent/60 bg-accent/5" : ""}`}>
                               <div className="flex items-center gap-3">

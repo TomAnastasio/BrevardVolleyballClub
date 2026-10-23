@@ -249,3 +249,184 @@ body {
     animation: none;
   }
 }
+
+/* App-wide motion (bespoke, not HeroUI). Everything here lives inside a
+   no-preference query, so with "reduce motion" on nothing hides, moves or
+   waits: elements just render in their final state. Entrances use
+   `backwards` fill so no transform lingers afterwards (a leftover transform
+   would trap position:fixed children like the photo editor's sheet). */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Each screen eases in when you open it. */
+  @keyframes view-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  .animate-view-in {
+    animation: view-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  /* List rows rise in one after another; see stagger() in lib/motion.js. */
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+  .animate-rise-in {
+    animation: rise-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) var(--rise-delay, 0ms) backwards;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.15s ease-out backwards;
+  }
+
+  /* Small things appearing (serve marker, a photo-saved note). */
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+  .animate-pop-in {
+    animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+
+  /* Win / switch-sides banners drop in with a little spring. */
+  @keyframes banner-in {
+    from {
+      opacity: 0;
+      transform: translateY(-12px) scale(0.94);
+    }
+  }
+  .animate-banner-in {
+    animation: banner-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+  @keyframes switch-flip {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(180deg);
+    }
+  }
+  .animate-switch-flip {
+    display: inline-block;
+    animation: switch-flip 0.8s cubic-bezier(0.65, 0, 0.35, 1) 0.3s 2;
+  }
+
+  /* Scoreboard number: kicks up on +1, dips on −1 (see AnimatedScore). */
+  @keyframes score-up {
+    0% {
+      transform: translateY(-14%) scale(1.18);
+    }
+    100% {
+      transform: none;
+    }
+  }
+  @keyframes score-down {
+    0% {
+      opacity: 0.4;
+      transform: translateY(12%) scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .animate-score-up {
+    animation: score-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .animate-score-down {
+    animation: score-down 0.3s ease-out;
+  }
+
+  /* Elo chart: once on screen, waits a beat, then the line draws left to
+     right, the end dot pops and the soft fill fades in under it. The path
+     uses pathLength="1"; the gap is a hair longer than the line so the
+     round cap doesn't leave a dot at the start before it draws. */
+  .chart-line {
+    stroke-dasharray: 1 1.1;
+    stroke-dashoffset: 1.05;
+  }
+  .chart-area,
+  .chart-dot {
+    opacity: 0;
+  }
+  .chart-grid {
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+  }
+  .chart-in-view .chart-grid {
+    opacity: 1;
+  }
+  .chart-in-view .chart-line {
+    animation: chart-draw 1.2s cubic-bezier(0.65, 0, 0.35, 1) 0.35s forwards;
+  }
+  .chart-in-view .chart-area {
+    animation: chart-fade 0.6s ease-out 1.2s forwards;
+  }
+  .chart-in-view .chart-dot {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: chart-dot 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s forwards;
+  }
+  @keyframes chart-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes chart-fade {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes chart-dot {
+    from {
+      opacity: 0;
+      transform: scale(0);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Loading meteor: a gentle float while the stars twinkle in turn. */
+  @keyframes meteor-float {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(3px, -5px);
+    }
+  }
+  @keyframes star-twinkle {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.25;
+      transform: scale(0.6);
+    }
+  }
+  .loading-meteor-body {
+    animation: meteor-float 1.6s ease-in-out infinite;
+  }
+  .loading-meteor-star {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: star-twinkle 1.2s ease-in-out infinite;
+  }
+}

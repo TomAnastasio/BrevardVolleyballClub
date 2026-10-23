@@ -17,7 +17,7 @@ export default function MyProfileView({ onBack, ...profileProps }) {
 
   if (!user) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
+      <main className="animate-view-in flex flex-1 flex-col items-center justify-center gap-3 p-6">
         <LoadingMeteor />
         <p className="m-0 text-center text-muted">Loading your profile…</p>
       </main>

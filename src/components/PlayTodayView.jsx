@@ -97,7 +97,7 @@ function DayGroup({ day, onSelectMeetup }) {
 function MeetupDetailView({ meetup, onBack }) {
   const { details } = meetup;
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto">
+    <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">
       <header
         className="relative flex flex-none items-center px-3 pb-2"
         style={{ paddingTop: "calc(0.5rem + var(--safe-top))" }}
@@ -162,7 +162,7 @@ export default function PlayTodayView({ onBack }) {
   }
 
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto">
+    <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">
       <header
         className="relative flex flex-none items-center px-3 pb-2"
         style={{ paddingTop: "calc(0.5rem + var(--safe-top))" }}

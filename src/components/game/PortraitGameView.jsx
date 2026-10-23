@@ -1,6 +1,6 @@
 import { Button } from "@heroui/react";
 import { colorForeground } from "../../lib/teamColors.js";
-import { EditableTeamName, RosterAvatar } from "./TeamPanel.jsx";
+import { AnimatedScore, EditableTeamName, RosterAvatar } from "./TeamPanel.jsx";
 import WinBanner from "./WinBanner.jsx";
 
 // Upright phone layout for the live scoreboard (landscape keeps GameView):
@@ -34,9 +34,9 @@ function SwitchSidesBanner({ totalPoints, onDone }) {
   return (
     <div
       role="status"
-      className="mx-3 mb-2 flex flex-none items-center gap-3 rounded-2xl bg-accent px-4 py-3 text-accent-foreground"
+      className="animate-banner-in mx-3 mb-2 flex flex-none items-center gap-3 rounded-2xl bg-accent px-4 py-3 text-accent-foreground"
     >
-      <span aria-hidden="true" className="text-2xl font-extrabold leading-none">
+      <span aria-hidden="true" className="animate-switch-flip text-2xl font-extrabold leading-none">
         ⇅
       </span>
       <div className="min-w-0 flex-1">
@@ -88,7 +88,7 @@ function PortraitTeam({ side, score, names, fallbacks, roster, color, serving, w
         <div className="flex min-w-0 flex-col gap-2">
           {nameOrRoster}
           {serving && (
-            <p className="m-0 flex items-center gap-2 px-2 text-xs font-bold tracking-wider text-accent">
+            <p className="animate-pop-in m-0 flex origin-left items-center gap-2 px-2 text-xs font-bold tracking-wider text-accent">
               <VolleyballIcon />
               SERVING
             </p>
@@ -100,7 +100,7 @@ function PortraitTeam({ side, score, names, fallbacks, roster, color, serving, w
           style={{ fontSize: "clamp(4rem, 15vh, 9rem)" }}
           className="flex-none font-extrabold leading-none [font-variant-numeric:tabular-nums]"
         >
-          {score}
+          <AnimatedScore score={score} />
         </span>
       </div>
 

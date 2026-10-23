@@ -14,6 +14,8 @@ import { useAuth } from "../hooks/useAuth.js";
 import { supabase } from "../lib/supabaseClient.js";
 import CopyableText from "./CopyableText.jsx";
 import TournamentGameTag from "./TournamentGameTag.jsx";
+import { stagger } from "../lib/motion.js";
+import { useCountUp } from "../hooks/useCountUp.js";
 
 function PlayerAvatar({ src }) {
   if (!src) {
@@ -22,12 +24,12 @@ function PlayerAvatar({ src }) {
   return <img src={src} alt="" aria-hidden="true" className="h-16 w-16 flex-none rounded-full border border-white/10 object-cover" />;
 }
 
-function GameRow({ game, onOpenGame, onOpenTournament }) {
+function GameRow({ game, index, onOpenGame, onOpenTournament }) {
   const result = game.ownScore > game.oppScore ? "win" : game.ownScore < game.oppScore ? "loss" : "tie";
   // Same stretched-button card as Past Games (HistoryView), so the
   // tournament tag stays its own button.
   return (
-    <li className="relative">
+    <li className={`animate-rise-in relative transition-transform duration-150 has-[>button:active]:scale-[0.98]`} style={stagger(index)}>
       <Card className="gap-1 p-3">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm text-muted">{game.date}</span>
@@ -160,10 +162,13 @@ export default function PlayerProfileView({
   const [photoSaved, setPhotoSaved] = useState(false);
 
   const records = winLossRecords(games);
+  // Starts most of the way there: a quick tick up to their rating, not a
+  // count from zero.
+  const shownElo = useCountUp(player.elo_rating, { from: Math.round((player.elo_rating ?? 0) * 0.9) });
   const hasRanked = player.elo_games_played > 0;
 
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto">
+    <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">
       <header
         className="relative flex flex-none items-center px-3 pb-2"
         style={{ paddingTop: "calc(0.5rem + var(--safe-top))" }}
@@ -203,7 +208,7 @@ export default function PlayerProfileView({
         </div>
 
         {photoSaved && (
-          <p role="status" className="m-0 text-sm font-semibold text-success">
+          <p role="status" className="animate-pop-in m-0 origin-left text-sm font-semibold text-success">
             ✓ Profile photo updated
           </p>
         )}
@@ -212,7 +217,7 @@ export default function PlayerProfileView({
           <div className="flex flex-col gap-0.5 text-sm text-muted">
             {hasRanked && (
               <p className="m-0 font-semibold text-foreground">
-                {player.elo_rating} Elo
+                <span className="[font-variant-numeric:tabular-nums]">{shownElo}</span> Elo
                 {player.tier && <span className="font-normal text-muted"> · {rankTitle(player.tier, player.division)}</span>}
               </p>
             )}
@@ -252,8 +257,8 @@ export default function PlayerProfileView({
           <section className="flex flex-col gap-2">
             <h3 className="m-0 text-sm font-bold uppercase tracking-wide text-muted">Tournaments</h3>
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
-              {tournaments.map((e) => (
-                <li key={e.id}>
+              {tournaments.map((e, index) => (
+                <li key={e.id} className="animate-rise-in" style={stagger(index)}>
                   <Card className={`gap-0.5 p-3 ${e.title ? "border border-accent/40" : ""}`}>
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate font-bold">{e.tournament.name}</span>
@@ -281,8 +286,8 @@ export default function PlayerProfileView({
           <p className="p-6 text-center text-muted">No games played yet.</p>
         ) : (
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
-            {games.map((game) => (
-              <GameRow key={game.id} game={game} onOpenGame={onOpenGame} onOpenTournament={onOpenTournament} />
+            {games.map((game, index) => (
+              <GameRow key={game.id} game={game} index={index} onOpenGame={onOpenGame} onOpenTournament={onOpenTournament} />
             ))}
           </ul>
         )}
