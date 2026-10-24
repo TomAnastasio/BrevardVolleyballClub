@@ -17,7 +17,8 @@ home-screen rally. Purely cosmetic: nothing touches Elo, nothing is sold.
 ## Decided (owner's calls, 2026-10-24)
 
 **Tokens**
-- 1 token per saved game, 2 for a win, at most 10 a day.
+- 1 token per saved game, 2 for a win, at most 10 a day. The day resets at
+  midnight Eastern.
 - 1 token = 1 pull.
 - Only players signed in with Google earn tokens. No back pay for games
   before launch.
@@ -47,7 +48,9 @@ home-screen rally. Purely cosmetic: nothing touches Elo, nothing is sold.
   profile adds your token count and a "Change outfit" button. Screenshots
   are in `profile-mock/`.
 - **Home-screen rally:** you vs your rival (the app's existing "toughest
-  opponent"). With no rival yet, you play the #1 ranked player.
+  opponent"). Everyone always has a rival: if the normal rule finds none
+  (too few games, no losses), it's the current #1 ranked player. If that's
+  you, it's #2 (assumed; the owner hasn't said otherwise).
 - **Past games:** victory and defeat poses (winners celebrate on one side,
   losers slump on the other). Not designed yet.
 
@@ -86,12 +89,10 @@ Waiting for the owner to name what to **cut** (everything not named stays in):
    thinnest tier.
 3. **Where transformations sit in the odds:** inside Epic and Legendary
    like everything else, or with their own share.
-4. **The locker screen:** where you equip items and switch a transformation
-   on or off. Not mocked up yet.
-5. **Edge cases:** what the #1 ranked player sees when they have no rival
-   (suggested: #2), and whether the 10-a-day cap resets at midnight Eastern
-   (suggested: yes).
-6. **Later:** held items, victory and defeat poses, home-screen moves, name
+4. **The locker screen:** three layouts on page 15 (A mirror and drawers,
+   B profile card and shelves, C paper doll). Waiting for the owner to pick
+   one, and to say whether unowned items show as "?" tiles.
+5. **Later:** held items, victory and defeat poses, home-screen moves, name
    colors, fonts and effects, photo borders, profile banners, and the
    non-Halloween set.
 
@@ -131,11 +132,14 @@ Waiting for the owner to name what to **cut** (everything not named stays in):
   - 12 [transformation sketches](https://claude.ai/artifact/F4mvoFQ414a34NP2jM5LiD)
   - 13 [wardrobe batch](https://claude.ai/artifact/Dc1YJney4Pp82zybhseXDe)
   - 14 [transformations](https://claude.ai/artifact/PjB5iAgyCy3i4Z8emYhg9h)
-- `source/`: drawing code for pages 13 and 14. `engine.js` draws the 16-Bit
+  - 15 [locker](https://claude.ai/artifact/V2iSTuc1hDZG6cs9aXH2XJ)
+- `source/`: drawing code for pages 13, 14 and 15. `engine.js` draws the 16-Bit
   Pro and layers gear by zone, with the item format documented at its
   bottom. `data/*.js` holds one file per slot (the transformations are
-  `xe*.js` and `xl*.js`). `build.sh OUT.html` and `xbuild.sh OUT.html`
-  rebuild the pages.
+  `xe*.js` and `xl*.js`). `build.sh`, `xbuild.sh` and `lbuild.sh` (each
+  takes `OUT.html`) rebuild pages 13, 14 and 15; the locker's own code is
+  `locker.js`.
+- `locker-mock/`: screenshots of page 15's three locker layouts.
 - `profile-mock/`: option A's throwaway component, plus screenshots of the
   profile today and of options A, B and C.
 
