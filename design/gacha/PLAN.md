@@ -51,6 +51,13 @@ home-screen rally. Purely cosmetic: nothing touches Elo, nothing is sold.
   opponent"). Everyone always has a rival: if the normal rule finds none
   (too few games, no losses), it's the current #1 ranked player. If that's
   you, it's #2 (assumed; the owner hasn't said otherwise).
+- **Locker:** option A on page 15 ("mirror and drawers"), as drafted: a big
+  avatar on top, tabs for Head, Shirt, Pants, Shoes and Monsters, a grid of
+  item tiles. Tapping wears an item and saves straight away; "Plain" takes a
+  slot off; tapping a monster transforms you and "Back to my outfit" (or any
+  clothing) switches it off; NEW badges on fresh items; rarest first; items
+  not owned yet show as "?" tiles with an "x of y found" count; a "Brew"
+  button at the bottom. Screenshots are in `locker-mock/` (A-*.png).
 - **Past games:** victory and defeat poses (winners celebrate on one side,
   losers slump on the other). Not designed yet.
 
@@ -89,10 +96,7 @@ Waiting for the owner to name what to **cut** (everything not named stays in):
    thinnest tier.
 3. **Where transformations sit in the odds:** inside Epic and Legendary
    like everything else, or with their own share.
-4. **The locker screen:** three layouts on page 15 (A mirror and drawers,
-   B profile card and shelves, C paper doll). Waiting for the owner to pick
-   one, and to say whether unowned items show as "?" tiles.
-5. **Later:** held items, victory and defeat poses, home-screen moves, name
+4. **Later:** held items, victory and defeat poses, home-screen moves, name
    colors, fonts and effects, photo borders, profile banners, and the
    non-Halloween set.
 
@@ -116,7 +120,8 @@ Waiting for the owner to name what to **cut** (everything not named stays in):
 4. **Home-screen rally:** draw both players' avatars instead of the current
    figures.
 5. **Cauldron pull screen:** token balance, the animation and the reveal.
-6. **Locker:** equip items and switch transformations on and off.
+6. **Locker (option A, page 15):** equip items and switch transformations
+   on and off.
 7. README and TODO updates in the same push as each user-visible piece.
 
 ## What's in this folder
