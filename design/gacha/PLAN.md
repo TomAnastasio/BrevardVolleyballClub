@@ -66,7 +66,8 @@ home-screen rally. Purely cosmetic: nothing touches Elo, nothing is sold.
 - One-offs that replace the whole avatar, whatever is equipped.
 - Creative shapes using the whole space are encouraged; they don't need to be
   human-shaped.
-- Only Epic and Legendary.
+- Only Epic and Legendary, rolled together with the other items in those
+  tiers: no separate share of the odds.
 - Switchable off. The plan is that equipping one covers the outfit and
   "Back to my outfit" restores it.
 
@@ -95,9 +96,7 @@ Waiting for the owner to name what to **cut** (everything not named stays in):
    0.2%; the simulator on page 01 shows what different numbers do. With
    1 token per pull, a small set gets finished fast, and Rare is the
    thinnest tier.
-3. **Where transformations sit in the odds:** inside Epic and Legendary
-   like everything else, or with their own share.
-4. **Later:** held items, victory and defeat poses, home-screen moves, name
+3. **Later:** held items, victory and defeat poses, home-screen moves, name
    colors, fonts and effects, photo borders, profile banners, and the
    non-Halloween set.
 
