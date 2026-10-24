@@ -1,10 +1,8 @@
-// Halloween art for the home screen's rally (VolleyballRally.jsx): pixel
-// skeletons instead of stick figures, a pumpkin instead of the ball, and a
-// cobwebby net on bone posts. Only the drawing changes; every position,
-// timing and motion still comes from VolleyballRally, which passes in the
-// same numbers its classic drawing uses.
+// Halloween art for the home screen's rally (VolleyballRally.jsx): a
+// pumpkin instead of the ball, and a cobwebby net on bone posts. Only the
+// drawing changes; every position, timing and motion still comes from
+// VolleyballRally, which passes in the same numbers its classic drawing uses.
 const BONE = "#ece6d6";
-const BONE_SHADE = "#b9b09c";
 const SOCKET = "#1a1024";
 const GLOW = "#ff7a1a";
 const PUMPKIN = "#ff7a1a";
@@ -13,27 +11,9 @@ const FACE = "#ffd84a";
 const STEM = "#4a7a28";
 const WEB = "rgba(225,215,255,0.32)";
 
-// Pixel maps: each character is one pixel ("." = see-through).
-const SKELETON_BODY = [
-  "....b....",
-  "bbbbbbbbb",
-  "b.bbbbb.b",
-  "b.b.b.b.b",
-  "b.bbbbb.b",
-  "b.b.b.b.b",
-  "b..bbb..b",
-  "s...b...s",
-  "..bbbbb..",
-  "..b...b..",
-  "..b...b..",
-  "..s...s..",
-  "..b...b..",
-  "..b...b..",
-  ".bb...bb.",
-];
-const SKULL = [".bbbbb.", "bbbbbbb", "bkkbkkb", "bkgbkgb", "bbbkbbb", ".btbtb.", "..bbb.."];
+// Pixel map: each character is one pixel ("." = see-through).
 const PUMPKIN_ART = ["...v...", ".oooro.", "oyoroyo", "rooooor", "oyyyyyo", ".ooroo."];
-const PALETTE = { b: BONE, s: BONE_SHADE, k: SOCKET, g: GLOW, t: SOCKET, o: PUMPKIN, r: PUMPKIN_RIB, y: FACE, v: STEM };
+const PALETTE = { o: PUMPKIN, r: PUMPKIN_RIB, y: FACE, v: STEM };
 
 // Draws a pixel map with its centre at (0, 0) of the current transform,
 // stretched to w x h.
@@ -50,35 +30,6 @@ function drawPixels(ctx, rows, w, h, palette = PALETTE) {
       ctx.fillRect(-w / 2 + i * pw, -h / 2 + j * ph, pw + 0.02, ph + 0.02);
     }
   });
-}
-
-// Same arguments and the same body/head boxes as the classic drawPlayer, so
-// the skeleton stands, hops, squashes and falls exactly where the stick
-// figure would. Falling over is drawn as a rotation of the standing pose.
-export function drawSkeleton(ctx, { x, groundY, squash, hop, lie = 0, fallDir = 1 }) {
-  const bodyW = 9;
-  const bodyH = 15;
-  const headSize = 7;
-  const w = bodyW * (1 + squash * 0.35);
-  const h = bodyH * (1 - squash * 0.35);
-  const angle = fallDir * lie * (Math.PI / 2);
-
-  ctx.save();
-  ctx.imageSmoothingEnabled = false;
-  // pivot on the feet, rising as it tips so the fallen skeleton lies on the
-  // ground instead of half through it
-  ctx.translate(x + fallDir * lie * 2, groundY - hop - (lie * w) / 2);
-  ctx.rotate(angle);
-  ctx.save();
-  ctx.translate(0, -h / 2);
-  drawPixels(ctx, SKELETON_BODY, w, h);
-  ctx.restore();
-
-  // Always a skull, even for a signed-in player's photo head (owner's call):
-  // photo heads come back with the classic look.
-  ctx.translate(0, -h - headSize / 2);
-  drawPixels(ctx, SKULL, headSize, headSize);
-  ctx.restore();
 }
 
 // The pumpkin, a touch bigger than the ball so its face reads. `squashX` and

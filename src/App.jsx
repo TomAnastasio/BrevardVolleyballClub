@@ -78,7 +78,6 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
       {!joinRequested && <SplashScreen onReveal={() => setAppReady(true)} />}
       {appReady && (
         <div data-app-shell className="flex min-h-dvh flex-col bg-background text-foreground [font-family:system-ui,-apple-system,'Segoe_UI',Roboto,sans-serif]">
-          <VersionBadge />
           {activeTheme === "halloween" && <HalloweenDecor />}
           <div className={topPage ? "hidden" : "contents"}>
             {view === "landing" && (
@@ -189,6 +188,7 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
               }}
             />
           )}
+          <VersionBadge />
         </div>
       )}
     </AuthProvider>

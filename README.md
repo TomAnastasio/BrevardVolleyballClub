@@ -64,6 +64,18 @@ Signed out, that corner says **Sign in**. After Google sign-in it opens your
 profile (a short-lived breadcrumb, `src/lib/pendingMyProfile.js`, survives
 the redirect).
 
+### Home-screen rally
+
+The strip at the bottom of the home screen is an endless 1v1 rally, with
+the odd spike that knocks a player over. Signed in, it's you (left) vs your
+rival (right): your toughest opponent (see "Partners & rivals" below), or,
+until you have one, the #1 ranked player (#2 if you're #1). Signed out, it's
+#1 vs #2. Each player is their pixel avatar (`src/avatar/engine.js`), with
+their first name underneath. Everyone is plain grey for now: avatar gear
+and monster transformations aren't in the app yet. On short screens (small
+phones, landscape) the avatars and net are drawn a bit smaller so tall
+headgear and jumps fit.
+
 ### Profile stats
 
 Below the Overall/Ranked records, a profile shows:
@@ -117,12 +129,9 @@ green glow and fog (phones set to reduce motion get still pictures). They live i
 `src/themes/halloween/badges/`; the classic badges in `src/assets/badges/`
 are untouched and come back with the classic look.
 
-The rally at the bottom of the home screen gets the same treatment: two
-pixel skeletons hit a jack-o'-lantern over a cobweb net on bone posts (with
-a little spider). It moves exactly like the classic rally, spike and
-knockdown included; only the drawings change (`src/themes/halloween/rally.js`).
-The skeletons keep their skulls even when you're signed in; the photo heads
-come back with the classic look.
+The home-screen rally gets the same treatment: the players hit a
+jack-o'-lantern over a cobweb net on bone posts (with a little spider). Only
+the ball and net change (`src/themes/halloween/rally.js`).
 
 Players with no profile photo get a pixel-art Halloween monster in their
 photo circle instead of the blank one: 100 of them (vampires, witches,

@@ -1,6 +1,7 @@
 import SocialLinks from "./SocialLinks.jsx";
 import VolleyballRally from "./VolleyballRally.jsx";
 import { useAuth } from "../hooks/useAuth.js";
+import { useRallyPlayers } from "../avatar/useRallyPlayers.js";
 import { setPendingMyProfile } from "../lib/pendingMyProfile.js";
 import { playerPhoto } from "../themes/playerPhoto.js";
 
@@ -74,9 +75,9 @@ function ProfileCorner({ avatarUrl, onMyProfile }) {
 }
 
 export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard, onTournaments, onAdminPanel, onMyProfile }) {
-  const { user, isAdmin, avatarUrl: profileAvatarUrl } = useAuth();
+  const { user, isAdmin, avatarUrl: profileAvatarUrl, displayName } = useAuth();
   const avatarUrl = playerPhoto(profileAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null, user?.id);
-  const isAuthenticated = Boolean(user);
+  const rally = useRallyPlayers(user, displayName || user?.user_metadata?.full_name);
 
   return (
     <main className="relative flex flex-1 flex-col overflow-hidden">
@@ -136,8 +137,8 @@ export default function LandingView({ onPlayToday, onGameTracking, onLeaderboard
       </div>
       <VolleyballRally
         className="h-[clamp(96px,14vh,140px)] w-full flex-none"
-        avatarUrl={avatarUrl}
-        isAuthenticated={isAuthenticated}
+        left={rally.left}
+        right={rally.right}
       />
     </main>
   );

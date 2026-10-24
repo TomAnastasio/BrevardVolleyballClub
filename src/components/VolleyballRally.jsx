@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { activeTheme } from "../themes/activeTheme.js";
-import { drawPumpkin, drawSkeleton, drawSpookyCourt } from "../themes/halloween/rally.js";
+import { AVATAR_HEIGHT, drawAvatar } from "../avatar/engine.js";
+import { drawPumpkin, drawSpookyCourt } from "../themes/halloween/rally.js";
 
 // Tunable parameters for the endless rally animation.
 const MIN_FLIGHT_SECONDS = 0.85;
@@ -8,14 +9,21 @@ const MAX_FLIGHT_SECONDS = 1.65;
 const MIN_ARC_PX = 46;
 const MAX_ARC_PX = 88;
 const LANE_HALF_WIDTH_PX = 26; // how far a player shuffles from their home spot to reach the ball
-const FIGURE_HEIGHT_PX = 23;
-const NET_HEIGHT_PX = 22;
+// Each avatar pixel is 2x2 screen pixels, or 1.5x1.5 when the strip is short
+// (small phones, landscape) so tall hats and jumps aren't cut off at the top.
+const AVATAR_SCALE = 2;
+const SHORT_STRIP_AVATAR_SCALE = 1.5;
+const SHORT_STRIP_PX = 112;
+// Sizes in avatar pixels, so they shrink along with the avatars.
+const LYING_THICKNESS = 12; // how tall the avatar is when lying on its side
+const NET_HEIGHT = 19; // about shoulder height
 const NET_SKEW_PX = 13; // horizontal spread between the two net posts (the angled camera view)
 const GROUND_MARGIN_PX = 16; // gap between the ground line and the bottom of the canvas
-const TOM_AVATAR_URL = "/Tom.jpg"; // always worn by the right-side figure once anyone is signed in
 const BALL_RADIUS_PX = 3;
+const NAME_FONT_PX = 9;
+const NAME_MAX_WIDTH_PX = 80; // longer first names get squeezed to fit
 
-// While the Halloween theme is on: skeletons, a pumpkin and a spooky net
+// While the Halloween theme is on: a pumpkin and a spooky net
 // (themes/halloween/rally.js). Same motion either way.
 const halloween = activeTheme === "halloween";
 
@@ -28,9 +36,9 @@ const SPECIAL_TRIGGER_CHANCE = 0.25;
 const SET_DURATION_SECONDS = 2.0;
 const SET_ARC_PX = 150;
 const JUMP_DURATION_SECONDS = 0.4;
-const JUMP_HEIGHT_PX = 18;
+const JUMP_HEIGHT = 9; // avatar pixels
 const SPIKE_DURATION_SECONDS = 0.28;
-const SPIKE_ARC_PX = 12;
+const SPIKE_ARC = 9; // avatar pixels: just enough to clear the net
 const IMPACT_DURATION_SECONDS = 0.22;
 const IMPACT_ARC_PX = 14;
 const IMPACT_DRIFT_PX = 10;
@@ -56,106 +64,41 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-function drawPlayer(ctx, { x, groundY, squash, hop, avatarImg, lie = 0, fallDir = 1 }) {
-  const bodyW = 9;
-  const bodyH = 15;
-  const headW = 7;
-  const headH = 7;
+// One player: their avatar (with whatever gear or transformation they wear)
+// standing on the ground at x, with their first name underneath. `lie`
+// (0..1) tips them over for the knockdown, pivoting on the feet and rising as
+// they tip so they end up lying on the ground rather than half through it.
+function drawRallyPlayer(ctx, player, { x, groundY, squash, hop, lie = 0, fallDir = 1, t, font, scale }) {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.translate(x, groundY - hop - (lie * LYING_THICKNESS * scale) / 2);
+  ctx.rotate(fallDir * lie * (Math.PI / 2));
+  ctx.scale(scale * (1 + squash * 0.35), scale * (1 - squash * 0.35));
+  drawAvatar(ctx, player?.gear, 0, 0, t);
+  ctx.restore();
 
-  const squashedW = bodyW * (1 + squash * 0.35);
-  const squashedH = bodyH * (1 - squash * 0.35);
-
-  const standingBodyBottom = groundY - hop;
-  const standingBodyTop = standingBodyBottom - squashedH;
-
-  const lyingWidth = bodyH * 1.2;
-  const lyingHeight = bodyW * 1.1;
-  const lyingBodyBottom = groundY;
-  const lyingBodyTop = lyingBodyBottom - lyingHeight;
-  const lyingBodyCenterX = x + (fallDir * lyingWidth) / 2;
-
-  const bodyW2 = lerp(squashedW, lyingWidth, lie);
-  const bodyH2 = lerp(squashedH, lyingHeight, lie);
-  const bodyCenterX = lerp(x, lyingBodyCenterX, lie);
-  const bodyBottom2 = lerp(standingBodyBottom, lyingBodyBottom, lie);
-  const bodyTop2 = bodyBottom2 - bodyH2;
-
-  ctx.fillRect(Math.round(bodyCenterX - bodyW2 / 2), Math.round(bodyTop2), Math.round(bodyW2), Math.round(bodyH2));
-
-  let standingHeadCenterX;
-  let standingHeadCenterY;
-  let lyingHeadCenterX;
-  let lyingHeadCenterY;
-  let headRadius = null;
-
-  if (avatarImg) {
-    headRadius = bodyH;
-    standingHeadCenterX = x;
-    standingHeadCenterY = standingBodyTop - headRadius;
-    lyingHeadCenterX = lyingBodyCenterX + fallDir * (lyingWidth / 2 + headRadius);
-    lyingHeadCenterY = lyingBodyTop + lyingHeight / 2;
-  } else {
-    standingHeadCenterX = x;
-    standingHeadCenterY = standingBodyTop - headH / 2;
-    lyingHeadCenterX = lyingBodyCenterX + fallDir * (lyingWidth / 2 + headW / 2);
-    lyingHeadCenterY = lyingBodyTop + lyingHeight / 2;
-  }
-
-  const headCenterX = lerp(standingHeadCenterX, lyingHeadCenterX, lie);
-  const headCenterY = lerp(standingHeadCenterY, lyingHeadCenterY, lie);
-
-  if (avatarImg) {
-    const diameter = bodyH * 2;
-    const radius = diameter / 2;
-
-    ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    ctx.beginPath();
-    ctx.arc(headCenterX, headCenterY, radius, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.drawImage(avatarImg, headCenterX - radius, headCenterY - radius, diameter, diameter);
-    ctx.restore();
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(headCenterX, headCenterY, radius, 0, Math.PI * 2);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(255,255,255,0.85)";
-    ctx.stroke();
-    ctx.restore();
-  } else {
-    ctx.fillRect(Math.round(headCenterX - headW / 2), Math.round(headCenterY - headH / 2), headW, headH);
-  }
+  if (!player?.name) return;
+  ctx.save();
+  ctx.font = font;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  ctx.fillText(player.name.trim().split(/\s+/)[0], x, groundY + 4, NAME_MAX_WIDTH_PX);
+  ctx.restore();
 }
 
-function useAvatarImage(url) {
-  const imgRef = useRef(null);
-
-  useEffect(() => {
-    if (!url) {
-      imgRef.current = null;
-      return undefined;
-    }
-    let cancelled = false;
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      if (!cancelled) imgRef.current = img;
-    };
-    img.src = url;
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
-
-  return imgRef;
-}
-
-export default function VolleyballRally({ className = "", avatarUrl = null, isAuthenticated = false }) {
+// `left` and `right` are the two players, each { name, gear } or null for a
+// plain, nameless one (see avatar/rallyMatchup.js for who they are).
+export default function VolleyballRally({ className = "", left = null, right = null }) {
   const canvasRef = useRef(null);
   const wrapperRef = useRef(null);
-  const avatarImageRef = useAvatarImage(avatarUrl);
-  const tomAvatarImageRef = useAvatarImage(isAuthenticated ? TOM_AVATAR_URL : null);
+  const playersRef = useRef({ left, right });
+  const redrawRef = useRef(null);
+
+  useEffect(() => {
+    playersRef.current = { left, right };
+    redrawRef.current?.();
+  }, [left, right]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -164,15 +107,18 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
     const ctx = canvas.getContext("2d");
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const font = `700 ${NAME_FONT_PX}px ${getComputedStyle(document.body).fontFamily}`;
 
     let width = 0;
     let height = 0;
+    let scale = AVATAR_SCALE;
 
     const resize = () => {
       const rect = wrapper.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       width = rect.width;
       height = rect.height;
+      scale = height < SHORT_STRIP_PX ? SHORT_STRIP_AVATAR_SCALE : AVATAR_SCALE;
       canvas.width = Math.max(1, Math.round(width * dpr));
       canvas.height = Math.max(1, Math.round(height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -186,7 +132,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
     const laneCenter = (side) => (side === "left" ? width * 0.28 : width * 0.72);
     // The canvas itself clips anything drawn above y=0, so no arc may lift the ball higher
     // than the contact height — leave a small buffer so it never grazes the top edge.
-    const maxSafeArc = () => Math.max(18, getGroundY() - FIGURE_HEIGHT_PX * 0.6 - 6);
+    const maxSafeArc = () => Math.max(18, getGroundY() - AVATAR_HEIGHT * scale * 0.6 - 6);
 
     const positions = { left: laneCenter("left"), right: laneCenter("right") };
     const rally = {
@@ -222,7 +168,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
         rally.targetX = laneCenter(receiverSide);
         rally.receiverStartX = rally.targetX;
         rally.duration = SPIKE_DURATION_SECONDS;
-        rally.arc = Math.min(SPIKE_ARC_PX, maxSafeArc());
+        rally.arc = Math.min(SPIKE_ARC * scale, maxSafeArc());
       } else if (kind === "set") {
         rally.receiverStartX = positions[receiverSide];
         rally.targetX = laneCenter(receiverSide) + randomBetween(-LANE_HALF_WIDTH_PX, LANE_HALF_WIDTH_PX);
@@ -252,7 +198,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       special.downSide = side;
       special.impactStartTime = nowSeconds;
       special.ball.startX = rally.targetX;
-      special.ball.startY = getGroundY() - FIGURE_HEIGHT_PX * 0.6;
+      special.ball.startY = getGroundY() - AVATAR_HEIGHT * scale * 0.6;
       special.ball.endX = rally.targetX + driftDir * IMPACT_DRIFT_PX;
       special.ball.arc = Math.min(IMPACT_ARC_PX, maxSafeArc());
     };
@@ -270,7 +216,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
 
     const drawCourt = (groundY) => {
       if (halloween) {
-        drawSpookyCourt(ctx, { width, groundY, netHeight: NET_HEIGHT_PX, netSkew: NET_SKEW_PX });
+        drawSpookyCourt(ctx, { width, groundY, netHeight: NET_HEIGHT * scale, netSkew: NET_SKEW_PX });
         return;
       }
       ctx.strokeStyle = "rgba(255,255,255,0.15)";
@@ -282,8 +228,8 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       const netCenterX = width / 2;
       const leftPostX = netCenterX - NET_SKEW_PX;
       const rightPostX = netCenterX + NET_SKEW_PX;
-      const leftTopY = groundY - NET_HEIGHT_PX;
-      const rightTopY = groundY - NET_HEIGHT_PX - 10;
+      const leftTopY = groundY - NET_HEIGHT * scale;
+      const rightTopY = groundY - NET_HEIGHT * scale - 10;
       const rightBottomY = groundY - 4;
 
       ctx.save();
@@ -338,7 +284,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       // The ball itself moves at a constant clip (true parabola, no ease) so it snaps off
       // the hitter and into the receiver instead of drifting in and out slowly.
       const ballX = lerp(hitterX, rally.targetX, t);
-      const ballHitY = groundY - FIGURE_HEIGHT_PX * 0.6;
+      const ballHitY = groundY - AVATAR_HEIGHT * scale * 0.6;
       const ballY = ballHitY - 4 * rally.arc * t * (1 - t);
 
       // The receiver's footwork eases out (quick reaction, gentle settle) rather than
@@ -354,15 +300,13 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       const hitterSquash = t < 0.08 ? contactSquash : 0;
       const receiverSquash = t > 0.92 ? contactSquash : 0;
 
-      ctx.fillStyle = "rgba(255,255,255,0.88)";
       const drawSide = (side) => {
         const isMoving = side === receiverSide;
         const x = isMoving ? receiverX : hitterX;
         const squash = isMoving ? receiverSquash : hitterSquash;
         const idleAmplitude = isMoving ? 1.6 : 0.6;
         const hop = Math.abs(Math.sin(nowSeconds * 5 + (side === "left" ? 0 : Math.PI))) * idleAmplitude;
-        const avatarImg = side === "left" ? avatarImageRef.current : tomAvatarImageRef.current;
-        (halloween ? drawSkeleton : drawPlayer)(ctx, { x, groundY, squash, hop, avatarImg });
+        drawRallyPlayer(ctx, playersRef.current[side], { x, groundY, squash, hop, t: nowSeconds, font, scale });
       };
       drawSide("left");
       drawSide("right");
@@ -390,7 +334,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       drawCourt(groundY);
 
       const jumpSide = special.phase === "jump" ? special.jumpSide : null;
-      const spikerHop = jumpSide ? Math.sin(Math.PI * t) * JUMP_HEIGHT_PX : 0;
+      const spikerHop = jumpSide ? Math.sin(Math.PI * t) * JUMP_HEIGHT * scale : 0;
 
       let lie = 0;
       if (special.phase === "impact" || special.phase === "dribble" || special.phase === "idle") {
@@ -400,7 +344,6 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
         lie = Math.max(0, 1 - t);
       }
 
-      ctx.fillStyle = "rgba(255,255,255,0.88)";
       const drawSide = (side) => {
         const isJumper = side === jumpSide;
         const isDown = side === special.downSide;
@@ -409,15 +352,16 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
           : isDown
             ? 0
             : Math.abs(Math.sin(nowSeconds * 5 + (side === "left" ? 0 : Math.PI))) * 0.5;
-        const avatarImg = side === "left" ? avatarImageRef.current : tomAvatarImageRef.current;
-        (halloween ? drawSkeleton : drawPlayer)(ctx, {
+        drawRallyPlayer(ctx, playersRef.current[side], {
           x: positions[side],
           groundY,
           squash: 0,
           hop,
-          avatarImg,
           lie: isDown ? lie : 0,
           fallDir: side === "left" ? -1 : 1,
+          t: nowSeconds,
+          font,
+          scale,
         });
       };
       drawSide("left");
@@ -427,7 +371,7 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
       let ballY = null;
       if (special.phase === "jump") {
         ballX = positions[jumpSide];
-        ballY = groundY - FIGURE_HEIGHT_PX * 0.6 - spikerHop * 0.5;
+        ballY = groundY - AVATAR_HEIGHT * scale * 0.6 - spikerHop * 0.5;
       } else if (special.phase === "impact") {
         ballX = lerp(special.ball.startX, special.ball.endX, t);
         const straightY = lerp(special.ball.startY, groundY - BALL_RADIUS_PX, t);
@@ -461,8 +405,16 @@ export default function VolleyballRally({ className = "", avatarUrl = null, isAu
     let lastTime = null;
 
     if (reducedMotion) {
-      renderFlight(0.5, 0);
-      return () => observer.disconnect();
+      // One still frame, redrawn when the players or the size change.
+      redrawRef.current = () => renderFlight(0.5, 0);
+      redrawRef.current();
+      const stillObserver = new ResizeObserver(() => redrawRef.current?.());
+      stillObserver.observe(wrapper);
+      return () => {
+        redrawRef.current = null;
+        stillObserver.disconnect();
+        observer.disconnect();
+      };
     }
 
     const advanceSpecial = (dt, nowSeconds) => {

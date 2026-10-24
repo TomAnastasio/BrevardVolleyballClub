@@ -11,6 +11,13 @@ After Halloween, ask the owner whether to delete `src/themes/halloween/`
 (steps in README "Seasonal themes") or keep it for next October with new
 dates.
 
+## Pixel avatars: home-screen rally
+
+The rally draws everyone plain grey until the tokens/items database exists
+(full plan: `design/gacha/PLAN.md` on branch `claude/gacha-avatars-design`).
+That step should set each player's `gear` in `src/avatar/useRallyPlayers.js`.
+Unconfirmed: when you're #1 with no toughest opponent, your rival is #2.
+
 ## Open: tournaments (Queen of Paradise, Sat 2026-10-31)
 
 Live in production; how it runs is in README "Tournaments", the rules are
