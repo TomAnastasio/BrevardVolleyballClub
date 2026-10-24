@@ -83,7 +83,12 @@ Picked and final (49 items: 30 Common, 4 Rare, 6 Epic, 9 Legendary):
 | Skeleton Tee (page 07) | C1 Classic Ribcage ×6 | R1 Glow Bones | E1 Beating Heart | L1 Lich Armor, L2 Ectoplasm, L3 Rave Bones |
 | Witch Stockings (page 09) | C1 Classic Stripes ×6 | R2 Mismatched | E1 Marquee Stripes, E3 Potion Belt | L2 Bubbling Brew, L3 Flame Stockings |
 
-Waiting for the owner to name what to **cut** (everything not named stays in):
+Cuts so far (2026-10-24; hidden on the pages, numbers kept): 161–164, 177–180,
+209–212, 249–252 and 370. The owner also asked for remakes and tweaks to
+dozens of cards in the same pass (see `git log` on this branch); those are
+in the pages now, awaiting a look.
+
+Still open: any further cuts (everything not named stays in):
 - **Wardrobe batch (page 13):** 43 more themes, 387 items, on 172 cards
   numbered 101–272 (a Common card covers its six colors; each theme shows
   its range). The last three shoe themes are the Slime Kicks option sets.

@@ -21,13 +21,19 @@ addTheme("shirt", {
     make: (s) => ({ sleeve: "short", px: cornPx(s) }),
   },
   rare: {
-    name: "Caramel Drizzle",
-    pitch: "The classic bands with gooey caramel dripping down from the collar.",
+    name: "Caramel Apple",
+    pitch: "The top of the shirt is dipped in shiny caramel like a caramel apple, with thick drips of different lengths running down over the candy bands.",
     item: {
       sleeve: "short",
       px: (x, y, z) => {
-        const drip = { 3: 9, 4: 10, 5: 9, 6: 11, 7: 9, 8: 10, 9: 9, 10: 11, 11: 9 };
-        if (torso(z) && y >= 8 && y <= (drip[x] ?? 8)) return z === "T" ? "#8a5a20" : "#b8792a";
+        // how far down the caramel reaches in each column; the last pixel is the darker drop tip
+        const drip = { 5: 12, 8: 13, 10: 12 };
+        const end = drip[x] ?? 10;
+        if (y <= end) {
+          if (y === end && end > 10) return "#7a4510";
+          if (at([[4, 9], [5, 8]], x, y)) return "#f8d08a";
+          return z === "T" ? "#9a5e20" : "#c8822e";
+        }
         return cornPx({ a: "#fff6e0", b: "#ff7a1a", c: "#ffd84a" })(x, y, z);
       },
     },
@@ -88,17 +94,18 @@ addTheme("shirt", {
     make: (s) => ({ sleeve: "long", px: plaid(s) }),
   },
   rare: {
-    name: "Patched Up",
-    pitch: "A well-loved flannel with brown elbow patches and a candy bar poking out of the chest pocket.",
+    name: "Puffer Vest",
+    pitch: "A puffy brown quilted vest zipped up over the orange flannel, with a cream fleece collar and the plaid sleeves showing.",
     item: {
       sleeve: "long",
       px: (x, y, z) => {
-        if ((z === "l") && y === 12) return "#6b4a28";
-        if (torso(z) && x >= 5 && x <= 7 && y === 10) return "#8f3c06";
-        if (torso(z) && x >= 5 && x <= 7 && y === 11) return "#c4550a";
-        return plaid({ base: "#ff7a1a", mid: "#8f3c06", dark: "#1a1024" })(x, y, z);
+        if (!torso(z)) return plaid({ base: "#ff7a1a", mid: "#8f3c06", dark: "#1a1024" })(x, y, z);
+        if (y === 8) return x >= 5 && x <= 9 ? "#ecdcb8" : "#6b4a28";
+        if (x === 7) return y === 9 ? "#f3efe6" : "#a49db0"; // zipper and pull
+        if (y === 10 || y === 13) return "#3d2614"; // quilting seams
+        if (y === 9 || y === 11) return z === "T" ? "#6b4a28" : "#a87a44"; // puffy highlight under each seam
+        return z === "T" ? "#55391e" : "#7a5430";
       },
-      over: (c, l, tp) => { R(c, l + 6, tp + 9, 1, 1, "#7a4a24"); R(c, l + 6, tp + 8, 1, 1, "#c42a3e"); },
     },
   },
   epic: {
@@ -142,23 +149,35 @@ addTheme("shirt", {
 });
 
 // ---------- 3. Vampire Count ----------
+// White shirt, vest and bow tie in front; the cape hangs behind the body (drawn in `under`), so its
+// edges show past the arms, its lining shows around the legs, and a tall collar stands up behind the
+// head. A light rim on the cape's outer edge keeps it from melting into the dark night background.
 const vampPx = (s) => (x, y, z) => {
-  if (z === "u" || z === "l") return z === "l" ? "#14101c" : "#1f1a2a";
-  if (x === 7 || x === 6) return y === 9 ? s.accent : "#f3efe6";
+  if (z === "u" || z === "l") return z === "l" ? "#3a3150" : "#4a4060";
+  if (x === 7 || x === 8) return y === 9 ? s.accent : "#f3efe6";
   if (y >= 10) return z === "T" ? darken(s.accent, 0.6) : s.accent;
   return z === "T" ? "#cfc8d8" : "#f3efe6";
 };
-function vampCape(c, l, tp, lining, flap = 0) {
-  [[3, 6], [3, 7], [4, 6], [4, 7], [10, 6], [10, 7], [11, 6], [11, 7], [4, 5], [10, 5]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, x === 4 || x === 10 ? lining : "#14101c"));
-  for (let y = 9; y <= 18; y++) {
-    const out = y > 13 ? Math.round(flap * (y - 13) / 5) : 0;
-    R(c, l + 1 - out, tp + y, 1, 1, "#14101c"); R(c, l + 14 + out, tp + y, 1, 1, "#14101c");
+// P: { cape, rim, lining }; flap widens the hem; liningPx(x, y) can paint the lining
+function vampCape(c, l, tp, P, flap = 0, liningPx = null) {
+  for (const [x, y] of [[2, 4], [2, 5], [3, 5], [2, 6], [3, 6], [4, 6], [2, 7], [3, 7], [4, 7]]) {
+    const col = x === 2 ? P.rim : P.lining;
+    R(c, l + x, tp + y, 1, 1, col); R(c, l + 15 - x, tp + y, 1, 1, col);
   }
-  R(c, l + 1 - Math.round(flap), tp + 19, 1, 1, lining); R(c, l + 14 + Math.round(flap), tp + 19, 1, 1, lining);
+  for (let y = 8; y <= 24; y++) {
+    const w = 6.5 + (y - 8) * 0.13 + (y > 14 ? (flap * (y - 14)) / 10 : 0);
+    const x0 = Math.round(7.5 - w), x1 = Math.round(7.5 + w);
+    for (let x = x0; x <= x1; x++) {
+      let col = x === x0 || x === x1 ? P.rim : x === x0 + 1 || x === x1 - 1 ? P.cape : liningPx ? liningPx(x, y) : P.lining;
+      if (y === 24 && x !== x0 && x !== x1) col = x % 2 ? P.rim : P.cape; // scalloped hem
+      R(c, l + x, tp + y, 1, 1, col);
+    }
+  }
 }
+const VAMP = { cape: "#2e2546", rim: "#b8a8d8" };
 addTheme("shirt", {
   name: "Vampire Count",
-  pitch: "A white dress shirt, colored vest and bow tie under a black cape with a tall lined collar.",
+  pitch: "A white dress shirt, colored vest and bow tie under a long black cape with a tall standing collar and a bright lining.",
   common: {
     pitch: "Vest, bow tie and cape lining in one color.",
     colors: [
@@ -169,47 +188,55 @@ addTheme("shirt", {
       { name: "Old gold", accent: "#a8792a" },
       { name: "Silver", accent: "#6b6380" },
     ],
-    make: (s) => ({ sleeve: "long", px: vampPx(s), over: (c, l, tp) => vampCape(c, l, tp, lighten(s.accent, 0.15)) }),
+    make: (s) => ({ sleeve: "long", px: vampPx(s), under: (c, l, tp) => vampCape(c, l, tp, { ...VAMP, lining: lighten(s.accent, 0.3) }) }),
   },
   rare: {
-    name: "Bat Brooch",
-    pitch: "Frilly white ruffles down the front, pinned at the collar with a silver bat brooch.",
+    name: "Royal Count",
+    pitch: "A gold-trimmed cape with a crimson lining, frilly white ruffles down the front and a ruby medallion on a gold chain.",
     item: {
       sleeve: "long",
       px: (x, y, z) => {
-        if (torso(z) && (x === 6 || x === 7) && y >= 10 && y <= 12) return (x + y) % 2 ? "#ffffff" : "#d9d2e6";
+        if (torso(z) && (x === 7 || x === 8) && y >= 10 && y <= 12) return (x + y) % 2 ? "#ffffff" : "#d9d2e6";
         return vampPx({ accent: "#8f1426" })(x, y, z);
       },
+      under: (c, l, tp) => vampCape(c, l, tp, { cape: "#2e2546", rim: "#e8b84a", lining: "#c42a3e" }),
       over: (c, l, tp) => {
-        vampCape(c, l, tp, "#c42a3e");
-        R(c, l + 5, tp + 8, 1, 1, "#c9c2d9"); R(c, l + 6, tp + 9, 1, 1, "#c9c2d9"); R(c, l + 7, tp + 9, 1, 1, "#c9c2d9"); R(c, l + 8, tp + 8, 1, 1, "#c9c2d9");
+        [[4, 9], [5, 10], [6, 11], [9, 11], [10, 10], [11, 9]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, "#e8b84a"));
+        R(c, l + 7, tp + 12, 2, 2, "#e8b84a"); R(c, l + 7, tp + 12, 1, 1, "#ff3b4d"); R(c, l + 8, tp + 13, 1, 1, "#8f1426");
       },
     },
   },
   epic: {
     name: "Billowing Cape",
-    pitch: "The cape catches a ghostly breeze and keeps billowing out and settling back.",
+    pitch: "The cape catches a ghostly breeze and keeps billowing out wide and settling back.",
     item: {
       sleeve: "long",
       px: vampPx({ accent: "#8f1426" }),
-      over: (c, l, tp, t) => vampCape(c, l, tp, "#c42a3e", reduced ? 0 : (Math.sin(t * 2.5) + 1) * 1.2),
+      under: (c, l, tp, t) => vampCape(c, l, tp, { ...VAMP, lining: "#c42a3e" }, reduced ? 0 : (Math.sin(t * 2.5) + 1) * 1.6),
     },
   },
   legendary: {
-    name: "Nosferatu",
-    pitch: "A crimson glow pours out from under the cape and a swarm of bats keeps circling you.",
+    name: "Night Lord",
+    pitch: "The cape's lining is a twinkling blood-red night sky, a crimson glow pulses around you, and bats keep breaking off the hem and flying away.",
     item: {
       sleeve: "long",
-      px: (x, y, z, t) => (torso(z) && (x === 6 || x === 7) && y === 9 ? (Math.sin(t * 4) > 0 ? "#ff3b4d" : "#c42a3e") : vampPx({ accent: "#5c0c18" })(x, y, z)),
-      under: (c, l, tp, t) => glow(c, l + 7, tp + 13, 15, "#ff3b4d", 0.35 + 0.12 * Math.sin(t * 2.5)),
+      px: (x, y, z, t) => (torso(z) && (x === 7 || x === 8) && y === 9 ? (Math.sin(t * 4) > 0 ? "#ff3b4d" : "#c42a3e") : vampPx({ accent: "#5c0c18" })(x, y, z)),
+      under: (c, l, tp, t) => {
+        glow(c, l + 7, tp + 14, 16, "#ff3b4d", 0.35 + 0.12 * Math.sin(t * 2.5));
+        const rim = Math.sin(t * 3) > 0 ? "#ff8a96" : "#ff3b4d";
+        vampCape(c, l, tp, { cape: "#2a1430", rim, lining: "#5c0c28" }, reduced ? 0 : (Math.sin(t * 2) + 1) * 0.8,
+          (x, y) => (hash(x, y, Math.floor(t * 2)) > 0.94 ? "#ffffff" : hash(x, y) > 0.88 ? "#ff6b7a" : "#5c0c28"));
+      },
       over: (c, l, tp, t) => {
-        vampCape(c, l, tp, "#ff3b4d", reduced ? 0 : (Math.sin(t * 2) + 1) * 0.8);
         for (let k = 0; k < 3; k++) {
-          const a = t * 1.3 + (k * TAU) / 3;
-          const x = Math.round(l + 7 + Math.cos(a) * 9), y = Math.round(tp + 11 + Math.sin(a) * 6);
-          const up = Math.floor(t * 8 + k) % 2;
-          R(c, x, y, 1, 1, "#0b0614"); R(c, x - 1, y - up, 1, 1, "#0b0614"); R(c, x + 1, y - up, 1, 1, "#0b0614");
-          R(c, x, y, 1, 1, "#ff3b4d");
+          const ph = (t * 0.45 + k / 3) % 1;
+          const dir = k === 1 ? 1 : -1;
+          const x = Math.round(l + (k === 1 ? 15 : 0) + dir * ph * 6), y = Math.round(tp + 23 - ph * 20);
+          const up = Math.floor(t * 9 + k) % 2;
+          fade(c, 1 - ph * 0.8, () => {
+            R(c, x, y, 1, 1, "#0b0614"); R(c, x - 1, y - up, 1, 1, "#0b0614"); R(c, x + 1, y - up, 1, 1, "#0b0614");
+            R(c, x, y, 1, 1, "#ff3b4d");
+          });
         }
       },
     },
@@ -498,27 +525,33 @@ addTheme("shirt", {
     },
   },
   legendary: {
-    name: "It's Alive!",
-    pitch: "Lightning arcs crackle across the whole torso, the stitches glow electric blue, and the air flashes with each strike.",
+    name: "Lightning Rods",
+    pitch: "Two copper lightning rods stick up from the shoulders and a bolt keeps jumping between them over your head. Pulses of blue power run down the stitches, and a green heart beats in a glass window on the chest.",
     item: {
       sleeve: "short",
       px: (x, y, z, t) => {
-        const flash = Math.floor(t * 7) % 5 === 0;
-        if (x === 4 && y >= 9 && y <= 13 || (x === 3 || x === 5) && (y === 10 || y === 12)) return flash ? "#ffffff" : "#4fb2ff";
-        if (torso(z) && x >= 6 && x <= 8) return x === 7 && y % 2 === 0 ? "#4fb2ff" : "#8a8494";
+        const seam = (x === 4 && y >= 9 && y <= 13) || ((x === 3 || x === 5) && (y === 10 || y === 12));
+        if (seam) return Math.abs(((y - t * 8) % 5 + 5) % 5) < 1 ? "#d8fbff" : "#4fb2ff";
+        if (torso(z) && x >= 7 && x <= 9 && y >= 10 && y <= 12) {
+          if (x === 8 && y === 11) return Math.sin(t * 7) > 0.2 ? "#b7ff9e" : "#3fb02f";
+          return x === 8 || y === 11 ? "#2a5a3a" : "#c9c2d9";
+        }
+        if (torso(z) && x >= 6 && x <= 8) return "#8a8494";
         return z === "T" ? "#2f4a26" : "#456b36";
       },
-      under: (c, l, tp, t) => glow(c, l + 7, tp + 11, 15, "#4fb2ff", 0.25 + (Math.floor(t * 7) % 5 === 0 ? 0.3 : 0.05)),
+      under: (c, l, tp, t) => glow(c, l + 7, tp + 6, 16, "#4fb2ff", 0.28 + (Math.floor(t * 6) % 3 === 0 ? 0.25 : 0.05)),
       over: (c, l, tp, t) => {
         rag(c, l, tp, "#456b36");
-        const step = Math.floor(t * 8);
+        for (const x of [1, 14]) {
+          for (let y = 2; y <= 8; y++) R(c, l + x, tp + y, 1, 1, y % 2 ? "#e8a060" : "#b8662a");
+          R(c, l + x, tp + 1, 1, 1, "#d8fbff");
+        }
+        const step = Math.floor(t * 6);
         if (step % 3 === 2) return;
-        for (let b = 0; b < 2; b++) {
-          let x = l + (b ? 13 : 1), y = tp + 9 + Math.round(hash(step, b) * 3);
-          for (let k = 0; k < 6; k++) {
-            R(c, x, y, 1, 1, k < 2 ? "#ffffff" : "#9fd4ff");
-            x += b ? -1 : 1; y += hash(step, b, k) > 0.5 ? 1 : -1;
-          }
+        let y = tp + 1;
+        for (let x = l + 2; x <= l + 13; x++) {
+          y = Math.max(tp - 4, Math.min(tp + 1, y + (hash(step, x) > 0.5 ? 1 : -1)));
+          R(c, x, y, 1, 1, hash(step, x, 7) > 0.7 ? "#ffffff" : "#9fd4ff");
         }
       },
     },
@@ -622,27 +655,30 @@ addTheme("shirt", {
     make: (s) => ({ sleeve: "long", px: burlap(s), over: (c, l, tp, t) => straw(c, l, tp, t) }),
   },
   rare: {
+    name: "Windswept",
+    pitch: "Caught in a big gust: the straw sticks out sideways from the collar and cuffs, frozen mid-blow, and the hem has torn loose on one side.",
+    item: {
+      sleeve: "long",
+      px: (x, y, z) => (torso(z) && y === 14 && x >= 9 ? "#1a1024" : burlap({ c: "#a8844e" })(x, y, z)),
+      over: (c, l, tp) => {
+        [[5, 7], [6, 6], [7, 6], [8, 7], [9, 6], [10, 6], [11, 5], [12, 5]].forEach(([x, y], i) => R(c, l + x, tp + y, 1, 1, STRAW[i % 3]));
+        [[2, 15], [3, 15], [4, 16], [12, 15], [13, 15], [14, 16], [15, 16]].forEach(([x, y], i) => R(c, l + x, tp + y, 1, 1, STRAW[i % 3]));
+        R(c, l + 11, tp + 14, 1, 1, "#a8844e"); R(c, l + 12, tp + 15, 1, 1, "#8a6a3e");
+      },
+    },
+  },
+  epic: {
     name: "Crow's Perch",
-    pitch: "A black crow has made itself at home on your shoulder, beady yellow eye and all.",
+    pitch: "A black crow has made itself at home on your shoulder, beady yellow eye and all, and every few seconds it throws its head up and caws.",
     item: {
       sleeve: "long",
       px: burlap({ c: "#a8844e" }),
       over: (c, l, tp, t) => {
         straw(c, l, tp, t);
-        spr(c, ["..kk.", ".kkyo", "kgkk.", ".kk..", ".k.k."], { k: "#3a3150", g: "#6b6380", y: "#ffd84a", o: "#e0661a" }, l + 11, tp + 4);
-      },
-    },
-  },
-  epic: {
-    name: "Windblown",
-    pitch: "The straw rustles in the wind and every so often a loose piece blows away.",
-    item: {
-      sleeve: "long",
-      px: burlap({ c: "#a8844e" }),
-      over: (c, l, tp, t) => {
-        straw(c, l, tp, t, true);
-        const ph = (t * 0.5) % 1;
-        fade(c, 1 - ph, () => { R(c, l + 14 + ph * 6, tp + 15 - ph * 8 + Math.sin(t * 6) , 1, 1, "#ffd84a"); R(c, l + 9 + ph * 7, tp + 6 - ph * 4, 1, 1, "#f3d27a"); });
+        const caw = !reduced && t % 3 < 0.5;
+        // cawing: head tipped up, beak open (upper and lower beak)
+        const crow = caw ? ["...kko", "..kkyo", "kgkk.o", ".kk...", ".k.k.."] : ["..kk.", ".kkyo", "kgkk.", ".kk..", ".k.k."];
+        spr(c, crow, { k: "#3a3150", g: "#6b6380", y: "#ffd84a", o: "#e0661a" }, l + 11, tp + 4);
       },
     },
   },

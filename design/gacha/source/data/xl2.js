@@ -315,7 +315,7 @@ addSkin("legendary", {
 // ---------- 6 Spider Queen ----------
 addSkin("legendary", {
   name: "Spider Queen",
-  pitch: "A giant crowned spider with a glowing red hourglass, eight long legs filling the space, webs spreading behind her, and spiderlings dropping on silk threads.",
+  pitch: "A giant crowned spider with a glowing red hourglass, sitting in the middle of a huge web that fills the space, slim legs gripping the strands and a spiderling lowering itself on a thread.",
   pal: { y: "#ffc53a", h: "#231d33", r: "#ff3b4d", a: "#2a2238", A: "#1a1528", R: "#ff3b4d" },
   rows: [
     "......y.y.y.......",
@@ -348,38 +348,42 @@ addSkin("legendary", {
     "..................",
   ],
   under(c, l, tp, t) {
-    // web spreading from the corners, pulsing
-    const a = 0.35 + 0.15 * Math.sin(t * 2);
-    fade(c, a, () => {
-      for (const [cx, cy] of [[-1, -1], [18, -1]]) {
-        for (let k = 0; k < 5; k++) line(c, l + cx, tp + cy, l + cx + (cx < 0 ? 1 : -1) * (3 + k * 3), tp + cy + 15 - k * 3, "#d8d0ec");
-        for (let r = 4; r <= 12; r += 4) for (let k = 0; k <= 8; k++) {
-          const ang = (k / 8) * (Math.PI / 2);
-          R(c, l + cx + (cx < 0 ? 1 : -1) * Math.cos(ang) * r, tp + cy + Math.sin(ang) * r, 1, 1, "#d8d0ec");
-        }
+    // one big web filling the space behind her: spokes out to the edges and
+    // sagging rings, gently brightening and dimming
+    const cx = 8.5, cy = 10;
+    fade(c, 0.55 + 0.15 * Math.sin(t * 2), () => {
+      const spokes = 12;
+      for (let k = 0; k < spokes; k++) {
+        const a = (k / spokes) * TAU;
+        line(c, l + cx, tp + cy, l + cx + Math.cos(a) * 13, tp + cy + Math.sin(a) * 16, "#d8d0ec");
+      }
+      for (const r of [4, 7, 10, 13]) for (let k = 0; k < spokes; k++) {
+        const a0 = (k / spokes) * TAU, a1 = ((k + 1) / spokes) * TAU;
+        const sag = r * 0.12;
+        const mx = Math.cos((a0 + a1) / 2) * (r - sag), my = Math.sin((a0 + a1) / 2) * (r - sag) * 1.2;
+        line(c, l + cx + Math.cos(a0) * r, tp + cy + Math.sin(a0) * r * 1.2, l + cx + mx, tp + cy + my, "#b8aed8");
+        line(c, l + cx + mx, tp + cy + my, l + cx + Math.cos(a1) * r, tp + cy + Math.sin(a1) * r * 1.2, "#b8aed8");
       }
     });
     glow(c, l + 8, tp + 10, 12, "#ff3b4d", 0.2 + 0.1 * Math.sin(t * 4));
-    // eight legs from the body down to the ground
+    // eight slim legs gripping the web
     const step = M(t) * 3;
-    const legs = [[-1, 7, -7, 27], [-1, 9, -5, 27], [-1, 11, -3, 27], [-1, 13, -1, 27], [1, 7, 7, 27], [1, 9, 5, 27], [1, 11, 3, 27], [1, 13, 1, 27]];
-    legs.forEach(([side, y0, dx, y1], i) => {
-      const x0 = 8 + side * 4, lift = Math.round(Math.max(0, Math.sin(step + i * 1.7)) * 1.5);
-      const kx = x0 + side * 6, ky = y0 - 4 + (i % 4);
-      line(c, l + x0, tp + y0, l + kx, tp + ky, "#2a2238");
-      line(c, l + kx, tp + ky, l + x0 + dx + side * 6, tp + y1 - lift, "#2a2238");
-      R(c, l + kx, tp + ky, 1, 1, "#4a3a6a");
+    const legs = [[-1, 7, -5], [-1, 9, -6], [-1, 11, -6], [-1, 13, -5], [1, 7, 5], [1, 9, 6], [1, 11, 6], [1, 13, 5]];
+    legs.forEach(([side, y0, reach], i) => {
+      const x0 = 8 + side * 4, twitch = Math.round(Math.max(0, Math.sin(step + i * 1.7)));
+      const kx = x0 + side * 3, ky = y0 - 3 + (i % 4) - twitch;
+      line(c, l + x0, tp + y0, l + kx, tp + ky, "#3a2f52");
+      line(c, l + kx, tp + ky, l + kx + side * Math.abs(reach) * 0.6, tp + y0 + 4 + (i % 4) * 2, "#3a2f52");
+      R(c, l + kx, tp + ky, 1, 1, "#6b5a94");
     });
   },
   over(c, l, tp, t) {
     const glowR = Math.sin(t * 4) > 0 ? "#ff6b7a" : "#ff3b4d";
     [[8, 9], [7, 10], [8, 10], [9, 10], [8, 11], [7, 12], [8, 12], [9, 12]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, glowR));
-    for (let k = 0; k < 3; k++) {
-      const ph = ((M(t) * 0.35 + k / 3) % 1);
-      const x = l + [1, 15, 12][k], y = tp - 2 + Math.sin(ph * Math.PI) * [10, 14, 7][k];
-      line(c, x, tp - 3, x, y, "#a99bc9");
-      spr(c, ["k.k", ".k.", "k.k"], { k: "#d8d0ec" }, x - 1, y);
-    }
+    // a single spiderling lowering itself on a thread below her
+    const drop = 19 + Math.round((Math.sin(M(t) * 1.4) + 1) * 2);
+    line(c, l + 8, tp + 17, l + 8, tp + drop, "#d8d0ec");
+    spr(c, ["k.k", ".k.", "k.k"], { k: "#ece6ff" }, l + 7, tp + drop);
   },
 });
 
@@ -877,7 +881,6 @@ addSkin("legendary", {
     const cx = l + 8 + lx, cy = tp + 7 + ly;
     spr(c, [".ggg.", "ggggg", "ggkgg", "ggggg", ".ggg."], { g: Math.sin(t * 2) > 0 ? "#5ee84a" : "#3fb02f", k: "#07040f" }, cx - 2, cy - 2);
     R(c, cx - 1, cy - 1, 1, 1, "#ffffff");
-    if (t % 5 > 4.75) for (let y = 0; y < 15; y++) R(c, l + 1, tp + y, 16, 1, "#4a2a66");
     for (let k = 0; k < 3; k++) {
       const ph = (t * 0.8 + k / 3) % 1;
       if (ph < 0.3) sparkle(c, l + [0, 17, 2][k], tp + [3, 6, 16][k], "#e0b0ff", ph < 0.15);

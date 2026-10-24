@@ -6,6 +6,9 @@ const xtiles = [];
 // Three-digit numbers for the owner to cut by, from 301 in page order (page
 // 13's wardrobe uses 101 upward).
 let xnum = 301;
+// Monsters the owner cut (2026-10-24). Hidden, but they keep their numbers so
+// every other card's number stays the same.
+const XCUT = new Set([370]);
 const xvisible = new Set();
 const xio = new IntersectionObserver((es) => { for (const e of es) e.isIntersecting ? xvisible.add(e.target) : xvisible.delete(e.target); }, { rootMargin: "200px" });
 const xmain = document.getElementById("xslots");
@@ -15,11 +18,12 @@ for (const sec of SECTIONS) {
   const el = document.createElement("section");
   el.id = sec.tier;
   el.className = "slot";
-  el.innerHTML = `<div class="sec-head"><span class="eyebrow ${sec.cls}">${list.length} transformations · ${xnum}–${xnum + list.length - 1}</span><h2 class="${sec.cls}">${sec.title}</h2><p>${sec.blurb}</p></div><div class="grid xgrid"></div>`;
-  xnav.insertAdjacentHTML("beforeend", `<a class="chip ${sec.cls}" href="#${sec.tier}">${sec.title} <span class="n">${list.length}</span></a>`);
+  el.innerHTML = `<div class="sec-head"><span class="eyebrow ${sec.cls}">${list.length - [...XCUT].filter((n) => n >= xnum && n < xnum + list.length).length} transformations · ${xnum}–${xnum + list.length - 1}</span><h2 class="${sec.cls}">${sec.title}</h2><p>${sec.blurb}</p></div><div class="grid xgrid"></div>`;
+  xnav.insertAdjacentHTML("beforeend", `<a class="chip ${sec.cls}" href="#${sec.tier}">${sec.title} <span class="n">${list.length - [...XCUT].filter((n) => n >= xnum && n < xnum + list.length).length}</span></a>`);
   const grid = el.querySelector(".xgrid");
   list.forEach((s, i) => {
     const code = String(xnum++);
+    if (XCUT.has(Number(code))) return;
     const card = document.createElement("article");
     card.className = "card xcard";
     card.id = `n${code}`;
@@ -35,7 +39,7 @@ for (const sec of SECTIONS) {
   });
   xmain.appendChild(el);
 }
-document.getElementById("xtotal").textContent = SKINS2.epic.length + SKINS2.legendary.length;
+document.getElementById("xtotal").textContent = xtiles.length;
 
 const xstart = performance.now();
 (function loop(now) {

@@ -94,6 +94,8 @@ const BASE = { h: "#6b6380", H: "#55506b", s: SKIN, S: SKIN_D, e: "#1a1024", m: 
    pants: { long: bool (covers shins/knees), socks: bool (also colors w), ghost: bool (hide legs+shoes),
             px(x,y,zone,t) -> color (required; zones p P, plus q Q k if long, w if socks; null = see-through),
             shin(x,y,zone,t) (shorts only: color the bare shins), under, over }
+   pants and shirt under/over also get a 5th argument, groundTop: the body's top if it were
+   standing on the floor (ignores shoe lift), for anything that belongs on the floor.
    shoes: { high: bool (also colors socks w), lift: int (hover/platform px), px(x,y,zone,t) -> color (required; zones f F, w if high; null = hidden),
             under(c,left,groundTop,t) (groundTop ignores lift), over }
    theme: { name, pitch,
@@ -104,11 +106,13 @@ const THEMES = { head: [], shirt: [], pants: [], shoes: [] };
 function addTheme(slot, theme) { THEMES[slot].push(theme); }
 
 function drawAvatar(c, gear, x, bottom, t, still = false) {
-  const { head, shirt, pants, shoes } = gear;
+  const { head, shirt, pants } = gear;
+  // A ghost tail has no feet, so whatever shoes are equipped are ignored (owner's call, 2026-10-24).
+  const shoes = pants && pants.ghost ? null : gear.shoes;
   const bob = reduced || still ? 0 : Math.round((Math.sin(t * 3) + 1) / 2);
   const lift = shoes && shoes.lift ? shoes.lift : 0;
   const left = Math.round(x - 7), groundTop = bottom - BODY.length - bob, top = groundTop - lift;
-  for (const it of [pants, shirt]) if (it && it.under) it.under(c, left, top, t);
+  for (const it of [pants, shirt]) if (it && it.under) it.under(c, left, top, t, groundTop);
   if (shoes && shoes.under) shoes.under(c, left, groundTop, t);
   BODY.forEach((row, j) => {
     for (let i = 0; i < row.length; i++) {
@@ -126,7 +130,8 @@ function drawAvatar(c, gear, x, bottom, t, still = false) {
       if (col) R(c, left + i, top + j, 1, 1, col);
     }
   });
-  for (const it of [pants, shirt, shoes]) if (it && it.over) it.over(c, left, top, t);
+  for (const it of [pants, shirt]) if (it && it.over) it.over(c, left, top, t, groundTop);
+  if (shoes && shoes.over) shoes.over(c, left, top, t);
   if (head) {
     const hTop = top - (head.float ? head.float(t) : 0);
     if (head.under) head.under(c, left, hTop, t);

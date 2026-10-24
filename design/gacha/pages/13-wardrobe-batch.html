@@ -288,6 +288,8 @@ const BASE = { h: "#6b6380", H: "#55506b", s: SKIN, S: SKIN_D, e: "#1a1024", m: 
    pants: { long: bool (covers shins/knees), socks: bool (also colors w), ghost: bool (hide legs+shoes),
             px(x,y,zone,t) -> color (required; zones p P, plus q Q k if long, w if socks; null = see-through),
             shin(x,y,zone,t) (shorts only: color the bare shins), under, over }
+   pants and shirt under/over also get a 5th argument, groundTop: the body's top if it were
+   standing on the floor (ignores shoe lift), for anything that belongs on the floor.
    shoes: { high: bool (also colors socks w), lift: int (hover/platform px), px(x,y,zone,t) -> color (required; zones f F, w if high; null = hidden),
             under(c,left,groundTop,t) (groundTop ignores lift), over }
    theme: { name, pitch,
@@ -298,11 +300,13 @@ const THEMES = { head: [], shirt: [], pants: [], shoes: [] };
 function addTheme(slot, theme) { THEMES[slot].push(theme); }
 
 function drawAvatar(c, gear, x, bottom, t, still = false) {
-  const { head, shirt, pants, shoes } = gear;
+  const { head, shirt, pants } = gear;
+  // A ghost tail has no feet, so whatever shoes are equipped are ignored (owner's call, 2026-10-24).
+  const shoes = pants && pants.ghost ? null : gear.shoes;
   const bob = reduced || still ? 0 : Math.round((Math.sin(t * 3) + 1) / 2);
   const lift = shoes && shoes.lift ? shoes.lift : 0;
   const left = Math.round(x - 7), groundTop = bottom - BODY.length - bob, top = groundTop - lift;
-  for (const it of [pants, shirt]) if (it && it.under) it.under(c, left, top, t);
+  for (const it of [pants, shirt]) if (it && it.under) it.under(c, left, top, t, groundTop);
   if (shoes && shoes.under) shoes.under(c, left, groundTop, t);
   BODY.forEach((row, j) => {
     for (let i = 0; i < row.length; i++) {
@@ -320,7 +324,8 @@ function drawAvatar(c, gear, x, bottom, t, still = false) {
       if (col) R(c, left + i, top + j, 1, 1, col);
     }
   });
-  for (const it of [pants, shirt, shoes]) if (it && it.over) it.over(c, left, top, t);
+  for (const it of [pants, shirt]) if (it && it.over) it.over(c, left, top, t, groundTop);
+  if (shoes && shoes.over) shoes.over(c, left, top, t);
   if (head) {
     const hTop = top - (head.float ? head.float(t) : 0);
     if (head.under) head.under(c, left, hTop, t);
@@ -366,16 +371,27 @@ function drawAvatar(c, gear, x, bottom, t, still = false) {
       make: (c) => ({ build: () => horns(c.hi, c.sh) }),
     },
     rare: {
-      name: "Ram Horns",
-      pitch: "Thick, ridged ram horns that curl all the way around the sides of the head.",
+      name: "Bighorn Curls",
+      pitch: "Huge ridged bighorn-sheep horns that sweep up off the head and spiral all the way round over the ears, tips curling in.",
       item: {
         build() {
           const g = makeGrid();
-          const L = [[5, 1], [4, 0], [3, 0], [2, 1], [2, 2], [2, 3], [3, 4], [4, 4], [4, 3], [3, -1], [4, -1], [5, 0]];
-          L.forEach(([x, y], i) => {
-            const col = i % 3 === 0 ? "#b9ae94" : "#e8dcc0";
-            g.set(x, y, col); g.set(14 - x, y, i % 3 === 0 ? "#9a8f78" : "#d9cfb2");
-          });
+          // a thick spiral on each side: starts at the top of the head, sweeps out and down round the ear, ends curled in
+          const cx = 2.8, cy = -0.4;
+          for (let k = 0; k <= 60; k++) {
+            const u = k / 60;
+            const a = -1.2 - u * TAU * 0.9;
+            const r = 3.4 - u * 2.3;
+            const ridge = Math.floor(u * 14) % 2 === 0;
+            const drs = u < 0.5 ? [0, -0.8, -1.6] : u < 0.8 ? [0, -0.8] : [0];
+            for (const dr of drs) {
+              const groove = dr && dr === drs[drs.length - 1];
+              const x = Math.round(cx + Math.cos(a) * (r + dr)), y = Math.round(cy + Math.sin(a) * (r + dr));
+              const col = groove ? "#6e6450" : u > 0.85 ? "#8a7e64" : ridge ? "#b9ae94" : dr ? "#d9cfb2" : "#efe6cc";
+              g.set(x, y, col);
+              g.set(14 - x, y, groove ? "#5e5544" : u > 0.85 ? "#7a6e56" : ridge ? "#a89c80" : dr ? "#c9bfa2" : "#ddd4ba");
+            }
+          }
           outline(g);
           return g;
         },
@@ -418,73 +434,97 @@ function drawAvatar(c, gear, x, bottom, t, still = false) {
   });
 
   // ---------- 2. Cat Ears ----------
-  function catEars(c, inner, band, opts = {}) {
+  // two separate pointy triangles on a headband, tips leaning out, gap in the middle
+  // left ear rows from the tip down: [y, x0, x1]; the right ear mirrors it (x -> 14 - x)
+  const EAR = [[-5, 3, 3], [-4, 3, 4], [-3, 3, 5], [-2, 3, 5], [-1, 4, 5]];
+  const EAR_IN = [[4, -3], [4, -2], [4, -1]];
+  function catEars(fur, inner, band, opts = {}) {
     const g = makeGrid();
-    const rows = [[0, 3], [0, 3], [0, 2], [0, 1]];
-    const ear = (x0, dir, bend) => rows.forEach(([off, w], j) => {
-      for (let i = 0; i < w; i++) g.set(x0 + dir * (off + i) + (j === 3 ? bend * dir : 0), -j, c);
+    const furAt = opts.fur || (() => fur);
+    const bend = opts.bend || [0, 0]; // per ear: 1 folds the tip over (a flick)
+    [0, 1].forEach((side) => {
+      const mx = (x) => (side ? 14 - x : x);
+      EAR.forEach(([y, x0, x1]) => {
+        if (bend[side] && y === -5) return;
+        for (let x = x0; x <= x1; x++) g.set(mx(x), y, furAt(mx(x), y, side));
+      });
+      if (bend[side]) g.set(mx(2), -4, furAt(mx(2), -4, side));
+      if (!(opts.notch && side === 1)) {} else { g.del(mx(3), -3); g.del(mx(3), -2); }
     });
-    ear(4, 1, 0); ear(10, -1, opts.bendR || 0);
-    g.row(4, 10, 1, band);
-    if (opts.notch) g.del(10, -1);
-    outline(g);
-    g.set(5, -1, inner); g.set(5, -2, inner); g.set(9, -1, inner); g.set(9, -2 - (opts.twitch || 0), inner);
+    g.row(4, 10, 0, band); g.row(4, 10, 1, darken(band, 0.75));
+    outline(g, opts.rim || OUT);
+    if (opts.notch) { g.del(11, -3); g.del(11, -2); }
+    [0, 1].forEach((side) => EAR_IN.forEach(([x, y]) => {
+      if (bend[side] && y === -3) return;
+      g.set(side ? 14 - x : x, y, opts.innerAt ? opts.innerAt(x, y, side) : inner);
+    }));
+    if (opts.decor) opts.decor(g);
     return g;
   }
   addTheme("head", {
     name: "Cat Ears",
-    pitch: "A cat-ear headband with pink inner ears. The cutest option, and it never hides the face.",
+    pitch: "A headband with two tall, pointy cat ears and pink insides. Cute, readable at any size, and it never hides the face.",
     common: {
-      pitch: "Plain cat ears.",
+      pitch: "Pointy cat ears on a headband.",
       colors: [
-        { name: "Black cat", c: "#1f1a30", inner: "#ff8fb8" },
+        { name: "Black cat", c: "#2a2238", inner: "#ff8fb8" },
         { name: "Orange tabby", c: "#e0661a", inner: "#ffc0a0" },
         { name: "Snow white", c: "#f3efe6", inner: "#ff8fb8" },
-        { name: "Smoke grey", c: "#7d7591", inner: "#ffb0c8" },
-        { name: "Chocolate", c: "#6b4a28", inner: "#e8a090" },
-        { name: "Witch purple", c: "#6b3fa8", inner: "#d18bff" },
+        { name: "Smoke grey", c: "#8a8299", inner: "#ffb0c8" },
+        { name: "Chocolate", c: "#7a5230", inner: "#e8a090" },
+        { name: "Witch purple", c: "#7a4ad9", inner: "#e0b0ff" },
       ],
-      make: (k) => ({ build: () => catEars(k.c, k.inner, darken(k.c, 0.6)) }),
+      make: (k) => ({ build: () => catEars(k.c, k.inner, darken(k.c, 0.55)) }),
     },
     rare: {
-      name: "Alley Cat",
-      pitch: "A scrappy black cat: one ear has a pink bow, the other has a notch torn out of it.",
+      name: "Calico Bell",
+      pitch: "Calico cat ears in patches of orange, black and white, with a little gold bell hanging from the front of the band.",
       item: {
         build() {
-          const g = catEars("#1f1a30", "#ff8fb8", "#14101c", { notch: true });
-          g.set(3, -1, "#ff6fb5"); g.set(5, 0, "#ff6fb5"); g.set(4, 0, "#ffb0d8"); g.set(3, 0, "#ff6fb5"); g.set(5, -1, "#ff6fb5");
+          const CAL = ["#f3efe6", "#e0661a", "#2a2238"];
+          const g = catEars(null, "#ff8fb8", "#c42a3e", { fur: (x, y) => CAL[(x * 7 + y * 3) % 5 < 2 ? 0 : (x + y) % 3 === 0 ? 2 : 1] });
+          g.set(7, 1, "#ffd84a"); g.set(6, 2, OUT); g.set(8, 2, OUT); g.set(7, 2, "#e8a820"); g.set(7, 3, OUT);
           return g;
         },
       },
     },
     epic: {
-      name: "Twitchy Ears",
-      pitch: "Orange tabby ears that twitch and flick every few seconds, like the cat just heard something.",
+      name: "Flicking Ears",
+      pitch: "Striped tabby ears that flick: every few seconds one ear folds its tip over, then the other, like the cat just heard something.",
       item: {
         build(t) {
-          const ph = t % 2.8;
-          const flick = !reduced && ph > 2.2 && Math.floor(ph * 10) % 2 === 0;
-          return catEars("#e0661a", "#ffc0a0", "#8f3c06", { bendR: flick ? 1 : 0, twitch: flick ? 1 : 0 });
+          const ph = t % 3;
+          const bend = reduced ? [0, 0] : [ph > 2.1 && ph < 2.35 ? 1 : 0, ph > 2.5 && ph < 2.75 ? 1 : 0];
+          return catEars(null, "#ffc0a0", "#8f3c06", { bend, fur: (x, y) => (y % 2 ? "#e0661a" : "#a8470a") });
         },
       },
     },
     legendary: {
-      name: "Ghost Cat",
-      pitch: "Glowing spirit-cat ears with ghostly whiskers that flicker across the cheeks and little sparkles floating around.",
+      name: "Witch's Familiar",
+      pitch: "Inky black ears full of twinkling stars with glowing green rims, a ghostly cat tail swishing behind your head and green sparkles drifting off the tips.",
       item: {
-        under: (c, l, tp, t) => glow(c, l + 7, tp - 1, 12, "#7dfcff", 0.35 + 0.1 * Math.sin(t * 3)),
+        under(c, l, tp, t) {
+          glow(c, l + 7, tp - 2, 15, "#5ee84a", 0.32 + 0.1 * Math.sin(t * 3));
+          // ghostly tail curling up behind the head, swishing side to side
+          const sw = reduced ? 0 : Math.sin(t * 2.2) * 2.5;
+          for (let k = 0; k < 12; k++) {
+            const u = k / 11;
+            const x = l + 12 + Math.round(Math.sin(u * 2.6) * (2 + sw * u));
+            const y = tp + 6 - Math.round(u * 13);
+            fade(c, 0.35 + 0.4 * u, () => R(c, x, y, 2, 1, k > 9 ? "#d8ffcc" : "#7dff5a"));
+          }
+        },
         build(t) {
-          const g = catEars(Math.sin(t * 3) > 0 ? "#d8fbff" : "#b8feff", "#7dfcff", "#3ac6d6");
-          return g;
+          return catEars(null, "#5ee84a", "#14101c", {
+            fur: (x, y) => (hash(x, y, Math.floor(t * 3)) > 0.8 ? "#ffffff" : hash(x, y) > 0.6 ? "#3a2a6a" : "#100a1c"),
+            innerAt: (x, y) => (Math.sin(t * 4 + y) > 0 ? "#b7ff9e" : "#5ee84a"),
+          });
         },
         over(c, l, tp, t) {
-          if (Math.sin(t * 5) > -0.6) {
-            const col = "#b8feff";
-            [[2, 5], [3, 5], [2, 6], [11, 5], [12, 5], [12, 6]].forEach(([x, y]) => fade(c, 0.85, () => R(c, l + x, tp + y, 1, 1, col)));
-          }
-          for (let k = 0; k < 3; k++) {
-            const a = t * 1.2 + (k * TAU) / 3;
-            sparkle(c, Math.round(l + 7 + Math.cos(a) * 7), Math.round(tp - 2 + Math.sin(a) * 3), tw(t, k) ? "#ffffff" : "#7dfcff", tw(t, k));
+          for (let k = 0; k < 4; k++) {
+            const ph = (t * 0.6 + k / 4) % 1;
+            const x = k % 2 ? l + 11 + Math.round(ph * 3) : l + 3 - Math.round(ph * 3);
+            fade(c, 1 - ph, () => sparkle(c, x, tp - 6 - Math.round(ph * 6), tw(t, k) ? "#ffffff" : "#7dff5a", false));
           }
         },
       },
@@ -492,79 +532,109 @@ function drawAvatar(c, gear, x, bottom, t, still = false) {
   });
 
   // ---------- 3. Mummy Wraps ----------
-  const WRAP = [[5, 8], [4, 9], [4, 10], [4, 10], [4, 9], [4, 9], [5, 8]];
+  // the whole head wrapped in diagonal bandage strips with dark seams between them
+  const WRAP = [[5, 8], [4, 9], [3, 10], [3, 10], [3, 10], [4, 10], [4, 9], [5, 8]]; // rows y -1..6
   function mummy(P, t, opts = {}) {
     const g = makeGrid();
-    WRAP.forEach(([x0, x1], y) => {
+    WRAP.forEach(([x0, x1], j) => {
+      const y = j - 1;
       for (let x = x0; x <= x1; x++) {
-        const band = (x + y * 2) % 4;
-        let col = band === 0 ? P.sh : band === 2 ? P.hi : P.base;
-        if (opts.px) col = opts.px(x, y, col) || col;
+        // slanted strips: each row of bandage steps down every four pixels
+        const d = (((y + Math.floor((x + (opts.shift || 0)) / 4)) % 3) + 3) % 3;
+        let col = d === 0 ? P.sh : d === 1 ? P.base : P.hi;
+        if (opts.px) col = opts.px(x, y, d) || col;
         g.set(x, y, col);
       }
     });
     outline(g);
-    g.set(8, 4, opts.eye || "#1a1024"); g.set(9, 4, opts.eyeWhite || "#f3efe6");
-    g.set(5, 4, P.sh);
-    const fl = reduced ? 0 : Math.sin(t * (opts.flutter || 4));
-    const tail = [[3, 2], [2, 3], [1, 3 + Math.round(fl)], [0, 4 + Math.round(fl * 1.5)]];
-    if (opts.longTail) tail.push([-1, 4 + Math.round(fl * 2)], [-2, 5 + Math.round(fl * 2.5)]);
-    tail.forEach(([x, y]) => { g.set(x, y, P.base); g.set(x, y + 1, P.sh); });
+    // eye slit with both eyes peeking through
+    if (!opts.noSlit) {
+      g.row(4, 9, 4, opts.slit || "#1a1024");
+      const eye = blinkAt(t, 4.2) ? opts.slit || "#1a1024" : opts.eye || "#f3efe6";
+      g.set(5, 4, eye); g.set(8, 4, eye);
+    }
+    // loose end hanging off the right side of the jaw
+    const sway = reduced || !opts.sway ? 0 : Math.round(Math.sin(t * opts.sway));
+    [[10, 5], [11, 6], [11, 7], [12 + sway, 8], [12 + sway, 9]].concat(opts.long ? [[13 + sway, 10], [13 + sway * 2, 11]] : []).forEach(([x, y], k) => g.set(x, y, k % 2 ? P.sh : P.base));
+    if (opts.decor) opts.decor(g, t);
     return g;
   }
   addTheme("head", {
     name: "Mummy Wraps",
-    pitch: "The whole head wrapped in old bandages, one eye peeking out and a loose end fluttering behind.",
+    pitch: "The whole head wrapped in old bandages, two eyes peering out of a slit and a loose end dangling off the jaw.",
     common: {
-      pitch: "Plain wraps.",
+      pitch: "Neat diagonal wraps.",
       colors: [
-        { name: "Linen", base: "#d9cfb2", hi: "#e8e0c8", sh: "#b9ae94" },
-        { name: "Ash grey", base: "#a49db0", hi: "#c9c2d9", sh: "#7d7591" },
-        { name: "Tea-stained", base: "#c0a070", hi: "#d9bc8a", sh: "#957848" },
-        { name: "Soot black", base: "#3a3646", hi: "#55506b", sh: "#231d33" },
-        { name: "Moss", base: "#8a9a6a", hi: "#a8b888", sh: "#65744a" },
-        { name: "Dusty rose", base: "#c89a9a", hi: "#e0b8b8", sh: "#9a7070" },
+        { name: "Linen", base: "#ddd3b8", hi: "#f0e8d4", sh: "#a89c80" },
+        { name: "Ash grey", base: "#a49db0", hi: "#c9c2d9", sh: "#6b6380" },
+        { name: "Tea-stained", base: "#c4a476", hi: "#dcc092", sh: "#8a6a40" },
+        { name: "Soot black", base: "#3e3a4c", hi: "#5a5468", sh: "#1e1a2a" },
+        { name: "Moss", base: "#8a9a6a", hi: "#a8b888", sh: "#5a6a40" },
+        { name: "Dusty rose", base: "#c89a9a", hi: "#e0b8b8", sh: "#906464" },
       ],
       make: (P) => ({ build: (t) => mummy(P, t) }),
     },
     rare: {
-      name: "Pharaoh Wraps",
-      pitch: "Royal wraps painted with ancient gold symbols and a blue band across the brow.",
+      name: "Pharaoh's Headdress",
+      pitch: "Wraps under a blue-and-gold striped pharaoh headdress that falls to the shoulders, with a little gold cobra on the brow.",
       item: {
-        build: (t) => mummy({ base: "#d9cfb2", hi: "#e8e0c8", sh: "#b9ae94" }, t, {
-          px: (x, y) => (y === 2 ? (x % 2 ? "#2a4a8f" : "#ffc53a") : at([[5, 0], [8, 1], [6, 5], [9, 6], [4, 6]], x, y) ? "#e8a820" : null),
-        }),
+        build(t) {
+          const g = mummy({ base: "#ddd3b8", hi: "#f0e8d4", sh: "#a89c80" }, t);
+          const NEMES = [[-2, 5, 9], [-1, 4, 10], [0, 3, 11], [1, 3, 11], [2, 2, 12]];
+          NEMES.forEach(([y, x0, x1]) => { for (let x = x0; x <= x1; x++) g.set(x, y, y % 2 ? "#ffc53a" : "#2a4a8f"); });
+          for (let y = 3; y <= 8; y++) for (const x of [2, 3, 11, 12]) g.set(x, y, y % 2 ? "#ffc53a" : "#2a4a8f");
+          g.row(4, 10, 2, "#e8a820");
+          g.set(7, 1, "#ffd84a"); g.set(7, 0, "#ffd84a"); g.set(6, 0, OUT); g.set(8, 0, OUT); g.set(7, -1, "#5ee84a");
+          return g;
+        },
       },
     },
     epic: {
-      name: "Unraveling",
-      pitch: "A long loose strip whips around in the wind and little puffs of tomb dust shake off the wraps.",
+      name: "Peekaboo",
+      pitch: "Fully wrapped, no eyes at all, until a bandage slips down every few seconds and one big eye peeks out and looks around.",
       item: {
-        build: (t) => mummy({ base: "#d9cfb2", hi: "#e8e0c8", sh: "#b9ae94" }, t, { longTail: true, flutter: 6 }),
-        over(c, l, tp, t) {
-          for (let k = 0; k < 4; k++) {
-            const ph = (t * 0.5 + k / 4) % 1;
-            fade(c, 0.6 * (1 - ph), () => R(c, l + 4 + k * 2 + Math.round(ph * (k % 2 ? 3 : -3)), tp + 1 - ph * 6, 1, 1, "#c9b896"));
+        build(t) {
+          const ph = reduced ? 0 : t % 3.2;
+          const open = ph > 1.8 && ph < 3;
+          const g = mummy({ base: "#ddd3b8", hi: "#f0e8d4", sh: "#a89c80" }, t, { noSlit: true, sway: 3 });
+          if (open) {
+            const look = ph < 2.3 ? 0 : ph < 2.6 ? -1 : 1;
+            g.row(6, 9, 3, "#1a1024"); g.row(6, 9, 4, "#1a1024");
+            g.set(7, 3, "#ffffff"); g.set(8, 3, "#ffffff"); g.set(7, 4, "#ffffff"); g.set(8, 4, "#ffffff");
+            g.set(7 + (look > 0 ? 1 : 0), 4, "#1a1024");
+            if (look < 0) g.set(7, 3, "#1a1024");
+            g.row(6, 9, 5, "#a89c80"); g.set(9, 6, "#f0e8d4");
           }
+          return g;
         },
       },
     },
     legendary: {
-      name: "Cursed Pharaoh",
-      pitch: "The wraps hum with a curse: the eye burns green, the bandages glow at the seams, and glowing hieroglyphs orbit the head.",
+      name: "Tomb King",
+      pitch: "A cursed mummy king: a gold crown with a scarab, burning green eyes, green soul-fire leaking through the gaps in the wraps, and desert sand swirling around the head.",
       item: {
-        under: (c, l, tp, t) => glow(c, l + 7, tp + 3, 14, "#5ee84a", 0.3 + 0.1 * Math.sin(t * 4)),
-        build: (t) => mummy({ base: "#d9cfb2", hi: "#e8e0c8", sh: "#7a9a5a" }, t, {
-          eye: Math.sin(t * 6) > 0 ? "#b7ff9e" : "#5ee84a", eyeWhite: "#2f8a3a",
-          px: (x, y) => ((x + y * 2) % 4 === 0 && Math.sin(t * 3 + y) > 0.4 ? "#7dff5a" : null),
-        }),
-        over(c, l, tp, t) {
-          const GLYPHS = [["g.g", "ggg", ".g."], [".g.", "g.g", ".g."], ["gg.", ".g.", ".gg"], ["g..", "ggg", "g.."]];
-          GLYPHS.forEach((rows, k) => {
-            const a = t * 0.9 + (k * TAU) / 4;
-            if (Math.sin(a) < -0.3) return;
-            spr(c, rows, { g: tw(t, k) ? "#b7ff9e" : "#5ee84a" }, Math.round(l + 7 + Math.cos(a) * 9) - 1, Math.round(tp + 2 + Math.sin(a) * 4) - 1);
+        under: (c, l, tp, t) => glow(c, l + 7, tp + 2, 16, "#5ee84a", 0.32 + 0.12 * Math.sin(t * 4)),
+        build(t) {
+          const g = mummy({ base: "#d4c8a8", hi: "#ece2c6", sh: "#3a5a2a" }, t, {
+            eye: Math.sin(t * 7) > 0 ? "#b7ff9e" : "#5ee84a", slit: "#0f2a12", sway: 4, long: true,
+            px: (x, y, d) => (d === 0 && Math.sin(t * 5 + x + y * 2) > 0.3 ? "#7dff5a" : null),
           });
+          // gold crown band with points and a blue scarab
+          g.row(4, 9, -1, "#ffc53a"); g.row(5, 8, -2, "#e8a820");
+          for (const x of [4, 7, 9]) g.set(x, -3, "#ffd84a");
+          g.set(6, -1, "#2a6aff"); g.set(7, -1, "#4fb2ff");
+          return g;
+        },
+        over(c, l, tp, t) {
+          for (let k = 0; k < 7; k++) {
+            const a = t * 1.4 + (k * TAU) / 7;
+            if (Math.sin(a) < -0.2) continue;
+            R(c, Math.round(l + 7 + Math.cos(a) * 9), Math.round(tp + 4 + Math.sin(a) * 3 - k % 3), 1, 1, k % 2 ? "#e8c070" : "#c9a050");
+          }
+          for (let k = 0; k < 3; k++) {
+            const ph = (t * 0.7 + k / 3) % 1;
+            fade(c, 0.8 * (1 - ph), () => R(c, l + 5 + k * 2, tp - 4 - Math.round(ph * 7), 1, 2, "#7dff5a"));
+          }
         },
       },
     },
@@ -837,9 +907,10 @@ function drawAvatar(c, gear, x, bottom, t, still = false) {
     },
     rare: {
       name: "Black Widow",
-      pitch: "A glossy black widow with the red hourglass mark on its back.",
+      pitch: "A glossy black widow with the red hourglass mark on its back and long shiny legs gripping your hair.",
       item: {
-        build: (t) => spider({ base: "#14101c", hi: "#3a3150", leg: "#0b0614" }, t, {
+        // legs are a lighter, shiny charcoal so they show up against the dark background
+        build: (t) => spider({ base: "#14101c", hi: "#4a4060", leg: "#6b6380" }, t, {
           abdomen: (x, y) => (at([[6, -6], [7, -6], [8, -6], [7, -5], [6, -4], [7, -4], [8, -4]], x, y) ? "#e0242e" : null),
           eye: "#ff8090",
         }),
@@ -852,19 +923,43 @@ function drawAvatar(c, gear, x, bottom, t, still = false) {
     },
     legendary: {
       name: "Spider Queen",
-      pitch: "A huge violet queen with glowing eyes, web strands draped down past the face and a baby spider bobbing on its thread.",
+      pitch: "A crowned amethyst spider queen sits on a glowing web halo behind your head. Her eyes glow, her legs tap, and baby spiders scurry round the web.",
       item: {
-        under: (c, l, tp, t) => glow(c, l + 7, tp - 2, 14, "#c46bff", 0.35 + 0.1 * Math.sin(t * 3)),
+        under(c, l, tp, t) {
+          glow(c, l + 7, tp - 2, 16, "#c46bff", 0.35 + 0.1 * Math.sin(t * 3));
+          // the web: a half-circle of spokes and rings fanning out above the head (kept off the face)
+          const cx = l + 7, cy = tp + 1;
+          const dot = (x, y, col) => { if (y <= tp) R(c, x, y, 1, 1, col); };
+          fade(c, 0.55, () => {
+            for (let k = 0; k <= 6; k++) {
+              const a = Math.PI + (k * Math.PI) / 6;
+              for (let r = 6; r <= 11; r++) dot(cx + Math.round(Math.cos(a) * r), cy + Math.round(Math.sin(a) * r * 0.85), "#e8e0f0");
+            }
+            for (const r of [8, 11]) for (let k = 0; k <= 30; k++) {
+              const a = Math.PI + (k * Math.PI) / 30;
+              dot(cx + Math.round(Math.cos(a) * r), cy + Math.round(Math.sin(a) * r * 0.85), "#cfc4e6");
+            }
+          });
+        },
         build(t) {
-          const g = spider({ base: "#3a2060", hi: "#7a4ad9", leg: "#24143f" }, t, { eye: Math.sin(t * 4) > 0 ? "#f0d8ff" : "#c46bff", hair: true });
-          g.set(7, -8, "#ffc53a"); g.set(6, -8, "#e8a820"); g.set(8, -8, "#e8a820"); g.set(6, -9, "#ffc53a"); g.set(8, -9, "#ffc53a");
+          const g = spider({ base: "#5a2a9a", hi: "#a070f0", leg: "#d0b0ff" }, t, {
+            wiggle: !reduced,
+            eye: ["#f0d8ff", "#c46bff", "#ff6fb5"][Math.floor(t * 3) % 3],
+            abdomen: (x, y) => (at([[7, -6], [6, -5], [8, -5], [7, -4]], x, y) ? "#ffc53a" : null),
+          });
+          // gold crown on the head
+          g.row(6, 8, -8, "#e8a820"); g.set(6, -9, "#ffd84a"); g.set(7, -10, "#ffd84a"); g.set(8, -9, "#ffd84a"); g.set(7, -9, "#ff3b8a");
           return g;
         },
         over(c, l, tp, t) {
-          for (const [x, len] of [[1, 8], [13, 9]]) for (let y = -2; y < 2 + len; y++) fade(c, 0.55, () => R(c, l + x + (y % 3 === 0 ? (x < 7 ? -1 : 1) : 0), tp + y, 1, 1, "#e8e0f0"));
-          const drop = 6 + Math.round((Math.sin(t * 1.6) + 1) * 2);
-          for (let y = 3; y < 3 + drop; y++) fade(c, 0.7, () => R(c, l + 12, tp + y, 1, 1, "#d8d0ec"));
-          R(c, l + 11, tp + 3 + drop, 3, 1, "#24143f"); R(c, l + 12, tp + 3 + drop, 1, 2, "#3a2060"); R(c, l + 12, tp + 3 + drop, 1, 1, "#c46bff");
+          // three baby spiders running round the outer ring of the web
+          for (let k = 0; k < 3; k++) {
+            const a = t * (k % 2 ? -0.9 : 0.7) + (k * TAU) / 3;
+            const ang = Math.PI + (((a % Math.PI) + Math.PI) % Math.PI);
+            const x = Math.round(l + 7 + Math.cos(ang) * 11), y = Math.round(tp + 1 + Math.sin(ang) * 9.3);
+            R(c, x, y, 2, 1, "#24143f"); R(c, x - 1, y - (Math.floor(t * 10) % 2), 1, 1, "#24143f"); R(c, x + 2, y - (Math.floor(t * 10 + 1) % 2), 1, 1, "#24143f");
+            R(c, x, y, 1, 1, "#c46bff");
+          }
         },
       },
     },
@@ -971,13 +1066,30 @@ function drawAvatar(c, gear, x, bottom, t, still = false) {
       make: (k) => ({ build: (t) => brainDome(k.fluid, t) }),
     },
     rare: {
-      name: "Robo Brain",
-      pitch: "A brass-collared dome with rivets and a little antenna with a red bulb on top.",
+      name: "Cyborg Brain",
+      pitch: "A riveted steel skull-cap with a round porthole window showing the brain, red and blue tubes plugged into the sides, a green status light and a tiny satellite dish on top.",
       item: {
-        build: (t) => brainDome("#9fb8d8", t, {
-          metal: "#c9a24a", rivet: "#fff1b0",
-          extra: (g) => { g.set(7, -7, "#c9a24a"); g.set(7, -8, "#c9a24a"); g.set(7, -9, "#ff3b4d"); g.set(8, -9, OUT); g.set(6, -9, OUT); g.set(7, -10, OUT); },
-        }),
+        build() {
+          const g = makeGrid();
+          const STEEL = "#9a94aa", STEEL_HI = "#d0cadc", STEEL_SH = "#5a5470";
+          // steel cap over the top of the head
+          ellipse(g, 7, 0.5, 4.4, 3.6, (x, y, x0, x1) => (y > 2 ? null : x === x0 || y < -2 ? STEEL_HI : x >= x1 - 1 ? STEEL_SH : STEEL));
+          for (const [k, v] of [...g.m]) if (v.y > 2 || v.c === null) g.m.delete(k);
+          g.row(3, 11, 2, STEEL_SH);
+          [3, 5, 9, 11].forEach((x) => g.set(x, 2, STEEL_HI));
+          // porthole: brass ring, brain behind glass
+          ellipse(g, 7, -0.6, 2.7, 2.5, () => "#c9a24a");
+          ellipse(g, 7, -0.6, 1.8, 1.6, (x, y) => ((x + y) % 2 ? "#f0a0b8" : "#c46a8a"));
+          g.set(6, -1, "#ffffff");
+          // dish on a little stalk
+          g.set(9, -4, STEEL_SH); g.set(10, -5, STEEL_SH); g.row(9, 12, -6, STEEL_HI); g.set(11, -7, STEEL_HI); g.set(12, -7, STEEL_HI); g.set(10, -7, "#ff3b4d");
+          outline(g);
+          // tubes plugged into the sides, looping down to the shoulders
+          [[2, 1], [1, 2], [1, 3], [1, 4], [2, 5]].forEach(([x, y]) => g.set(x, y, "#e0384e"));
+          [[12, 1], [13, 2], [13, 3], [13, 4], [12, 5]].forEach(([x, y]) => g.set(x, y, "#4fb2ff"));
+          g.set(4, 0, "#5ee84a");
+          return g;
+        },
       },
     },
     epic: {
@@ -1125,13 +1237,19 @@ addTheme("shirt", {
     make: (s) => ({ sleeve: "short", px: cornPx(s) }),
   },
   rare: {
-    name: "Caramel Drizzle",
-    pitch: "The classic bands with gooey caramel dripping down from the collar.",
+    name: "Caramel Apple",
+    pitch: "The top of the shirt is dipped in shiny caramel like a caramel apple, with thick drips of different lengths running down over the candy bands.",
     item: {
       sleeve: "short",
       px: (x, y, z) => {
-        const drip = { 3: 9, 4: 10, 5: 9, 6: 11, 7: 9, 8: 10, 9: 9, 10: 11, 11: 9 };
-        if (torso(z) && y >= 8 && y <= (drip[x] ?? 8)) return z === "T" ? "#8a5a20" : "#b8792a";
+        // how far down the caramel reaches in each column; the last pixel is the darker drop tip
+        const drip = { 5: 12, 8: 13, 10: 12 };
+        const end = drip[x] ?? 10;
+        if (y <= end) {
+          if (y === end && end > 10) return "#7a4510";
+          if (at([[4, 9], [5, 8]], x, y)) return "#f8d08a";
+          return z === "T" ? "#9a5e20" : "#c8822e";
+        }
         return cornPx({ a: "#fff6e0", b: "#ff7a1a", c: "#ffd84a" })(x, y, z);
       },
     },
@@ -1192,17 +1310,18 @@ addTheme("shirt", {
     make: (s) => ({ sleeve: "long", px: plaid(s) }),
   },
   rare: {
-    name: "Patched Up",
-    pitch: "A well-loved flannel with brown elbow patches and a candy bar poking out of the chest pocket.",
+    name: "Puffer Vest",
+    pitch: "A puffy brown quilted vest zipped up over the orange flannel, with a cream fleece collar and the plaid sleeves showing.",
     item: {
       sleeve: "long",
       px: (x, y, z) => {
-        if ((z === "l") && y === 12) return "#6b4a28";
-        if (torso(z) && x >= 5 && x <= 7 && y === 10) return "#8f3c06";
-        if (torso(z) && x >= 5 && x <= 7 && y === 11) return "#c4550a";
-        return plaid({ base: "#ff7a1a", mid: "#8f3c06", dark: "#1a1024" })(x, y, z);
+        if (!torso(z)) return plaid({ base: "#ff7a1a", mid: "#8f3c06", dark: "#1a1024" })(x, y, z);
+        if (y === 8) return x >= 5 && x <= 9 ? "#ecdcb8" : "#6b4a28";
+        if (x === 7) return y === 9 ? "#f3efe6" : "#a49db0"; // zipper and pull
+        if (y === 10 || y === 13) return "#3d2614"; // quilting seams
+        if (y === 9 || y === 11) return z === "T" ? "#6b4a28" : "#a87a44"; // puffy highlight under each seam
+        return z === "T" ? "#55391e" : "#7a5430";
       },
-      over: (c, l, tp) => { R(c, l + 6, tp + 9, 1, 1, "#7a4a24"); R(c, l + 6, tp + 8, 1, 1, "#c42a3e"); },
     },
   },
   epic: {
@@ -1246,23 +1365,35 @@ addTheme("shirt", {
 });
 
 // ---------- 3. Vampire Count ----------
+// White shirt, vest and bow tie in front; the cape hangs behind the body (drawn in `under`), so its
+// edges show past the arms, its lining shows around the legs, and a tall collar stands up behind the
+// head. A light rim on the cape's outer edge keeps it from melting into the dark night background.
 const vampPx = (s) => (x, y, z) => {
-  if (z === "u" || z === "l") return z === "l" ? "#14101c" : "#1f1a2a";
-  if (x === 7 || x === 6) return y === 9 ? s.accent : "#f3efe6";
+  if (z === "u" || z === "l") return z === "l" ? "#3a3150" : "#4a4060";
+  if (x === 7 || x === 8) return y === 9 ? s.accent : "#f3efe6";
   if (y >= 10) return z === "T" ? darken(s.accent, 0.6) : s.accent;
   return z === "T" ? "#cfc8d8" : "#f3efe6";
 };
-function vampCape(c, l, tp, lining, flap = 0) {
-  [[3, 6], [3, 7], [4, 6], [4, 7], [10, 6], [10, 7], [11, 6], [11, 7], [4, 5], [10, 5]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, x === 4 || x === 10 ? lining : "#14101c"));
-  for (let y = 9; y <= 18; y++) {
-    const out = y > 13 ? Math.round(flap * (y - 13) / 5) : 0;
-    R(c, l + 1 - out, tp + y, 1, 1, "#14101c"); R(c, l + 14 + out, tp + y, 1, 1, "#14101c");
+// P: { cape, rim, lining }; flap widens the hem; liningPx(x, y) can paint the lining
+function vampCape(c, l, tp, P, flap = 0, liningPx = null) {
+  for (const [x, y] of [[2, 4], [2, 5], [3, 5], [2, 6], [3, 6], [4, 6], [2, 7], [3, 7], [4, 7]]) {
+    const col = x === 2 ? P.rim : P.lining;
+    R(c, l + x, tp + y, 1, 1, col); R(c, l + 15 - x, tp + y, 1, 1, col);
   }
-  R(c, l + 1 - Math.round(flap), tp + 19, 1, 1, lining); R(c, l + 14 + Math.round(flap), tp + 19, 1, 1, lining);
+  for (let y = 8; y <= 24; y++) {
+    const w = 6.5 + (y - 8) * 0.13 + (y > 14 ? (flap * (y - 14)) / 10 : 0);
+    const x0 = Math.round(7.5 - w), x1 = Math.round(7.5 + w);
+    for (let x = x0; x <= x1; x++) {
+      let col = x === x0 || x === x1 ? P.rim : x === x0 + 1 || x === x1 - 1 ? P.cape : liningPx ? liningPx(x, y) : P.lining;
+      if (y === 24 && x !== x0 && x !== x1) col = x % 2 ? P.rim : P.cape; // scalloped hem
+      R(c, l + x, tp + y, 1, 1, col);
+    }
+  }
 }
+const VAMP = { cape: "#2e2546", rim: "#b8a8d8" };
 addTheme("shirt", {
   name: "Vampire Count",
-  pitch: "A white dress shirt, colored vest and bow tie under a black cape with a tall lined collar.",
+  pitch: "A white dress shirt, colored vest and bow tie under a long black cape with a tall standing collar and a bright lining.",
   common: {
     pitch: "Vest, bow tie and cape lining in one color.",
     colors: [
@@ -1273,47 +1404,55 @@ addTheme("shirt", {
       { name: "Old gold", accent: "#a8792a" },
       { name: "Silver", accent: "#6b6380" },
     ],
-    make: (s) => ({ sleeve: "long", px: vampPx(s), over: (c, l, tp) => vampCape(c, l, tp, lighten(s.accent, 0.15)) }),
+    make: (s) => ({ sleeve: "long", px: vampPx(s), under: (c, l, tp) => vampCape(c, l, tp, { ...VAMP, lining: lighten(s.accent, 0.3) }) }),
   },
   rare: {
-    name: "Bat Brooch",
-    pitch: "Frilly white ruffles down the front, pinned at the collar with a silver bat brooch.",
+    name: "Royal Count",
+    pitch: "A gold-trimmed cape with a crimson lining, frilly white ruffles down the front and a ruby medallion on a gold chain.",
     item: {
       sleeve: "long",
       px: (x, y, z) => {
-        if (torso(z) && (x === 6 || x === 7) && y >= 10 && y <= 12) return (x + y) % 2 ? "#ffffff" : "#d9d2e6";
+        if (torso(z) && (x === 7 || x === 8) && y >= 10 && y <= 12) return (x + y) % 2 ? "#ffffff" : "#d9d2e6";
         return vampPx({ accent: "#8f1426" })(x, y, z);
       },
+      under: (c, l, tp) => vampCape(c, l, tp, { cape: "#2e2546", rim: "#e8b84a", lining: "#c42a3e" }),
       over: (c, l, tp) => {
-        vampCape(c, l, tp, "#c42a3e");
-        R(c, l + 5, tp + 8, 1, 1, "#c9c2d9"); R(c, l + 6, tp + 9, 1, 1, "#c9c2d9"); R(c, l + 7, tp + 9, 1, 1, "#c9c2d9"); R(c, l + 8, tp + 8, 1, 1, "#c9c2d9");
+        [[4, 9], [5, 10], [6, 11], [9, 11], [10, 10], [11, 9]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, "#e8b84a"));
+        R(c, l + 7, tp + 12, 2, 2, "#e8b84a"); R(c, l + 7, tp + 12, 1, 1, "#ff3b4d"); R(c, l + 8, tp + 13, 1, 1, "#8f1426");
       },
     },
   },
   epic: {
     name: "Billowing Cape",
-    pitch: "The cape catches a ghostly breeze and keeps billowing out and settling back.",
+    pitch: "The cape catches a ghostly breeze and keeps billowing out wide and settling back.",
     item: {
       sleeve: "long",
       px: vampPx({ accent: "#8f1426" }),
-      over: (c, l, tp, t) => vampCape(c, l, tp, "#c42a3e", reduced ? 0 : (Math.sin(t * 2.5) + 1) * 1.2),
+      under: (c, l, tp, t) => vampCape(c, l, tp, { ...VAMP, lining: "#c42a3e" }, reduced ? 0 : (Math.sin(t * 2.5) + 1) * 1.6),
     },
   },
   legendary: {
-    name: "Nosferatu",
-    pitch: "A crimson glow pours out from under the cape and a swarm of bats keeps circling you.",
+    name: "Night Lord",
+    pitch: "The cape's lining is a twinkling blood-red night sky, a crimson glow pulses around you, and bats keep breaking off the hem and flying away.",
     item: {
       sleeve: "long",
-      px: (x, y, z, t) => (torso(z) && (x === 6 || x === 7) && y === 9 ? (Math.sin(t * 4) > 0 ? "#ff3b4d" : "#c42a3e") : vampPx({ accent: "#5c0c18" })(x, y, z)),
-      under: (c, l, tp, t) => glow(c, l + 7, tp + 13, 15, "#ff3b4d", 0.35 + 0.12 * Math.sin(t * 2.5)),
+      px: (x, y, z, t) => (torso(z) && (x === 7 || x === 8) && y === 9 ? (Math.sin(t * 4) > 0 ? "#ff3b4d" : "#c42a3e") : vampPx({ accent: "#5c0c18" })(x, y, z)),
+      under: (c, l, tp, t) => {
+        glow(c, l + 7, tp + 14, 16, "#ff3b4d", 0.35 + 0.12 * Math.sin(t * 2.5));
+        const rim = Math.sin(t * 3) > 0 ? "#ff8a96" : "#ff3b4d";
+        vampCape(c, l, tp, { cape: "#2a1430", rim, lining: "#5c0c28" }, reduced ? 0 : (Math.sin(t * 2) + 1) * 0.8,
+          (x, y) => (hash(x, y, Math.floor(t * 2)) > 0.94 ? "#ffffff" : hash(x, y) > 0.88 ? "#ff6b7a" : "#5c0c28"));
+      },
       over: (c, l, tp, t) => {
-        vampCape(c, l, tp, "#ff3b4d", reduced ? 0 : (Math.sin(t * 2) + 1) * 0.8);
         for (let k = 0; k < 3; k++) {
-          const a = t * 1.3 + (k * TAU) / 3;
-          const x = Math.round(l + 7 + Math.cos(a) * 9), y = Math.round(tp + 11 + Math.sin(a) * 6);
-          const up = Math.floor(t * 8 + k) % 2;
-          R(c, x, y, 1, 1, "#0b0614"); R(c, x - 1, y - up, 1, 1, "#0b0614"); R(c, x + 1, y - up, 1, 1, "#0b0614");
-          R(c, x, y, 1, 1, "#ff3b4d");
+          const ph = (t * 0.45 + k / 3) % 1;
+          const dir = k === 1 ? 1 : -1;
+          const x = Math.round(l + (k === 1 ? 15 : 0) + dir * ph * 6), y = Math.round(tp + 23 - ph * 20);
+          const up = Math.floor(t * 9 + k) % 2;
+          fade(c, 1 - ph * 0.8, () => {
+            R(c, x, y, 1, 1, "#0b0614"); R(c, x - 1, y - up, 1, 1, "#0b0614"); R(c, x + 1, y - up, 1, 1, "#0b0614");
+            R(c, x, y, 1, 1, "#ff3b4d");
+          });
         }
       },
     },
@@ -1602,27 +1741,33 @@ addTheme("shirt", {
     },
   },
   legendary: {
-    name: "It's Alive!",
-    pitch: "Lightning arcs crackle across the whole torso, the stitches glow electric blue, and the air flashes with each strike.",
+    name: "Lightning Rods",
+    pitch: "Two copper lightning rods stick up from the shoulders and a bolt keeps jumping between them over your head. Pulses of blue power run down the stitches, and a green heart beats in a glass window on the chest.",
     item: {
       sleeve: "short",
       px: (x, y, z, t) => {
-        const flash = Math.floor(t * 7) % 5 === 0;
-        if (x === 4 && y >= 9 && y <= 13 || (x === 3 || x === 5) && (y === 10 || y === 12)) return flash ? "#ffffff" : "#4fb2ff";
-        if (torso(z) && x >= 6 && x <= 8) return x === 7 && y % 2 === 0 ? "#4fb2ff" : "#8a8494";
+        const seam = (x === 4 && y >= 9 && y <= 13) || ((x === 3 || x === 5) && (y === 10 || y === 12));
+        if (seam) return Math.abs(((y - t * 8) % 5 + 5) % 5) < 1 ? "#d8fbff" : "#4fb2ff";
+        if (torso(z) && x >= 7 && x <= 9 && y >= 10 && y <= 12) {
+          if (x === 8 && y === 11) return Math.sin(t * 7) > 0.2 ? "#b7ff9e" : "#3fb02f";
+          return x === 8 || y === 11 ? "#2a5a3a" : "#c9c2d9";
+        }
+        if (torso(z) && x >= 6 && x <= 8) return "#8a8494";
         return z === "T" ? "#2f4a26" : "#456b36";
       },
-      under: (c, l, tp, t) => glow(c, l + 7, tp + 11, 15, "#4fb2ff", 0.25 + (Math.floor(t * 7) % 5 === 0 ? 0.3 : 0.05)),
+      under: (c, l, tp, t) => glow(c, l + 7, tp + 6, 16, "#4fb2ff", 0.28 + (Math.floor(t * 6) % 3 === 0 ? 0.25 : 0.05)),
       over: (c, l, tp, t) => {
         rag(c, l, tp, "#456b36");
-        const step = Math.floor(t * 8);
+        for (const x of [1, 14]) {
+          for (let y = 2; y <= 8; y++) R(c, l + x, tp + y, 1, 1, y % 2 ? "#e8a060" : "#b8662a");
+          R(c, l + x, tp + 1, 1, 1, "#d8fbff");
+        }
+        const step = Math.floor(t * 6);
         if (step % 3 === 2) return;
-        for (let b = 0; b < 2; b++) {
-          let x = l + (b ? 13 : 1), y = tp + 9 + Math.round(hash(step, b) * 3);
-          for (let k = 0; k < 6; k++) {
-            R(c, x, y, 1, 1, k < 2 ? "#ffffff" : "#9fd4ff");
-            x += b ? -1 : 1; y += hash(step, b, k) > 0.5 ? 1 : -1;
-          }
+        let y = tp + 1;
+        for (let x = l + 2; x <= l + 13; x++) {
+          y = Math.max(tp - 4, Math.min(tp + 1, y + (hash(step, x) > 0.5 ? 1 : -1)));
+          R(c, x, y, 1, 1, hash(step, x, 7) > 0.7 ? "#ffffff" : "#9fd4ff");
         }
       },
     },
@@ -1726,27 +1871,30 @@ addTheme("shirt", {
     make: (s) => ({ sleeve: "long", px: burlap(s), over: (c, l, tp, t) => straw(c, l, tp, t) }),
   },
   rare: {
+    name: "Windswept",
+    pitch: "Caught in a big gust: the straw sticks out sideways from the collar and cuffs, frozen mid-blow, and the hem has torn loose on one side.",
+    item: {
+      sleeve: "long",
+      px: (x, y, z) => (torso(z) && y === 14 && x >= 9 ? "#1a1024" : burlap({ c: "#a8844e" })(x, y, z)),
+      over: (c, l, tp) => {
+        [[5, 7], [6, 6], [7, 6], [8, 7], [9, 6], [10, 6], [11, 5], [12, 5]].forEach(([x, y], i) => R(c, l + x, tp + y, 1, 1, STRAW[i % 3]));
+        [[2, 15], [3, 15], [4, 16], [12, 15], [13, 15], [14, 16], [15, 16]].forEach(([x, y], i) => R(c, l + x, tp + y, 1, 1, STRAW[i % 3]));
+        R(c, l + 11, tp + 14, 1, 1, "#a8844e"); R(c, l + 12, tp + 15, 1, 1, "#8a6a3e");
+      },
+    },
+  },
+  epic: {
     name: "Crow's Perch",
-    pitch: "A black crow has made itself at home on your shoulder, beady yellow eye and all.",
+    pitch: "A black crow has made itself at home on your shoulder, beady yellow eye and all, and every few seconds it throws its head up and caws.",
     item: {
       sleeve: "long",
       px: burlap({ c: "#a8844e" }),
       over: (c, l, tp, t) => {
         straw(c, l, tp, t);
-        spr(c, ["..kk.", ".kkyo", "kgkk.", ".kk..", ".k.k."], { k: "#3a3150", g: "#6b6380", y: "#ffd84a", o: "#e0661a" }, l + 11, tp + 4);
-      },
-    },
-  },
-  epic: {
-    name: "Windblown",
-    pitch: "The straw rustles in the wind and every so often a loose piece blows away.",
-    item: {
-      sleeve: "long",
-      px: burlap({ c: "#a8844e" }),
-      over: (c, l, tp, t) => {
-        straw(c, l, tp, t, true);
-        const ph = (t * 0.5) % 1;
-        fade(c, 1 - ph, () => { R(c, l + 14 + ph * 6, tp + 15 - ph * 8 + Math.sin(t * 6) , 1, 1, "#ffd84a"); R(c, l + 9 + ph * 7, tp + 6 - ph * 4, 1, 1, "#f3d27a"); });
+        const caw = !reduced && t % 3 < 0.5;
+        // cawing: head tipped up, beak open (upper and lower beak)
+        const crow = caw ? ["...kko", "..kkyo", "kgkk.o", ".kk...", ".k.k.."] : ["..kk.", ".kkyo", "kgkk.", ".kk..", ".k.k."];
+        spr(c, crow, { k: "#3a3150", g: "#6b6380", y: "#ffd84a", o: "#e0661a" }, l + 11, tp + 4);
       },
     },
   },
@@ -1972,15 +2120,28 @@ addTheme("shirt", {
     },
     rare: {
       name: "Vine Belt",
-      pitch: "The pumpkin shorts held up by a curly green vine belt with two leaves.",
-      item: {
-        ...jack({ base: "#ff7a1a", hi: "#ffa45a", sh: "#c4550a" }, "#1a1024", false),
-        over(c, l, tp) {
-          R(c, l + 4, tp + 15, 8, 1, "#4a7a28");
-          R(c, l + 4, tp + 14, 1, 1, "#7aac52"); R(c, l + 11, tp + 14, 1, 1, "#7aac52");
-          R(c, l + 8, tp + 14, 1, 1, "#3a6020");
-        },
-      },
+      pitch: "The pumpkin shorts still growing on the vine: a twisted green vine for a belt, a curly stem and leaf sprouting at the front, and a corkscrew tendril dangling off one hip.",
+      item: (() => {
+        const VINE = "#4a8a2a", VINE_D = "#2a5a1c", LEAF = "#7ac44a", LEAF_D = "#4a8a2a";
+        const base = jack({ base: "#ff7a1a", hi: "#ffa45a", sh: "#c4550a" });
+        return {
+          ...base,
+          px(x, y, z, t) {
+            // the belt is a twisted vine: light and dark strands alternating
+            if (y === 15) return x % 2 ? VINE : VINE_D;
+            return base.px(x, y, z, t);
+          },
+          over(c, l, tp) {
+            // belt runs past the hips a little
+            R(c, l + 4, tp + 15, 1, 1, VINE_D); R(c, l + 11, tp + 15, 1, 1, VINE);
+            // curly stem and a leaf sprouting up at the front
+            spr(c, ["..s.", ".s..", "LLs.", "LLL."], { s: VINE_D, L: LEAF }, l + 6, tp + 11);
+            R(c, l + 6, tp + 14, 1, 1, LEAF_D);
+            // corkscrew tendril dangling off the right hip
+            spr(c, ["v.", ".v", "v.", ".v", "vv"], { v: VINE }, l + 11, tp + 16);
+          },
+        };
+      })(),
     },
     epic: {
       name: "Candlelit",
@@ -2042,12 +2203,23 @@ addTheme("shirt", {
     },
     rare: {
       name: "Ancient Gold",
-      pitch: "Royal wraps with gold bands at the hip, knee and ankle, marked with tiny hieroglyphs.",
+      pitch: "A pharaoh's burial wraps: a gold belt with a blue scarab buckle, a striped gold-and-lapis cloth hanging down the front, and gold cuffs at the ankles.",
       item: {
         long: true,
         px(x, y, z) {
-          if (y === 15 || y === 19 || y === 22) return (x + y) % 3 === 0 ? "#3a2300" : "#ffc53a";
+          if (y === 15) return x === 7 || x === 8 ? "#2a4a8f" : "#ffc53a";
+          if (y >= 22) return y === 22 ? "#ffc53a" : "#c9962a";
           return wraps(CREAM).px(x, y, z);
+        },
+        over(c, l, tp) {
+          // scarab buckle
+          R(c, l + 7, tp + 14, 2, 1, "#4fb2ff"); R(c, l + 7, tp + 15, 2, 1, "#2a4a8f");
+          // striped royal cloth hanging between the legs, wider at the bottom
+          for (let y = 16; y <= 20; y++) {
+            const w = y < 18 ? 2 : 4, x0 = y < 18 ? 7 : 6;
+            for (let x = x0; x < x0 + w; x++) R(c, l + x, tp + y, 1, 1, y % 2 ? "#ffc53a" : "#2a4a8f");
+          }
+          R(c, l + 6, tp + 21, 4, 1, "#c9962a");
         },
       },
     },
@@ -2208,34 +2380,57 @@ addTheme("shirt", {
     },
     epic: {
       name: "Full Moon Shift",
-      pitch: "The transformation is happening: fur creeps up the legs, bristles, and shrinks back down, over and over.",
+      pitch: "Every few seconds the werewolf bursts out: the jeans bulge and split open at the thighs, fur bristles out of the rips and claws poke out of the shoes, then it all settles back.",
       item: (() => {
         const w = werewolf({ base: "#3a4a78", edge: "#8a9ac0" });
+        // 0 = calm, 1 = full burst; a quick swell every 3 seconds
+        const burst = (t) => {
+          if (reduced) return 0.6;
+          const ph = t % 3;
+          return ph < 0.25 ? ph / 0.25 : ph < 1.1 ? 1 : ph < 1.5 ? 1 - (ph - 1.1) / 0.4 : 0;
+        };
+        const RIPS = [[5, 16], [6, 17], [10, 16], [9, 17], [5, 15], [10, 15]];
         return {
           ...w,
           px(x, y, z, t) {
-            const reach = 17 - Math.round(((Math.sin(t * 1.6) + 1) / 2) * 2);
-            if (y >= reach && y <= 17 && isLeg(x) && (x + y) % 2 === 0) return "#7a5230";
+            const b = burst(t);
+            const n = Math.round(b * RIPS.length);
+            const k = RIPS.findIndex(([a, c]) => a === x && c === y);
+            if (k >= 0 && k < n) return (x + y) % 2 ? "#7a5230" : "#5a3a20";
             return w.px(x, y, z);
           },
           over(c, l, tp, t) {
             w.over(c, l, tp);
-            const br = Math.floor(t * 6) % 2;
-            if (br) { R(c, l + 4, tp + 19, 1, 1, "#6b4a28"); R(c, l + 11, tp + 21, 1, 1, "#6b4a28"); }
+            const b = burst(t);
+            if (b < 0.5) return;
+            // fur bristling out past the sides of the legs
+            [[4, 16], [4, 19], [3, 20], [11, 16], [11, 19], [12, 20]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, "#6b4a28"));
+            // claws through the toes of the shoes
+            [[4, 26], [6, 26], [9, 26], [11, 26]].forEach(([x, y]) => R(c, l + x, tp + y - 1, 1, 1, "#f3efe6"));
           },
         };
       })(),
     },
     legendary: {
       name: "Moonlit Beast",
-      pitch: "Bathed in full-moon light: the fur glows silver-blue, claw marks shine on the thighs, and moon sparkles drift around.",
+      pitch: "Shredded midnight jeans with glowing blue fur, silver claw marks, a big bushy wolf tail that swishes behind you and moonlit fur tufts drifting off.",
       item: (() => {
-        const w = werewolf({ base: "#14182e", edge: "#5a6a9a" }, { a: "#9fb8e0", b: "#6f88b8", c: "#4a5a8f", tip: "#d8f0ff" });
+        const FUR = { a: "#9fb8e0", b: "#6f88b8", c: "#4a5a8f", tip: "#d8f0ff" };
+        const w = werewolf({ base: "#14182e", edge: "#5a6a9a" }, FUR);
+        const SHREDS = [[5, 16], [10, 15], [6, 17], [9, 16]];
+        const CLAW = [[9, 15], [10, 16], [10, 15]];
         return {
           ...w,
-          under: (c, l, tp, t) => glow(c, l + 7.5, tp + 20, 12, "#9fd4ff", 0.3 + 0.1 * Math.sin(t * 2)),
+          under(c, l, tp, t) {
+            glow(c, l + 7.5, tp + 19, 13, "#9fd4ff", 0.32 + 0.1 * Math.sin(t * 2));
+            // bushy tail curling up from behind the right hip, swishing side to side
+            const TAIL = ["...tt.", "..att.", "..aab.", ".aab..", ".aab..", "aab...", "ab...."];
+            const sw = reduced ? 0 : Math.sin(t * 3);
+            TAIL.forEach((row, j) => spr(c, [row], { a: FUR.a, b: FUR.b, t: FUR.tip }, l + 10 + Math.round((sw * (TAIL.length - 1 - j)) / 3), tp + 11 + j));
+          },
           px(x, y, z, t) {
-            if (at([[5, 15], [6, 16], [9, 15], [10, 16]], x, y)) return Math.sin(t * 4) > 0 ? "#d8f0ff" : "#9fd4ff";
+            if (at(SHREDS, x, y)) return (x + y) % 2 ? FUR.a : FUR.b;
+            if (at(CLAW, x, y)) return Math.sin(t * 4) > 0 ? "#ffffff" : "#d8f0ff";
             return w.px(x, y, z);
           },
           shin(x, y, z, t) {
@@ -2244,10 +2439,10 @@ addTheme("shirt", {
           },
           over(c, l, tp, t) {
             w.over(c, l, tp);
-            for (let k = 0; k < 3; k++) {
-              const ph = (t * 0.5 + k / 3) % 1;
-              const tw = Math.sin(t * 7 + k) > 0.3;
-              if (ph < 0.6) sparkle(c, l + [2, 13, 7][k], tp + 24 - Math.round(ph * 10), tw ? "#ffffff" : "#9fd4ff", tw);
+            // tufts of moonlit fur drifting up and away
+            for (let k = 0; k < 4; k++) {
+              const ph = (t * 0.45 + k / 4) % 1;
+              fade(c, 1 - ph, () => R(c, l + [3, 12, 5, 10][k] + Math.round(Math.sin(t * 2 + k) * 1.5), tp + 23 - Math.round(ph * 12), 1, 1, k % 2 ? "#d8f0ff" : "#9fb8e0"));
             }
           },
         };
@@ -2373,15 +2568,16 @@ addTheme("shirt", {
       pitch: "The slime keeps moving: drips stretch longer and longer until they drop off and splat on the floor.",
       item: {
         ...slime(SLIMES[0]),
-        over(c, l, tp, t) {
+        over(c, l, tp, t, g = tp) {
+          const floor = g - tp + 26; // the floor row, below the feet when shoes lift the body
           DRIPS.forEach(([x, y, sp]) => {
             const ph = (t * 0.6 + sp) % 1;
             if (ph < 0.6) R(c, l + x, tp + y, 1, 1 + Math.round(ph * 4), "#5ee84a");
             else {
               R(c, l + x, tp + y, 1, 1, "#5ee84a");
-              const fy = y + 3 + Math.round((ph - 0.6) * 20);
-              if (fy < 27) R(c, l + x, tp + fy, 1, 1, "#7dff5a");
-              else { R(c, l + x - 1, tp + 26, 3, 1, "#3fb02f"); }
+              const fy = y + 3 + Math.round((ph - 0.6) * (floor - y - 3) / 0.4);
+              if (fy < floor + 1) R(c, l + x, tp + fy, 1, 1, "#7dff5a");
+              else { R(c, l + x - 1, tp + floor, 3, 1, "#3fb02f"); }
             }
           });
         },
@@ -2397,10 +2593,10 @@ addTheme("shirt", {
           const f = Math.sin(y * 1.1 - t * 5 + x * 0.8);
           return sh(f > 0.6 ? "#e0ffd8" : f > -0.2 ? "#7dff5a" : "#3fb02f", x, z);
         },
-        under(c, l, tp, t) {
+        under(c, l, tp, t, g = tp) {
           glow(c, l + 7.5, tp + 20, 13, "#5ee84a", 0.4 + 0.12 * Math.sin(t * 4));
           const w = 9 + Math.round(Math.sin(t * 2) * 2);
-          R(c, l + 7.5 - w / 2, tp + 27, w, 1, "#3fb02f");
+          R(c, l + 7.5 - w / 2, g + 27, w, 1, "#3fb02f");
         },
         over(c, l, tp, t) {
           DRIPS.forEach(([x, y, sp]) => {
@@ -2494,11 +2690,11 @@ addTheme("shirt", {
     },
     rare: {
       name: "Sprinkles",
-      pitch: "The candy-corn track pants covered in colorful candy sprinkles.",
+      pitch: "The candy-corn track pants absolutely covered in rainbow candy sprinkles, from the waistband to the cuffs.",
       item: track({ base: "#1f1a2a" }, (x, y) => {
         if (outer(x)) return cornStripe(y);
         const h = hash(x, y, 7);
-        return h < 0.22 ? ["#ff6fb5", "#5ee84a", "#4fb2ff", "#ffd84a"][Math.floor(h * 18) % 4] : null;
+        return h < 0.6 ? ["#ff6fb5", "#5ee84a", "#4fb2ff", "#ffd84a", "#ffffff", "#c46bff"][Math.floor(h * 60) % 6] : null;
       }),
     },
     epic: {
@@ -2508,7 +2704,7 @@ addTheme("shirt", {
     },
     legendary: {
       name: "Candy Comet",
-      pitch: "The stripes glow like candy neon, little candy corns spin around your legs, and sugar sparkles burst off.",
+      pitch: "The stripes glow like candy neon and little candy corns spin around your legs.",
       item: {
         ...track({ base: "#140f20" }, (x, y, t) => (outer(x) ? ["#ffe14d", "#ff9a3a", "#ffffff"][Math.floor(y / 2 + t * 5) % 3] : null)),
         under: (c, l, tp, t) => glow(c, l + 7.5, tp + 20, 13, "#ff9a3a", 0.3 + 0.1 * Math.sin(t * 5)),
@@ -2518,8 +2714,6 @@ addTheme("shirt", {
             const x = Math.round(l + 7 + Math.cos(a) * 7), y = Math.round(tp + 20 + Math.sin(a) * 3);
             R(c, x, y, 1, 1, "#ffffff"); R(c, x, y + 1, 1, 1, "#ff7a1a"); R(c, x, y + 2, 1, 1, "#ffd84a");
           }
-          const ph = (t * 1.2) % 1;
-          if (ph < 0.25) sparkle(c, l + 12, tp + 17, "#fff6e0", ph < 0.12);
         },
       },
     },
@@ -2638,9 +2832,16 @@ addTheme("shoes", {
   },
   epic: {
     name: "Candlelit Kicks",
-    pitch: "The carved faces flicker like there's a candle inside each shoe, throwing warm light on the floor.",
+    pitch: "The carved faces flicker like there's a candle inside each shoe, and each one throws a warm pool of candlelight across the floor.",
     item: {
-      under: (c, l, g, t) => glow(c, l + 7, g + 26, 9, "#ff9a3a", 0.3 + 0.12 * Math.sin(t * 9)),
+      under: (c, l, g, t) => {
+        const f = Math.sin(t * 9) + Math.sin(t * 5.1);
+        glow(c, l + 7.5, g + 26, 16, "#ff9a3a", 0.45 + 0.08 * f);
+        glow(c, l + 5, g + 25.5, 6, "#ffd84a", 0.55 + 0.1 * f);
+        glow(c, l + 10, g + 25.5, 6, "#ffd84a", 0.55 + 0.1 * Math.sin(t * 7 + 1));
+        glow(c, l + 3, g + 27, 5, "#ffb84a", 0.35 + 0.08 * f);
+        glow(c, l + 12, g + 27, 5, "#ffb84a", 0.35 + 0.08 * f);
+      },
       px: (x, y, z, t) => {
         if (y === 26) return "#1a1024";
         if (x === 4 || x === 6 || x === 9 || x === 11) return Math.sin(t * 9) + Math.sin(t * 5.1 + x) > -0.5 ? "#fff3a0" : "#ffd84a";
@@ -2695,11 +2896,25 @@ addTheme("shoes", {
   },
   rare: {
     name: "Spiderweb Boots",
-    pitch: "Black boots stitched with a silver cobweb pattern and silver buckles, with a red spider on one toe.",
+    pitch: "Jet-black boots with a silver cobweb strand running across each one, silver buckles, and a little red-backed spider hanging off one curled toe.",
     item: {
       high: true,
-      px: (x, y) => (y === 24 && shLace(x) ? "#c9c2d9" : y === 26 ? "#0b0614" : (x + y) % 3 === 0 ? "#d8d0ec" : "#231d33"),
-      over: (c, l, tp) => { curls(c, l, tp, "#231d33"); R(c, l + 11, tp + 25, 1, 1, "#ff3b4d"); },
+      px: (x, y) => {
+        if (y === 26) return "#0b0614";
+        if (y === 24 && shLace(x)) return "#d8d0ec";
+        // one silver strand running diagonally down each boot
+        if ((y === 23 && (x === 4 || x === 11)) || (y === 25 && (x === 6 || x === 9))) return "#c9c2d9";
+        return "#1a1424";
+      },
+      over: (c, l, tp) => {
+        curls(c, l, tp, "#1a1424");
+        // the web corner between each curled toe and the ankle
+        both(c, l, tp, 3, 23, "#a99bc9");
+        // the spider dangles from the right toe on a thread
+        R(c, l + 13, tp + 25, 1, 1, "#a99bc9");
+        R(c, l + 12, tp + 26, 1, 1, "#6b6380"); R(c, l + 14, tp + 26, 1, 1, "#6b6380");
+        R(c, l + 13, tp + 26, 1, 1, "#e0242e");
+      },
     },
   },
   epic: {
@@ -2717,25 +2932,19 @@ addTheme("shoes", {
   },
   legendary: {
     name: "Broomflight Boots",
-    pitch: "Enchanted boots that lift you off the floor on a swirl of purple magic, curled toes glowing and sparkles trailing behind.",
+    pitch: "Enchanted boots that lift you off the floor on a soft swirl of purple magic, their curled toes glowing.",
     item: {
       high: true,
       lift: 3,
       under: (c, l, g, t) => {
-        glow(c, l + 7, g + 26, 12, "#c46bff", 0.45 + 0.12 * Math.sin(t * 3));
-        for (let k = 0; k < 6; k++) {
-          const a = t * 3 + (k * TAU) / 6;
-          fade(c, 0.8, () => R(c, l + 7.5 + Math.cos(a) * 6, g + 27 + Math.sin(a) * 1.2, 1, 1, k % 2 ? "#c46bff" : "#f0d8ff"));
+        glow(c, l + 7, g + 26, 10, "#c46bff", 0.35 + 0.08 * Math.sin(t * 3));
+        for (let k = 0; k < 3; k++) {
+          const a = t * 2 + (k * TAU) / 3;
+          fade(c, 0.55, () => R(c, l + 7.5 + Math.cos(a) * 5, g + 26.5 + Math.sin(a), 1, 1, "#c46bff"));
         }
       },
       px: (x, y) => (y === 24 && shLace(x) ? "#ffd84a" : y === 26 ? "#3a1f66" : "#231d33"),
-      over: (c, l, tp, t) => {
-        curls(c, l, tp, Math.sin(t * 5) > 0 ? "#e0b0ff" : "#c46bff");
-        for (let k = 0; k < 3; k++) {
-          const ph = (t * 1.2 + k / 3) % 1;
-          if (ph < 0.3) sparkle(c, l + [1, 14, 7][k], tp + [26, 26, 28][k] + Math.round(ph * 4), "#f0d8ff", ph < 0.15);
-        }
-      },
+      over: (c, l, tp, t) => curls(c, l, tp, Math.sin(t * 5) > 0 ? "#e0b0ff" : "#c46bff"),
     },
   },
 });
@@ -2849,24 +3058,31 @@ addTheme("shoes", {
   },
   rare: {
     name: "Cyclops Slippers",
-    pitch: "Each slipper has one big red-pupiled eye and a little horn sticking up behind it.",
-    item: slipperItem({ a: "#2f6b3a", hi: "#3f8a4a", sole: "#1f4a28" }, {
+    pitch: "Bright green fuzzy slippers, each with one big yellow-green eye, a red pupil, a little green horn and a row of mossy teeth.",
+    item: slipperItem({ a: "#3fae4a", hi: "#5ee84a", sole: "#2f6b3a" }, {
       eyes: false,
-      over: (c, l, tp) => { both(c, l, tp, 4, 24, "#ffffff"); both(c, l, tp, 5, 24, "#ff3b4d"); both(c, l, tp, 6, 23, "#e8dcc0"); },
+      px: (x, y) => (y === 26 ? (shToe(x) || shLace(x) ? "#c8f5a8" : "#2f6b3a") : undefined),
+      over: (c, l, tp) => {
+        both(c, l, tp, 4, 24, "#d8ff7a"); both(c, l, tp, 5, 24, "#ff3b4d");
+        both(c, l, tp, 6, 23, "#2f8a3a"); both(c, l, tp, 6, 22, "#7dff5a");
+      },
     }),
   },
   epic: {
     name: "Chomp Slippers",
-    pitch: "The slippers are hungry: their toothy mouths snap open and shut while their eyes blink.",
+    pitch: "The slippers are hungry: their toothy mouths snap open and shut, the teeth flashing red and white with every chomp, while their eyes blink.",
     item: slipperItem({ a: "#c4402a", hi: "#e0644a", sole: "#8f2a1a" }, {
       px: (x, y, z, t) => {
-        const open = Math.floor(t * 5) % 2 === 0 && t % 2.5 < 1.2;
+        const chomping = t % 2.5 < 1.2;
+        const open = chomping && Math.floor(t * 5) % 2 === 0;
         if (open && y === 25 && (x === 4 || x === 5 || x === 10 || x === 11)) return "#1a1024";
+        if (y === 26 && (shToe(x) || shLace(x))) return chomping && Math.floor(t * 10) % 2 ? "#ff3b4d" : "#f3efe6";
         return undefined;
       },
       over: (c, l, tp, t) => {
-        const open = Math.floor(t * 5) % 2 === 0 && t % 2.5 < 1.2;
-        if (open) { both(c, l, tp, 4, 26, "#f3efe6"); both(c, l, tp, 5, 25, "#ff6fb5"); }
+        const chomping = t % 2.5 < 1.2;
+        const open = chomping && Math.floor(t * 5) % 2 === 0;
+        if (open) { both(c, l, tp, 4, 26, Math.floor(t * 10) % 2 ? "#ff3b4d" : "#f3efe6"); both(c, l, tp, 5, 25, "#ff6fb5"); }
       },
     }),
   },
@@ -3006,31 +3222,29 @@ addTheme("shoes", {
     make: (col) => ghostItem(col),
   },
   rare: {
+    name: "Fading Kicks",
+    pitch: "Half-faded ghost sneakers: solid white at the toe, fading to see-through at the heel, with the little faces still watching.",
+    item: ghostItem({ a: "#f3efe6", sole: "#b9b0d9" }, {
+      px: (x, y) => {
+        if (y === 25 && shLace(x)) return "#1a1024";
+        if (shToe(x)) return y === 26 ? "#b9b0d9" : "#f3efe6";
+        if (shLace(x)) return y === 26 ? "#7d7591" : "#b9b0d9";
+        return y === 26 ? "#3a3150" : "#5a5078";
+      },
+    }),
+  },
+  epic: {
     name: "Sheet Kicks",
-    pitch: "Ghost high-tops with a wavy little bedsheet hem over the ankles and big round O-mouths.",
+    pitch: "Ghost high-tops with a little bedsheet hem over the ankles that ripples like it's caught in a draft, and big round O-mouths.",
     item: ghostItem({ a: "#f3efe6", sole: "#b9b0d9" }, {
       high: true,
-      px: (x, y) => {
-        if (y === 23) return x === 5 || x === 10 ? null : "#f3efe6";
+      px: (x, y, z, t) => {
+        if (y === 23) return (x + Math.floor(t * 4)) % 3 === 0 ? null : "#f3efe6";
         if (y === 24) return "#e8e0f0";
         if (y === 25 && shToe(x)) return "#1a1024";
         return undefined;
       },
     }),
-  },
-  epic: {
-    name: "Fading Kicks",
-    pitch: "Now you see them, now you don't: the shoes slowly fade to see-through and back while the faces keep watching.",
-    item: {
-      under: (c, l, g, t) => glow(c, l + 7, g + 26, 8, "#e8e0f0", 0.2),
-      px: (x, y, z, t) => {
-        const a = (Math.sin(t * 1.6) + 1) / 2;
-        if (y === 25 && shLace(x)) return "#1a1024";
-        if (a < 0.3) return y === 26 ? "#3a3150" : "#5a5078";
-        if (a < 0.65) return y === 26 ? "#7d7591" : "#b9b0d9";
-        return y === 26 ? "#b9b0d9" : "#f3efe6";
-      },
-    },
   },
   legendary: {
     name: "Poltergeist",
@@ -3051,26 +3265,34 @@ addTheme("shoes", {
 });
 
 // ---------- 7. Frankenstein Stompers ----------
+// Drawn over the body so they can be wider than the feet: a cuff at row 22,
+// shaft rows 23-24, a big toe box rows 25-26 and a 2-row sole (lift 1 makes room).
 function stomperItem(col, extra = {}) {
+  const pick = (x, y, t, fallback) => {
+    if (extra.px) { const v = extra.px(x, y, t); if (v !== undefined) return v; }
+    return fallback;
+  };
+  const boot = (c, l, tp, t) => {
+    const row = (y, x0, x1, base) => { for (let x = x0; x <= x1; x++) both(c, l, tp, x, y, pick(x, y, t, base)); };
+    row(22, 4, 6, darken(col.a, 0.8));
+    row(23, 4, 6, col.a); row(24, 4, 6, col.a);
+    row(25, 2, 6, col.toe); row(26, 2, 6, col.toe);
+    both(c, l, tp, 2, 25, darken(col.toe, 0.85));
+    row(27, 1, 6, col.sole);
+    both(c, l, tp, 3, 23, col.bolt); both(c, l, tp, 3, 24, darken(col.bolt, 0.7));
+  };
   return {
     high: true,
+    lift: 1,
     under: extra.under,
-    px: (x, y, z, t) => {
-      if (extra.px) { const v = extra.px(x, y, z, t); if (v !== undefined) return v; }
-      if (y === 26) return col.sole;
-      if (y <= 24) return col.a;
-      return col.toe;
-    },
-    over: (c, l, tp, t) => {
-      both(c, l, tp, 3, 25, col.toe); both(c, l, tp, 3, 26, col.sole);
-      both(c, l, tp, 2, 24, col.bolt);
-      if (extra.over) extra.over(c, l, tp, t);
-    },
+    px: (x, y, z, t) => (y === 26 ? col.toe : y <= 24 ? col.a : col.toe),
+    over: (c, l, tp, t) => { boot(c, l, tp, t); if (extra.over) extra.over(c, l, tp, t); },
+    boot,
   };
 }
 addTheme("shoes", {
   name: "Frankenstein Stompers",
-  pitch: "Huge, clunky boots a size too big, with thick soles and steel bolts sticking out of the sides.",
+  pitch: "Huge, chunky boots two sizes too big, with fat toes, extra-thick soles and steel bolts sticking out of the sides. Adds a pixel of height.",
   common: {
     pitch: "Oversized boots with bolts.",
     colors: [
@@ -3087,7 +3309,8 @@ addTheme("shoes", {
     name: "Stitched Stompers",
     pitch: "Green patchwork boots sewn together from mismatched leather with big black stitches.",
     item: stomperItem({ a: "#456b36", toe: "#6b4a30", sole: "#141f10", bolt: "#a49db0" }, {
-      px: (x, y) => (y === 24 && (x === 5 || x === 9) ? "#1a1024" : y === 25 && shLace(x) ? "#1a1024" : undefined),
+      // patches of mismatched leather, joined by black stitches
+      px: (x, y) => (x === 5 && y >= 23 && y <= 26 ? "#1a1024" : y === 24 && x === 6 ? "#1a1024" : x <= 4 && y >= 25 && y <= 26 ? "#8a6a3e" : y === 23 && x >= 6 ? "#2f4a26" : undefined),
     }),
   },
   epic: {
@@ -3101,14 +3324,14 @@ addTheme("shoes", {
           const ph = t % 2.2;
           if (ph < 0.6) {
             const p = ph / 0.6;
-            fade(c, 1 - p, () => { R(c, l + 1 - p * 3, g + 26, 2, 1, "#8a8494"); R(c, l + 13 + p * 3, g + 26, 2, 1, "#8a8494"); });
-            R(c, l + 7, g + 27, 2, 1, "#0b0614"); R(c, l + 6, g + 27, 1, 1, "#0b0614");
+            fade(c, 1 - p, () => { R(c, l - 1 - p * 3, g + 25, 2, 1, "#8a8494"); R(c, l + 15 + p * 3, g + 25, 2, 1, "#8a8494"); R(c, l - p * 2, g + 26, 1, 1, "#8a8494"); R(c, l + 15 + p * 2, g + 26, 1, 1, "#8a8494"); });
+            R(c, l + 7, g + 27, 2, 1, "#0b0614"); R(c, l + 6, g + 28, 1, 1, "#0b0614"); R(c, l + 9, g + 28, 1, 1, "#0b0614");
           }
         },
         over: (c, l, tp, t) => {
           const ph = t % 2.2;
           const dx = ph < 0.3 ? (Math.floor(t * 30) % 2 ? 1 : -1) : 0;
-          base.over(c, l + dx, tp, t);
+          base.boot(c, l + dx, tp, t);
         },
       };
     })(),
@@ -3125,8 +3348,8 @@ addTheme("shoes", {
         const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
         let y = tp + 24;
         for (let x = 6; x <= 9; x++) { R(c, l + x, y, 1, 1, x % 2 ? "#ffffff" : "#9fd4ff"); y += rnd() > 0.5 ? 1 : -1; y = Math.max(tp + 22, Math.min(tp + 25, y)); }
-        for (let k = 0; k < 2; k++) sparkle(c, l + (k ? 14 : 1), tp + 22 + Math.round(rnd() * 3), "#ffffff", false);
-        R(c, l + 2, tp + 24, 1, 1, "#ffffff"); R(c, l + 13, tp + 24, 1, 1, "#ffffff");
+        for (let k = 0; k < 2; k++) sparkle(c, l + (k ? 14 : 1), tp + 21 + Math.round(rnd() * 3), "#ffffff", false);
+        R(c, l + 3, tp + 23, 1, 1, "#ffffff"); R(c, l + 12, tp + 23, 1, 1, "#ffffff");
       },
     }),
   },
@@ -3589,13 +3812,15 @@ let total = 0;
 // Every card gets a three-digit number for the owner to cut by, counting up
 // from 101 in page order (page 14's monsters start at 301, so they never clash).
 let num = 101;
+// Cards the owner cut (2026-10-24). They're hidden but keep their numbers, so
+// every other card's number stays the same.
+const CUT = new Set([161, 162, 163, 164, 177, 178, 179, 180, 209, 210, 211, 212, 249, 250, 251, 252]);
 for (const slot of SLOTS) {
   const themes = THEMES[slot.key];
   const sec = document.createElement("section");
   sec.id = slot.key;
   sec.className = "slot";
-  sec.innerHTML = `<div class="sec-head"><span class="eyebrow">${themes.length} themes</span><h2>${slot.title}</h2></div>`;
-  nav.insertAdjacentHTML("beforeend", `<a class="chip" href="#${slot.key}">${slot.title} <span class="n">${themes.length}</span></a>`);
+  sec.innerHTML = `<div class="sec-head"><span class="eyebrow"></span><h2>${slot.title}</h2></div>`;
   themes.forEach((th, ti) => {
     const code = `${slot.prefix}${ti + 1}`;
     const art = document.createElement("article");
@@ -3607,12 +3832,14 @@ for (const slot of SLOTS) {
     for (const tier of TIER) {
       const d = th[tier.key];
       if (!d) continue;
+      const n = num++;
+      if (CUT.has(n)) continue;
       total += tier.key === "common" ? d.colors.length : 1;
       const tile = document.createElement("div");
       tile.className = "tile";
       const name = tier.key === "common" ? `${d.colors.length} colors` : d.name;
       tile.innerHTML = `
-        <div class="tile-top"><span class="tier ${tier.cls}">${tier.label}</span><span class="tcode ${tier.cls}">${num++}</span></div>
+        <div class="tile-top"><span class="tier ${tier.cls}">${tier.label}</span><span class="tcode ${tier.cls}">${n}</span></div>
         <div class="views">
           <canvas class="close" width="${slot.close.w}" height="${slot.close.h}" style="aspect-ratio:${slot.close.w}/${slot.close.h}" aria-label="${th.name} ${tier.label} close-up"></canvas>
           <canvas class="prof" width="24" height="40" aria-label="${th.name} ${tier.label} on the avatar"></canvas>
@@ -3644,8 +3871,12 @@ for (const slot of SLOTS) {
       io.observe(tile);
     }
     art.querySelector(".code").textContent = `${first}–${num - 1}`;
-    sec.appendChild(art);
+    if (row.children.length) sec.appendChild(art);
   });
+  // counts leave out themes that were cut entirely
+  const shown = sec.querySelectorAll("article.theme").length;
+  sec.querySelector(".eyebrow").textContent = `${shown} themes`;
+  nav.insertAdjacentHTML("beforeend", `<a class="chip" href="#${slot.key}">${slot.title} <span class="n">${shown}</span></a>`);
   main.appendChild(sec);
 }
 document.getElementById("total").textContent = total;

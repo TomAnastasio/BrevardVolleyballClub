@@ -109,15 +109,28 @@
     },
     rare: {
       name: "Vine Belt",
-      pitch: "The pumpkin shorts held up by a curly green vine belt with two leaves.",
-      item: {
-        ...jack({ base: "#ff7a1a", hi: "#ffa45a", sh: "#c4550a" }, "#1a1024", false),
-        over(c, l, tp) {
-          R(c, l + 4, tp + 15, 8, 1, "#4a7a28");
-          R(c, l + 4, tp + 14, 1, 1, "#7aac52"); R(c, l + 11, tp + 14, 1, 1, "#7aac52");
-          R(c, l + 8, tp + 14, 1, 1, "#3a6020");
-        },
-      },
+      pitch: "The pumpkin shorts still growing on the vine: a twisted green vine for a belt, a curly stem and leaf sprouting at the front, and a corkscrew tendril dangling off one hip.",
+      item: (() => {
+        const VINE = "#4a8a2a", VINE_D = "#2a5a1c", LEAF = "#7ac44a", LEAF_D = "#4a8a2a";
+        const base = jack({ base: "#ff7a1a", hi: "#ffa45a", sh: "#c4550a" });
+        return {
+          ...base,
+          px(x, y, z, t) {
+            // the belt is a twisted vine: light and dark strands alternating
+            if (y === 15) return x % 2 ? VINE : VINE_D;
+            return base.px(x, y, z, t);
+          },
+          over(c, l, tp) {
+            // belt runs past the hips a little
+            R(c, l + 4, tp + 15, 1, 1, VINE_D); R(c, l + 11, tp + 15, 1, 1, VINE);
+            // curly stem and a leaf sprouting up at the front
+            spr(c, ["..s.", ".s..", "LLs.", "LLL."], { s: VINE_D, L: LEAF }, l + 6, tp + 11);
+            R(c, l + 6, tp + 14, 1, 1, LEAF_D);
+            // corkscrew tendril dangling off the right hip
+            spr(c, ["v.", ".v", "v.", ".v", "vv"], { v: VINE }, l + 11, tp + 16);
+          },
+        };
+      })(),
     },
     epic: {
       name: "Candlelit",
@@ -179,12 +192,23 @@
     },
     rare: {
       name: "Ancient Gold",
-      pitch: "Royal wraps with gold bands at the hip, knee and ankle, marked with tiny hieroglyphs.",
+      pitch: "A pharaoh's burial wraps: a gold belt with a blue scarab buckle, a striped gold-and-lapis cloth hanging down the front, and gold cuffs at the ankles.",
       item: {
         long: true,
         px(x, y, z) {
-          if (y === 15 || y === 19 || y === 22) return (x + y) % 3 === 0 ? "#3a2300" : "#ffc53a";
+          if (y === 15) return x === 7 || x === 8 ? "#2a4a8f" : "#ffc53a";
+          if (y >= 22) return y === 22 ? "#ffc53a" : "#c9962a";
           return wraps(CREAM).px(x, y, z);
+        },
+        over(c, l, tp) {
+          // scarab buckle
+          R(c, l + 7, tp + 14, 2, 1, "#4fb2ff"); R(c, l + 7, tp + 15, 2, 1, "#2a4a8f");
+          // striped royal cloth hanging between the legs, wider at the bottom
+          for (let y = 16; y <= 20; y++) {
+            const w = y < 18 ? 2 : 4, x0 = y < 18 ? 7 : 6;
+            for (let x = x0; x < x0 + w; x++) R(c, l + x, tp + y, 1, 1, y % 2 ? "#ffc53a" : "#2a4a8f");
+          }
+          R(c, l + 6, tp + 21, 4, 1, "#c9962a");
         },
       },
     },
@@ -345,34 +369,57 @@
     },
     epic: {
       name: "Full Moon Shift",
-      pitch: "The transformation is happening: fur creeps up the legs, bristles, and shrinks back down, over and over.",
+      pitch: "Every few seconds the werewolf bursts out: the jeans bulge and split open at the thighs, fur bristles out of the rips and claws poke out of the shoes, then it all settles back.",
       item: (() => {
         const w = werewolf({ base: "#3a4a78", edge: "#8a9ac0" });
+        // 0 = calm, 1 = full burst; a quick swell every 3 seconds
+        const burst = (t) => {
+          if (reduced) return 0.6;
+          const ph = t % 3;
+          return ph < 0.25 ? ph / 0.25 : ph < 1.1 ? 1 : ph < 1.5 ? 1 - (ph - 1.1) / 0.4 : 0;
+        };
+        const RIPS = [[5, 16], [6, 17], [10, 16], [9, 17], [5, 15], [10, 15]];
         return {
           ...w,
           px(x, y, z, t) {
-            const reach = 17 - Math.round(((Math.sin(t * 1.6) + 1) / 2) * 2);
-            if (y >= reach && y <= 17 && isLeg(x) && (x + y) % 2 === 0) return "#7a5230";
+            const b = burst(t);
+            const n = Math.round(b * RIPS.length);
+            const k = RIPS.findIndex(([a, c]) => a === x && c === y);
+            if (k >= 0 && k < n) return (x + y) % 2 ? "#7a5230" : "#5a3a20";
             return w.px(x, y, z);
           },
           over(c, l, tp, t) {
             w.over(c, l, tp);
-            const br = Math.floor(t * 6) % 2;
-            if (br) { R(c, l + 4, tp + 19, 1, 1, "#6b4a28"); R(c, l + 11, tp + 21, 1, 1, "#6b4a28"); }
+            const b = burst(t);
+            if (b < 0.5) return;
+            // fur bristling out past the sides of the legs
+            [[4, 16], [4, 19], [3, 20], [11, 16], [11, 19], [12, 20]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, "#6b4a28"));
+            // claws through the toes of the shoes
+            [[4, 26], [6, 26], [9, 26], [11, 26]].forEach(([x, y]) => R(c, l + x, tp + y - 1, 1, 1, "#f3efe6"));
           },
         };
       })(),
     },
     legendary: {
       name: "Moonlit Beast",
-      pitch: "Bathed in full-moon light: the fur glows silver-blue, claw marks shine on the thighs, and moon sparkles drift around.",
+      pitch: "Shredded midnight jeans with glowing blue fur, silver claw marks, a big bushy wolf tail that swishes behind you and moonlit fur tufts drifting off.",
       item: (() => {
-        const w = werewolf({ base: "#14182e", edge: "#5a6a9a" }, { a: "#9fb8e0", b: "#6f88b8", c: "#4a5a8f", tip: "#d8f0ff" });
+        const FUR = { a: "#9fb8e0", b: "#6f88b8", c: "#4a5a8f", tip: "#d8f0ff" };
+        const w = werewolf({ base: "#14182e", edge: "#5a6a9a" }, FUR);
+        const SHREDS = [[5, 16], [10, 15], [6, 17], [9, 16]];
+        const CLAW = [[9, 15], [10, 16], [10, 15]];
         return {
           ...w,
-          under: (c, l, tp, t) => glow(c, l + 7.5, tp + 20, 12, "#9fd4ff", 0.3 + 0.1 * Math.sin(t * 2)),
+          under(c, l, tp, t) {
+            glow(c, l + 7.5, tp + 19, 13, "#9fd4ff", 0.32 + 0.1 * Math.sin(t * 2));
+            // bushy tail curling up from behind the right hip, swishing side to side
+            const TAIL = ["...tt.", "..att.", "..aab.", ".aab..", ".aab..", "aab...", "ab...."];
+            const sw = reduced ? 0 : Math.sin(t * 3);
+            TAIL.forEach((row, j) => spr(c, [row], { a: FUR.a, b: FUR.b, t: FUR.tip }, l + 10 + Math.round((sw * (TAIL.length - 1 - j)) / 3), tp + 11 + j));
+          },
           px(x, y, z, t) {
-            if (at([[5, 15], [6, 16], [9, 15], [10, 16]], x, y)) return Math.sin(t * 4) > 0 ? "#d8f0ff" : "#9fd4ff";
+            if (at(SHREDS, x, y)) return (x + y) % 2 ? FUR.a : FUR.b;
+            if (at(CLAW, x, y)) return Math.sin(t * 4) > 0 ? "#ffffff" : "#d8f0ff";
             return w.px(x, y, z);
           },
           shin(x, y, z, t) {
@@ -381,10 +428,10 @@
           },
           over(c, l, tp, t) {
             w.over(c, l, tp);
-            for (let k = 0; k < 3; k++) {
-              const ph = (t * 0.5 + k / 3) % 1;
-              const tw = Math.sin(t * 7 + k) > 0.3;
-              if (ph < 0.6) sparkle(c, l + [2, 13, 7][k], tp + 24 - Math.round(ph * 10), tw ? "#ffffff" : "#9fd4ff", tw);
+            // tufts of moonlit fur drifting up and away
+            for (let k = 0; k < 4; k++) {
+              const ph = (t * 0.45 + k / 4) % 1;
+              fade(c, 1 - ph, () => R(c, l + [3, 12, 5, 10][k] + Math.round(Math.sin(t * 2 + k) * 1.5), tp + 23 - Math.round(ph * 12), 1, 1, k % 2 ? "#d8f0ff" : "#9fb8e0"));
             }
           },
         };
@@ -510,15 +557,16 @@
       pitch: "The slime keeps moving: drips stretch longer and longer until they drop off and splat on the floor.",
       item: {
         ...slime(SLIMES[0]),
-        over(c, l, tp, t) {
+        over(c, l, tp, t, g = tp) {
+          const floor = g - tp + 26; // the floor row, below the feet when shoes lift the body
           DRIPS.forEach(([x, y, sp]) => {
             const ph = (t * 0.6 + sp) % 1;
             if (ph < 0.6) R(c, l + x, tp + y, 1, 1 + Math.round(ph * 4), "#5ee84a");
             else {
               R(c, l + x, tp + y, 1, 1, "#5ee84a");
-              const fy = y + 3 + Math.round((ph - 0.6) * 20);
-              if (fy < 27) R(c, l + x, tp + fy, 1, 1, "#7dff5a");
-              else { R(c, l + x - 1, tp + 26, 3, 1, "#3fb02f"); }
+              const fy = y + 3 + Math.round((ph - 0.6) * (floor - y - 3) / 0.4);
+              if (fy < floor + 1) R(c, l + x, tp + fy, 1, 1, "#7dff5a");
+              else { R(c, l + x - 1, tp + floor, 3, 1, "#3fb02f"); }
             }
           });
         },
@@ -534,10 +582,10 @@
           const f = Math.sin(y * 1.1 - t * 5 + x * 0.8);
           return sh(f > 0.6 ? "#e0ffd8" : f > -0.2 ? "#7dff5a" : "#3fb02f", x, z);
         },
-        under(c, l, tp, t) {
+        under(c, l, tp, t, g = tp) {
           glow(c, l + 7.5, tp + 20, 13, "#5ee84a", 0.4 + 0.12 * Math.sin(t * 4));
           const w = 9 + Math.round(Math.sin(t * 2) * 2);
-          R(c, l + 7.5 - w / 2, tp + 27, w, 1, "#3fb02f");
+          R(c, l + 7.5 - w / 2, g + 27, w, 1, "#3fb02f");
         },
         over(c, l, tp, t) {
           DRIPS.forEach(([x, y, sp]) => {
@@ -631,11 +679,11 @@
     },
     rare: {
       name: "Sprinkles",
-      pitch: "The candy-corn track pants covered in colorful candy sprinkles.",
+      pitch: "The candy-corn track pants absolutely covered in rainbow candy sprinkles, from the waistband to the cuffs.",
       item: track({ base: "#1f1a2a" }, (x, y) => {
         if (outer(x)) return cornStripe(y);
         const h = hash(x, y, 7);
-        return h < 0.22 ? ["#ff6fb5", "#5ee84a", "#4fb2ff", "#ffd84a"][Math.floor(h * 18) % 4] : null;
+        return h < 0.6 ? ["#ff6fb5", "#5ee84a", "#4fb2ff", "#ffd84a", "#ffffff", "#c46bff"][Math.floor(h * 60) % 6] : null;
       }),
     },
     epic: {
@@ -645,7 +693,7 @@
     },
     legendary: {
       name: "Candy Comet",
-      pitch: "The stripes glow like candy neon, little candy corns spin around your legs, and sugar sparkles burst off.",
+      pitch: "The stripes glow like candy neon and little candy corns spin around your legs.",
       item: {
         ...track({ base: "#140f20" }, (x, y, t) => (outer(x) ? ["#ffe14d", "#ff9a3a", "#ffffff"][Math.floor(y / 2 + t * 5) % 3] : null)),
         under: (c, l, tp, t) => glow(c, l + 7.5, tp + 20, 13, "#ff9a3a", 0.3 + 0.1 * Math.sin(t * 5)),
@@ -655,8 +703,6 @@
             const x = Math.round(l + 7 + Math.cos(a) * 7), y = Math.round(tp + 20 + Math.sin(a) * 3);
             R(c, x, y, 1, 1, "#ffffff"); R(c, x, y + 1, 1, 1, "#ff7a1a"); R(c, x, y + 2, 1, 1, "#ffd84a");
           }
-          const ph = (t * 1.2) % 1;
-          if (ph < 0.25) sparkle(c, l + 12, tp + 17, "#fff6e0", ph < 0.12);
         },
       },
     },

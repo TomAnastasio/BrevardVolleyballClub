@@ -37,13 +37,15 @@ let total = 0;
 // Every card gets a three-digit number for the owner to cut by, counting up
 // from 101 in page order (page 14's monsters start at 301, so they never clash).
 let num = 101;
+// Cards the owner cut (2026-10-24). They're hidden but keep their numbers, so
+// every other card's number stays the same.
+const CUT = new Set([161, 162, 163, 164, 177, 178, 179, 180, 209, 210, 211, 212, 249, 250, 251, 252]);
 for (const slot of SLOTS) {
   const themes = THEMES[slot.key];
   const sec = document.createElement("section");
   sec.id = slot.key;
   sec.className = "slot";
-  sec.innerHTML = `<div class="sec-head"><span class="eyebrow">${themes.length} themes</span><h2>${slot.title}</h2></div>`;
-  nav.insertAdjacentHTML("beforeend", `<a class="chip" href="#${slot.key}">${slot.title} <span class="n">${themes.length}</span></a>`);
+  sec.innerHTML = `<div class="sec-head"><span class="eyebrow"></span><h2>${slot.title}</h2></div>`;
   themes.forEach((th, ti) => {
     const code = `${slot.prefix}${ti + 1}`;
     const art = document.createElement("article");
@@ -55,12 +57,14 @@ for (const slot of SLOTS) {
     for (const tier of TIER) {
       const d = th[tier.key];
       if (!d) continue;
+      const n = num++;
+      if (CUT.has(n)) continue;
       total += tier.key === "common" ? d.colors.length : 1;
       const tile = document.createElement("div");
       tile.className = "tile";
       const name = tier.key === "common" ? `${d.colors.length} colors` : d.name;
       tile.innerHTML = `
-        <div class="tile-top"><span class="tier ${tier.cls}">${tier.label}</span><span class="tcode ${tier.cls}">${num++}</span></div>
+        <div class="tile-top"><span class="tier ${tier.cls}">${tier.label}</span><span class="tcode ${tier.cls}">${n}</span></div>
         <div class="views">
           <canvas class="close" width="${slot.close.w}" height="${slot.close.h}" style="aspect-ratio:${slot.close.w}/${slot.close.h}" aria-label="${th.name} ${tier.label} close-up"></canvas>
           <canvas class="prof" width="24" height="40" aria-label="${th.name} ${tier.label} on the avatar"></canvas>
@@ -92,8 +96,12 @@ for (const slot of SLOTS) {
       io.observe(tile);
     }
     art.querySelector(".code").textContent = `${first}–${num - 1}`;
-    sec.appendChild(art);
+    if (row.children.length) sec.appendChild(art);
   });
+  // counts leave out themes that were cut entirely
+  const shown = sec.querySelectorAll("article.theme").length;
+  sec.querySelector(".eyebrow").textContent = `${shown} themes`;
+  nav.insertAdjacentHTML("beforeend", `<a class="chip" href="#${slot.key}">${slot.title} <span class="n">${shown}</span></a>`);
   main.appendChild(sec);
 }
 document.getElementById("total").textContent = total;

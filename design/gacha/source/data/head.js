@@ -36,16 +36,27 @@
       make: (c) => ({ build: () => horns(c.hi, c.sh) }),
     },
     rare: {
-      name: "Ram Horns",
-      pitch: "Thick, ridged ram horns that curl all the way around the sides of the head.",
+      name: "Bighorn Curls",
+      pitch: "Huge ridged bighorn-sheep horns that sweep up off the head and spiral all the way round over the ears, tips curling in.",
       item: {
         build() {
           const g = makeGrid();
-          const L = [[5, 1], [4, 0], [3, 0], [2, 1], [2, 2], [2, 3], [3, 4], [4, 4], [4, 3], [3, -1], [4, -1], [5, 0]];
-          L.forEach(([x, y], i) => {
-            const col = i % 3 === 0 ? "#b9ae94" : "#e8dcc0";
-            g.set(x, y, col); g.set(14 - x, y, i % 3 === 0 ? "#9a8f78" : "#d9cfb2");
-          });
+          // a thick spiral on each side: starts at the top of the head, sweeps out and down round the ear, ends curled in
+          const cx = 2.8, cy = -0.4;
+          for (let k = 0; k <= 60; k++) {
+            const u = k / 60;
+            const a = -1.2 - u * TAU * 0.9;
+            const r = 3.4 - u * 2.3;
+            const ridge = Math.floor(u * 14) % 2 === 0;
+            const drs = u < 0.5 ? [0, -0.8, -1.6] : u < 0.8 ? [0, -0.8] : [0];
+            for (const dr of drs) {
+              const groove = dr && dr === drs[drs.length - 1];
+              const x = Math.round(cx + Math.cos(a) * (r + dr)), y = Math.round(cy + Math.sin(a) * (r + dr));
+              const col = groove ? "#6e6450" : u > 0.85 ? "#8a7e64" : ridge ? "#b9ae94" : dr ? "#d9cfb2" : "#efe6cc";
+              g.set(x, y, col);
+              g.set(14 - x, y, groove ? "#5e5544" : u > 0.85 ? "#7a6e56" : ridge ? "#a89c80" : dr ? "#c9bfa2" : "#ddd4ba");
+            }
+          }
           outline(g);
           return g;
         },
@@ -88,73 +99,97 @@
   });
 
   // ---------- 2. Cat Ears ----------
-  function catEars(c, inner, band, opts = {}) {
+  // two separate pointy triangles on a headband, tips leaning out, gap in the middle
+  // left ear rows from the tip down: [y, x0, x1]; the right ear mirrors it (x -> 14 - x)
+  const EAR = [[-5, 3, 3], [-4, 3, 4], [-3, 3, 5], [-2, 3, 5], [-1, 4, 5]];
+  const EAR_IN = [[4, -3], [4, -2], [4, -1]];
+  function catEars(fur, inner, band, opts = {}) {
     const g = makeGrid();
-    const rows = [[0, 3], [0, 3], [0, 2], [0, 1]];
-    const ear = (x0, dir, bend) => rows.forEach(([off, w], j) => {
-      for (let i = 0; i < w; i++) g.set(x0 + dir * (off + i) + (j === 3 ? bend * dir : 0), -j, c);
+    const furAt = opts.fur || (() => fur);
+    const bend = opts.bend || [0, 0]; // per ear: 1 folds the tip over (a flick)
+    [0, 1].forEach((side) => {
+      const mx = (x) => (side ? 14 - x : x);
+      EAR.forEach(([y, x0, x1]) => {
+        if (bend[side] && y === -5) return;
+        for (let x = x0; x <= x1; x++) g.set(mx(x), y, furAt(mx(x), y, side));
+      });
+      if (bend[side]) g.set(mx(2), -4, furAt(mx(2), -4, side));
+      if (!(opts.notch && side === 1)) {} else { g.del(mx(3), -3); g.del(mx(3), -2); }
     });
-    ear(4, 1, 0); ear(10, -1, opts.bendR || 0);
-    g.row(4, 10, 1, band);
-    if (opts.notch) g.del(10, -1);
-    outline(g);
-    g.set(5, -1, inner); g.set(5, -2, inner); g.set(9, -1, inner); g.set(9, -2 - (opts.twitch || 0), inner);
+    g.row(4, 10, 0, band); g.row(4, 10, 1, darken(band, 0.75));
+    outline(g, opts.rim || OUT);
+    if (opts.notch) { g.del(11, -3); g.del(11, -2); }
+    [0, 1].forEach((side) => EAR_IN.forEach(([x, y]) => {
+      if (bend[side] && y === -3) return;
+      g.set(side ? 14 - x : x, y, opts.innerAt ? opts.innerAt(x, y, side) : inner);
+    }));
+    if (opts.decor) opts.decor(g);
     return g;
   }
   addTheme("head", {
     name: "Cat Ears",
-    pitch: "A cat-ear headband with pink inner ears. The cutest option, and it never hides the face.",
+    pitch: "A headband with two tall, pointy cat ears and pink insides. Cute, readable at any size, and it never hides the face.",
     common: {
-      pitch: "Plain cat ears.",
+      pitch: "Pointy cat ears on a headband.",
       colors: [
-        { name: "Black cat", c: "#1f1a30", inner: "#ff8fb8" },
+        { name: "Black cat", c: "#2a2238", inner: "#ff8fb8" },
         { name: "Orange tabby", c: "#e0661a", inner: "#ffc0a0" },
         { name: "Snow white", c: "#f3efe6", inner: "#ff8fb8" },
-        { name: "Smoke grey", c: "#7d7591", inner: "#ffb0c8" },
-        { name: "Chocolate", c: "#6b4a28", inner: "#e8a090" },
-        { name: "Witch purple", c: "#6b3fa8", inner: "#d18bff" },
+        { name: "Smoke grey", c: "#8a8299", inner: "#ffb0c8" },
+        { name: "Chocolate", c: "#7a5230", inner: "#e8a090" },
+        { name: "Witch purple", c: "#7a4ad9", inner: "#e0b0ff" },
       ],
-      make: (k) => ({ build: () => catEars(k.c, k.inner, darken(k.c, 0.6)) }),
+      make: (k) => ({ build: () => catEars(k.c, k.inner, darken(k.c, 0.55)) }),
     },
     rare: {
-      name: "Alley Cat",
-      pitch: "A scrappy black cat: one ear has a pink bow, the other has a notch torn out of it.",
+      name: "Calico Bell",
+      pitch: "Calico cat ears in patches of orange, black and white, with a little gold bell hanging from the front of the band.",
       item: {
         build() {
-          const g = catEars("#1f1a30", "#ff8fb8", "#14101c", { notch: true });
-          g.set(3, -1, "#ff6fb5"); g.set(5, 0, "#ff6fb5"); g.set(4, 0, "#ffb0d8"); g.set(3, 0, "#ff6fb5"); g.set(5, -1, "#ff6fb5");
+          const CAL = ["#f3efe6", "#e0661a", "#2a2238"];
+          const g = catEars(null, "#ff8fb8", "#c42a3e", { fur: (x, y) => CAL[(x * 7 + y * 3) % 5 < 2 ? 0 : (x + y) % 3 === 0 ? 2 : 1] });
+          g.set(7, 1, "#ffd84a"); g.set(6, 2, OUT); g.set(8, 2, OUT); g.set(7, 2, "#e8a820"); g.set(7, 3, OUT);
           return g;
         },
       },
     },
     epic: {
-      name: "Twitchy Ears",
-      pitch: "Orange tabby ears that twitch and flick every few seconds, like the cat just heard something.",
+      name: "Flicking Ears",
+      pitch: "Striped tabby ears that flick: every few seconds one ear folds its tip over, then the other, like the cat just heard something.",
       item: {
         build(t) {
-          const ph = t % 2.8;
-          const flick = !reduced && ph > 2.2 && Math.floor(ph * 10) % 2 === 0;
-          return catEars("#e0661a", "#ffc0a0", "#8f3c06", { bendR: flick ? 1 : 0, twitch: flick ? 1 : 0 });
+          const ph = t % 3;
+          const bend = reduced ? [0, 0] : [ph > 2.1 && ph < 2.35 ? 1 : 0, ph > 2.5 && ph < 2.75 ? 1 : 0];
+          return catEars(null, "#ffc0a0", "#8f3c06", { bend, fur: (x, y) => (y % 2 ? "#e0661a" : "#a8470a") });
         },
       },
     },
     legendary: {
-      name: "Ghost Cat",
-      pitch: "Glowing spirit-cat ears with ghostly whiskers that flicker across the cheeks and little sparkles floating around.",
+      name: "Witch's Familiar",
+      pitch: "Inky black ears full of twinkling stars with glowing green rims, a ghostly cat tail swishing behind your head and green sparkles drifting off the tips.",
       item: {
-        under: (c, l, tp, t) => glow(c, l + 7, tp - 1, 12, "#7dfcff", 0.35 + 0.1 * Math.sin(t * 3)),
+        under(c, l, tp, t) {
+          glow(c, l + 7, tp - 2, 15, "#5ee84a", 0.32 + 0.1 * Math.sin(t * 3));
+          // ghostly tail curling up behind the head, swishing side to side
+          const sw = reduced ? 0 : Math.sin(t * 2.2) * 2.5;
+          for (let k = 0; k < 12; k++) {
+            const u = k / 11;
+            const x = l + 12 + Math.round(Math.sin(u * 2.6) * (2 + sw * u));
+            const y = tp + 6 - Math.round(u * 13);
+            fade(c, 0.35 + 0.4 * u, () => R(c, x, y, 2, 1, k > 9 ? "#d8ffcc" : "#7dff5a"));
+          }
+        },
         build(t) {
-          const g = catEars(Math.sin(t * 3) > 0 ? "#d8fbff" : "#b8feff", "#7dfcff", "#3ac6d6");
-          return g;
+          return catEars(null, "#5ee84a", "#14101c", {
+            fur: (x, y) => (hash(x, y, Math.floor(t * 3)) > 0.8 ? "#ffffff" : hash(x, y) > 0.6 ? "#3a2a6a" : "#100a1c"),
+            innerAt: (x, y) => (Math.sin(t * 4 + y) > 0 ? "#b7ff9e" : "#5ee84a"),
+          });
         },
         over(c, l, tp, t) {
-          if (Math.sin(t * 5) > -0.6) {
-            const col = "#b8feff";
-            [[2, 5], [3, 5], [2, 6], [11, 5], [12, 5], [12, 6]].forEach(([x, y]) => fade(c, 0.85, () => R(c, l + x, tp + y, 1, 1, col)));
-          }
-          for (let k = 0; k < 3; k++) {
-            const a = t * 1.2 + (k * TAU) / 3;
-            sparkle(c, Math.round(l + 7 + Math.cos(a) * 7), Math.round(tp - 2 + Math.sin(a) * 3), tw(t, k) ? "#ffffff" : "#7dfcff", tw(t, k));
+          for (let k = 0; k < 4; k++) {
+            const ph = (t * 0.6 + k / 4) % 1;
+            const x = k % 2 ? l + 11 + Math.round(ph * 3) : l + 3 - Math.round(ph * 3);
+            fade(c, 1 - ph, () => sparkle(c, x, tp - 6 - Math.round(ph * 6), tw(t, k) ? "#ffffff" : "#7dff5a", false));
           }
         },
       },
@@ -162,79 +197,109 @@
   });
 
   // ---------- 3. Mummy Wraps ----------
-  const WRAP = [[5, 8], [4, 9], [4, 10], [4, 10], [4, 9], [4, 9], [5, 8]];
+  // the whole head wrapped in diagonal bandage strips with dark seams between them
+  const WRAP = [[5, 8], [4, 9], [3, 10], [3, 10], [3, 10], [4, 10], [4, 9], [5, 8]]; // rows y -1..6
   function mummy(P, t, opts = {}) {
     const g = makeGrid();
-    WRAP.forEach(([x0, x1], y) => {
+    WRAP.forEach(([x0, x1], j) => {
+      const y = j - 1;
       for (let x = x0; x <= x1; x++) {
-        const band = (x + y * 2) % 4;
-        let col = band === 0 ? P.sh : band === 2 ? P.hi : P.base;
-        if (opts.px) col = opts.px(x, y, col) || col;
+        // slanted strips: each row of bandage steps down every four pixels
+        const d = (((y + Math.floor((x + (opts.shift || 0)) / 4)) % 3) + 3) % 3;
+        let col = d === 0 ? P.sh : d === 1 ? P.base : P.hi;
+        if (opts.px) col = opts.px(x, y, d) || col;
         g.set(x, y, col);
       }
     });
     outline(g);
-    g.set(8, 4, opts.eye || "#1a1024"); g.set(9, 4, opts.eyeWhite || "#f3efe6");
-    g.set(5, 4, P.sh);
-    const fl = reduced ? 0 : Math.sin(t * (opts.flutter || 4));
-    const tail = [[3, 2], [2, 3], [1, 3 + Math.round(fl)], [0, 4 + Math.round(fl * 1.5)]];
-    if (opts.longTail) tail.push([-1, 4 + Math.round(fl * 2)], [-2, 5 + Math.round(fl * 2.5)]);
-    tail.forEach(([x, y]) => { g.set(x, y, P.base); g.set(x, y + 1, P.sh); });
+    // eye slit with both eyes peeking through
+    if (!opts.noSlit) {
+      g.row(4, 9, 4, opts.slit || "#1a1024");
+      const eye = blinkAt(t, 4.2) ? opts.slit || "#1a1024" : opts.eye || "#f3efe6";
+      g.set(5, 4, eye); g.set(8, 4, eye);
+    }
+    // loose end hanging off the right side of the jaw
+    const sway = reduced || !opts.sway ? 0 : Math.round(Math.sin(t * opts.sway));
+    [[10, 5], [11, 6], [11, 7], [12 + sway, 8], [12 + sway, 9]].concat(opts.long ? [[13 + sway, 10], [13 + sway * 2, 11]] : []).forEach(([x, y], k) => g.set(x, y, k % 2 ? P.sh : P.base));
+    if (opts.decor) opts.decor(g, t);
     return g;
   }
   addTheme("head", {
     name: "Mummy Wraps",
-    pitch: "The whole head wrapped in old bandages, one eye peeking out and a loose end fluttering behind.",
+    pitch: "The whole head wrapped in old bandages, two eyes peering out of a slit and a loose end dangling off the jaw.",
     common: {
-      pitch: "Plain wraps.",
+      pitch: "Neat diagonal wraps.",
       colors: [
-        { name: "Linen", base: "#d9cfb2", hi: "#e8e0c8", sh: "#b9ae94" },
-        { name: "Ash grey", base: "#a49db0", hi: "#c9c2d9", sh: "#7d7591" },
-        { name: "Tea-stained", base: "#c0a070", hi: "#d9bc8a", sh: "#957848" },
-        { name: "Soot black", base: "#3a3646", hi: "#55506b", sh: "#231d33" },
-        { name: "Moss", base: "#8a9a6a", hi: "#a8b888", sh: "#65744a" },
-        { name: "Dusty rose", base: "#c89a9a", hi: "#e0b8b8", sh: "#9a7070" },
+        { name: "Linen", base: "#ddd3b8", hi: "#f0e8d4", sh: "#a89c80" },
+        { name: "Ash grey", base: "#a49db0", hi: "#c9c2d9", sh: "#6b6380" },
+        { name: "Tea-stained", base: "#c4a476", hi: "#dcc092", sh: "#8a6a40" },
+        { name: "Soot black", base: "#3e3a4c", hi: "#5a5468", sh: "#1e1a2a" },
+        { name: "Moss", base: "#8a9a6a", hi: "#a8b888", sh: "#5a6a40" },
+        { name: "Dusty rose", base: "#c89a9a", hi: "#e0b8b8", sh: "#906464" },
       ],
       make: (P) => ({ build: (t) => mummy(P, t) }),
     },
     rare: {
-      name: "Pharaoh Wraps",
-      pitch: "Royal wraps painted with ancient gold symbols and a blue band across the brow.",
+      name: "Pharaoh's Headdress",
+      pitch: "Wraps under a blue-and-gold striped pharaoh headdress that falls to the shoulders, with a little gold cobra on the brow.",
       item: {
-        build: (t) => mummy({ base: "#d9cfb2", hi: "#e8e0c8", sh: "#b9ae94" }, t, {
-          px: (x, y) => (y === 2 ? (x % 2 ? "#2a4a8f" : "#ffc53a") : at([[5, 0], [8, 1], [6, 5], [9, 6], [4, 6]], x, y) ? "#e8a820" : null),
-        }),
+        build(t) {
+          const g = mummy({ base: "#ddd3b8", hi: "#f0e8d4", sh: "#a89c80" }, t);
+          const NEMES = [[-2, 5, 9], [-1, 4, 10], [0, 3, 11], [1, 3, 11], [2, 2, 12]];
+          NEMES.forEach(([y, x0, x1]) => { for (let x = x0; x <= x1; x++) g.set(x, y, y % 2 ? "#ffc53a" : "#2a4a8f"); });
+          for (let y = 3; y <= 8; y++) for (const x of [2, 3, 11, 12]) g.set(x, y, y % 2 ? "#ffc53a" : "#2a4a8f");
+          g.row(4, 10, 2, "#e8a820");
+          g.set(7, 1, "#ffd84a"); g.set(7, 0, "#ffd84a"); g.set(6, 0, OUT); g.set(8, 0, OUT); g.set(7, -1, "#5ee84a");
+          return g;
+        },
       },
     },
     epic: {
-      name: "Unraveling",
-      pitch: "A long loose strip whips around in the wind and little puffs of tomb dust shake off the wraps.",
+      name: "Peekaboo",
+      pitch: "Fully wrapped, no eyes at all, until a bandage slips down every few seconds and one big eye peeks out and looks around.",
       item: {
-        build: (t) => mummy({ base: "#d9cfb2", hi: "#e8e0c8", sh: "#b9ae94" }, t, { longTail: true, flutter: 6 }),
-        over(c, l, tp, t) {
-          for (let k = 0; k < 4; k++) {
-            const ph = (t * 0.5 + k / 4) % 1;
-            fade(c, 0.6 * (1 - ph), () => R(c, l + 4 + k * 2 + Math.round(ph * (k % 2 ? 3 : -3)), tp + 1 - ph * 6, 1, 1, "#c9b896"));
+        build(t) {
+          const ph = reduced ? 0 : t % 3.2;
+          const open = ph > 1.8 && ph < 3;
+          const g = mummy({ base: "#ddd3b8", hi: "#f0e8d4", sh: "#a89c80" }, t, { noSlit: true, sway: 3 });
+          if (open) {
+            const look = ph < 2.3 ? 0 : ph < 2.6 ? -1 : 1;
+            g.row(6, 9, 3, "#1a1024"); g.row(6, 9, 4, "#1a1024");
+            g.set(7, 3, "#ffffff"); g.set(8, 3, "#ffffff"); g.set(7, 4, "#ffffff"); g.set(8, 4, "#ffffff");
+            g.set(7 + (look > 0 ? 1 : 0), 4, "#1a1024");
+            if (look < 0) g.set(7, 3, "#1a1024");
+            g.row(6, 9, 5, "#a89c80"); g.set(9, 6, "#f0e8d4");
           }
+          return g;
         },
       },
     },
     legendary: {
-      name: "Cursed Pharaoh",
-      pitch: "The wraps hum with a curse: the eye burns green, the bandages glow at the seams, and glowing hieroglyphs orbit the head.",
+      name: "Tomb King",
+      pitch: "A cursed mummy king: a gold crown with a scarab, burning green eyes, green soul-fire leaking through the gaps in the wraps, and desert sand swirling around the head.",
       item: {
-        under: (c, l, tp, t) => glow(c, l + 7, tp + 3, 14, "#5ee84a", 0.3 + 0.1 * Math.sin(t * 4)),
-        build: (t) => mummy({ base: "#d9cfb2", hi: "#e8e0c8", sh: "#7a9a5a" }, t, {
-          eye: Math.sin(t * 6) > 0 ? "#b7ff9e" : "#5ee84a", eyeWhite: "#2f8a3a",
-          px: (x, y) => ((x + y * 2) % 4 === 0 && Math.sin(t * 3 + y) > 0.4 ? "#7dff5a" : null),
-        }),
-        over(c, l, tp, t) {
-          const GLYPHS = [["g.g", "ggg", ".g."], [".g.", "g.g", ".g."], ["gg.", ".g.", ".gg"], ["g..", "ggg", "g.."]];
-          GLYPHS.forEach((rows, k) => {
-            const a = t * 0.9 + (k * TAU) / 4;
-            if (Math.sin(a) < -0.3) return;
-            spr(c, rows, { g: tw(t, k) ? "#b7ff9e" : "#5ee84a" }, Math.round(l + 7 + Math.cos(a) * 9) - 1, Math.round(tp + 2 + Math.sin(a) * 4) - 1);
+        under: (c, l, tp, t) => glow(c, l + 7, tp + 2, 16, "#5ee84a", 0.32 + 0.12 * Math.sin(t * 4)),
+        build(t) {
+          const g = mummy({ base: "#d4c8a8", hi: "#ece2c6", sh: "#3a5a2a" }, t, {
+            eye: Math.sin(t * 7) > 0 ? "#b7ff9e" : "#5ee84a", slit: "#0f2a12", sway: 4, long: true,
+            px: (x, y, d) => (d === 0 && Math.sin(t * 5 + x + y * 2) > 0.3 ? "#7dff5a" : null),
           });
+          // gold crown band with points and a blue scarab
+          g.row(4, 9, -1, "#ffc53a"); g.row(5, 8, -2, "#e8a820");
+          for (const x of [4, 7, 9]) g.set(x, -3, "#ffd84a");
+          g.set(6, -1, "#2a6aff"); g.set(7, -1, "#4fb2ff");
+          return g;
+        },
+        over(c, l, tp, t) {
+          for (let k = 0; k < 7; k++) {
+            const a = t * 1.4 + (k * TAU) / 7;
+            if (Math.sin(a) < -0.2) continue;
+            R(c, Math.round(l + 7 + Math.cos(a) * 9), Math.round(tp + 4 + Math.sin(a) * 3 - k % 3), 1, 1, k % 2 ? "#e8c070" : "#c9a050");
+          }
+          for (let k = 0; k < 3; k++) {
+            const ph = (t * 0.7 + k / 3) % 1;
+            fade(c, 0.8 * (1 - ph), () => R(c, l + 5 + k * 2, tp - 4 - Math.round(ph * 7), 1, 2, "#7dff5a"));
+          }
         },
       },
     },
@@ -507,9 +572,10 @@
     },
     rare: {
       name: "Black Widow",
-      pitch: "A glossy black widow with the red hourglass mark on its back.",
+      pitch: "A glossy black widow with the red hourglass mark on its back and long shiny legs gripping your hair.",
       item: {
-        build: (t) => spider({ base: "#14101c", hi: "#3a3150", leg: "#0b0614" }, t, {
+        // legs are a lighter, shiny charcoal so they show up against the dark background
+        build: (t) => spider({ base: "#14101c", hi: "#4a4060", leg: "#6b6380" }, t, {
           abdomen: (x, y) => (at([[6, -6], [7, -6], [8, -6], [7, -5], [6, -4], [7, -4], [8, -4]], x, y) ? "#e0242e" : null),
           eye: "#ff8090",
         }),
@@ -522,19 +588,43 @@
     },
     legendary: {
       name: "Spider Queen",
-      pitch: "A huge violet queen with glowing eyes, web strands draped down past the face and a baby spider bobbing on its thread.",
+      pitch: "A crowned amethyst spider queen sits on a glowing web halo behind your head. Her eyes glow, her legs tap, and baby spiders scurry round the web.",
       item: {
-        under: (c, l, tp, t) => glow(c, l + 7, tp - 2, 14, "#c46bff", 0.35 + 0.1 * Math.sin(t * 3)),
+        under(c, l, tp, t) {
+          glow(c, l + 7, tp - 2, 16, "#c46bff", 0.35 + 0.1 * Math.sin(t * 3));
+          // the web: a half-circle of spokes and rings fanning out above the head (kept off the face)
+          const cx = l + 7, cy = tp + 1;
+          const dot = (x, y, col) => { if (y <= tp) R(c, x, y, 1, 1, col); };
+          fade(c, 0.55, () => {
+            for (let k = 0; k <= 6; k++) {
+              const a = Math.PI + (k * Math.PI) / 6;
+              for (let r = 6; r <= 11; r++) dot(cx + Math.round(Math.cos(a) * r), cy + Math.round(Math.sin(a) * r * 0.85), "#e8e0f0");
+            }
+            for (const r of [8, 11]) for (let k = 0; k <= 30; k++) {
+              const a = Math.PI + (k * Math.PI) / 30;
+              dot(cx + Math.round(Math.cos(a) * r), cy + Math.round(Math.sin(a) * r * 0.85), "#cfc4e6");
+            }
+          });
+        },
         build(t) {
-          const g = spider({ base: "#3a2060", hi: "#7a4ad9", leg: "#24143f" }, t, { eye: Math.sin(t * 4) > 0 ? "#f0d8ff" : "#c46bff", hair: true });
-          g.set(7, -8, "#ffc53a"); g.set(6, -8, "#e8a820"); g.set(8, -8, "#e8a820"); g.set(6, -9, "#ffc53a"); g.set(8, -9, "#ffc53a");
+          const g = spider({ base: "#5a2a9a", hi: "#a070f0", leg: "#d0b0ff" }, t, {
+            wiggle: !reduced,
+            eye: ["#f0d8ff", "#c46bff", "#ff6fb5"][Math.floor(t * 3) % 3],
+            abdomen: (x, y) => (at([[7, -6], [6, -5], [8, -5], [7, -4]], x, y) ? "#ffc53a" : null),
+          });
+          // gold crown on the head
+          g.row(6, 8, -8, "#e8a820"); g.set(6, -9, "#ffd84a"); g.set(7, -10, "#ffd84a"); g.set(8, -9, "#ffd84a"); g.set(7, -9, "#ff3b8a");
           return g;
         },
         over(c, l, tp, t) {
-          for (const [x, len] of [[1, 8], [13, 9]]) for (let y = -2; y < 2 + len; y++) fade(c, 0.55, () => R(c, l + x + (y % 3 === 0 ? (x < 7 ? -1 : 1) : 0), tp + y, 1, 1, "#e8e0f0"));
-          const drop = 6 + Math.round((Math.sin(t * 1.6) + 1) * 2);
-          for (let y = 3; y < 3 + drop; y++) fade(c, 0.7, () => R(c, l + 12, tp + y, 1, 1, "#d8d0ec"));
-          R(c, l + 11, tp + 3 + drop, 3, 1, "#24143f"); R(c, l + 12, tp + 3 + drop, 1, 2, "#3a2060"); R(c, l + 12, tp + 3 + drop, 1, 1, "#c46bff");
+          // three baby spiders running round the outer ring of the web
+          for (let k = 0; k < 3; k++) {
+            const a = t * (k % 2 ? -0.9 : 0.7) + (k * TAU) / 3;
+            const ang = Math.PI + (((a % Math.PI) + Math.PI) % Math.PI);
+            const x = Math.round(l + 7 + Math.cos(ang) * 11), y = Math.round(tp + 1 + Math.sin(ang) * 9.3);
+            R(c, x, y, 2, 1, "#24143f"); R(c, x - 1, y - (Math.floor(t * 10) % 2), 1, 1, "#24143f"); R(c, x + 2, y - (Math.floor(t * 10 + 1) % 2), 1, 1, "#24143f");
+            R(c, x, y, 1, 1, "#c46bff");
+          }
         },
       },
     },
@@ -641,13 +731,30 @@
       make: (k) => ({ build: (t) => brainDome(k.fluid, t) }),
     },
     rare: {
-      name: "Robo Brain",
-      pitch: "A brass-collared dome with rivets and a little antenna with a red bulb on top.",
+      name: "Cyborg Brain",
+      pitch: "A riveted steel skull-cap with a round porthole window showing the brain, red and blue tubes plugged into the sides, a green status light and a tiny satellite dish on top.",
       item: {
-        build: (t) => brainDome("#9fb8d8", t, {
-          metal: "#c9a24a", rivet: "#fff1b0",
-          extra: (g) => { g.set(7, -7, "#c9a24a"); g.set(7, -8, "#c9a24a"); g.set(7, -9, "#ff3b4d"); g.set(8, -9, OUT); g.set(6, -9, OUT); g.set(7, -10, OUT); },
-        }),
+        build() {
+          const g = makeGrid();
+          const STEEL = "#9a94aa", STEEL_HI = "#d0cadc", STEEL_SH = "#5a5470";
+          // steel cap over the top of the head
+          ellipse(g, 7, 0.5, 4.4, 3.6, (x, y, x0, x1) => (y > 2 ? null : x === x0 || y < -2 ? STEEL_HI : x >= x1 - 1 ? STEEL_SH : STEEL));
+          for (const [k, v] of [...g.m]) if (v.y > 2 || v.c === null) g.m.delete(k);
+          g.row(3, 11, 2, STEEL_SH);
+          [3, 5, 9, 11].forEach((x) => g.set(x, 2, STEEL_HI));
+          // porthole: brass ring, brain behind glass
+          ellipse(g, 7, -0.6, 2.7, 2.5, () => "#c9a24a");
+          ellipse(g, 7, -0.6, 1.8, 1.6, (x, y) => ((x + y) % 2 ? "#f0a0b8" : "#c46a8a"));
+          g.set(6, -1, "#ffffff");
+          // dish on a little stalk
+          g.set(9, -4, STEEL_SH); g.set(10, -5, STEEL_SH); g.row(9, 12, -6, STEEL_HI); g.set(11, -7, STEEL_HI); g.set(12, -7, STEEL_HI); g.set(10, -7, "#ff3b4d");
+          outline(g);
+          // tubes plugged into the sides, looping down to the shoulders
+          [[2, 1], [1, 2], [1, 3], [1, 4], [2, 5]].forEach(([x, y]) => g.set(x, y, "#e0384e"));
+          [[12, 1], [13, 2], [13, 3], [13, 4], [12, 5]].forEach(([x, y]) => g.set(x, y, "#4fb2ff"));
+          g.set(4, 0, "#5ee84a");
+          return g;
+        },
       },
     },
     epic: {
