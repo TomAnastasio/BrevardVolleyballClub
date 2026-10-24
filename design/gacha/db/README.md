@@ -15,3 +15,5 @@ pulls and outfits.
 Now that the tokens migration is on `main`, run the tests against the
 migrations folder as-is: `echo 'select 1;' > empty.sql && node tokens.test.mjs empty.sql`
 and `node look.test.mjs` (avatar and skin color, migration 20261024230000).
+
+And `node gift.test.mjs` (the one-time 10-token gift, migration 20261024235000).
