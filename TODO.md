@@ -13,10 +13,12 @@ dates.
 
 ## Pixel avatars: what's left
 
-Tokens, the profile card, the Locker, the Cauldron and outfits in the
-home-screen rally are live (README "Tokens, the Cauldron and the Locker").
-Not built yet: victory/defeat poses on past games and the later ideas in
-PLAN.md (held items, name colors, borders, the non-Halloween set). Full plan:
+Tokens, the profile card, the Locker, the Cauldron, outfits in the
+home-screen rally, and Avatar 1/2 with four skin colors are live (README
+"Tokens, the Cauldron and the Locker"). Not built yet: a non-Halloween item
+set (needed before Dec 1, when Halloween items stop dropping and brewing
+says there's nothing left), victory/defeat poses on past games, and the
+later ideas in PLAN.md (held items, name colors, borders). Full plan:
 `design/gacha/PLAN.md` and `DATABASE.md` on branch
 `claude/gacha-avatars-design`, which also has the item catalog generator and
 the database scenario tests. Halloween items stop dropping Dec 1.
@@ -83,6 +85,12 @@ assumptions above are settled.
   columns/table/functions by hand on prod and staging; a database rebuilt
   from migrations would get them back, empty and unused. Don't re-add it.
 - Direct pushes to `main`, no PR step (2026-10-20); see CLAUDE.md.
+- Pixel avatars (2026-10-24): the base choices are labeled "Avatar 1",
+  "Avatar 2" and "Skin color", never with gendered words. The three slime
+  shoe sets stay "Slime Kicks", "Slime Kicks II", "Slime Kicks III". The
+  10-token gift was one time only; another gift is the owner's call (how:
+  `supabase/README.md` "Tokens and items"). The design branch
+  `claude/gacha-avatars-design` stays separate from `main`, not merged.
 
 ## Testing gaps
 

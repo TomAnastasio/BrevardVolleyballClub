@@ -2,7 +2,8 @@
 // (hair, shirt, sleeves, shorts, shins, socks, shoes), so one item fits
 // every player. Ported from the design work on branch
 // `claude/gacha-avatars-design` (design/gacha/source/engine.js and
-// xcore.js), where the item art and the full item format live.
+// xcore.js), where the full item format is documented. The item art itself
+// is in ./art.
 //
 // Units are body pixels: the avatar is 14 wide and 27 tall. Callers scale
 // the canvas (ctx.scale) to draw it bigger.

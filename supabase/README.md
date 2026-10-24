@@ -179,3 +179,25 @@ If this is happening for real, it's worth getting a second pair of eyes
 (a developer, or a fresh Claude Code session) before running step 6 against
 a live project — restoring is meant to guarantee you're never stuck with
 zero options, not to be a casual undo button.
+
+## Tokens and items
+
+How tokens, the Cauldron and the Locker work for players is in the main
+`README.md` ("Tokens, the Cauldron and the Locker"). For the database:
+
+- **These tables hold real player data** like games do: token balances
+  (`token_balances`), what each player owns (`player_items`), every pull
+  (`pulls`), outfits (`player_outfits`) and gifts (`token_gifts`). They're
+  in the nightly backup. Restoring a backup also rolls these back, so
+  pulls and outfit changes made after it would be lost, the same as games.
+- **Nobody can change them directly**, not even from the app: only the
+  database functions (`brew()`, `equip_item()`, `set_look()`, …) can, and
+  each one checks who's asking.
+- **Giving everyone tokens again** is a new migration modeled on
+  `20261024235000_gift_10_tokens.sql` with a *new gift name* (that name is
+  what stops anyone getting the same gift twice). It's the owner's call
+  each time.
+- **Before any new token, item or outfit migration**, run the database
+  scenario tests (a throwaway copy of the database, no real data). They're
+  on branch `claude/gacha-avatars-design` in `design/gacha/db/`; its README
+  says how to run them.
