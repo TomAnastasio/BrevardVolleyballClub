@@ -44,12 +44,15 @@ export function drawAvatar(c, gear, x, bottom, t) {
     drawTransformation(c, gear.transformation, x, bottom, t);
     return;
   }
-  const { head, shirt, pants, shoes } = gear || {};
+  const { head, shirt, pants } = gear || {};
+  // A ghost tail has no feet, so whatever shoes are equipped are ignored (owner's call, 2026-10-24).
+  const shoes = pants?.ghost ? null : gear?.shoes;
   const lift = shoes?.lift ?? 0;
   const left = Math.round(x - AVATAR_WIDTH / 2);
   const groundTop = bottom - BODY.length;
   const top = groundTop - lift;
-  for (const it of [pants, shirt]) if (it?.under) it.under(c, left, top, t);
+  // pants and shirt also get groundTop (ignores shoe lift) for anything drawn on the floor
+  for (const it of [pants, shirt]) if (it?.under) it.under(c, left, top, t, groundTop);
   if (shoes?.under) shoes.under(c, left, groundTop, t);
   BODY.forEach((row, j) => {
     for (let i = 0; i < row.length; i++) {
@@ -67,7 +70,8 @@ export function drawAvatar(c, gear, x, bottom, t) {
       if (col) R(c, left + i, top + j, 1, 1, col);
     }
   });
-  for (const it of [pants, shirt, shoes]) if (it?.over) it.over(c, left, top, t);
+  for (const it of [pants, shirt]) if (it?.over) it.over(c, left, top, t, groundTop);
+  if (shoes?.over) shoes.over(c, left, top, t);
   if (head) {
     const hTop = top - (head.float ? head.float(t) : 0);
     if (head.under) head.under(c, left, hTop, t);
