@@ -1,0 +1,3834 @@
+[
+ {
+  "key": "head/witch-hat/common/ringed-midnight",
+  "slot": "head",
+  "tier": "common",
+  "name": "Witch Hat: Ringed (midnight)",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/common/ringed-witch-purple",
+  "slot": "head",
+  "tier": "common",
+  "name": "Witch Hat: Ringed (witch purple)",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/common/ringed-swamp-green",
+  "slot": "head",
+  "tier": "common",
+  "name": "Witch Hat: Ringed (swamp green)",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/common/ringed-pumpkin",
+  "slot": "head",
+  "tier": "common",
+  "name": "Witch Hat: Ringed (pumpkin)",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/common/ringed-moonlit-blue",
+  "slot": "head",
+  "tier": "common",
+  "name": "Witch Hat: Ringed (moonlit blue)",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/common/ringed-blood-red",
+  "slot": "head",
+  "tier": "common",
+  "name": "Witch Hat: Ringed (blood red)",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/rare/candy-corn",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Candy Corn",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/epic/jack-o-lantern-band",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Jack-o'-Lantern Band",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/epic/bat-perch",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Bat Perch",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/legendary/ghostfire",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Ghostfire",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/witch-hat/legendary/living-hat",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Living Hat",
+  "halloween": true,
+  "page": "03"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/classic-carve-orange",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Classic Carve (orange)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/classic-carve-ghost-white",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Classic Carve (ghost white)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/classic-carve-gourd-green",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Classic Carve (gourd green)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/classic-carve-blue-heirloom",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Classic Carve (blue heirloom)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/classic-carve-cinderella-red",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Classic Carve (cinderella red)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/classic-carve-rotten",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Classic Carve (rotten)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/grumpy-carve-orange",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Grumpy Carve (orange)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/grumpy-carve-ghost-white",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Grumpy Carve (ghost white)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/grumpy-carve-gourd-green",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Grumpy Carve (gourd green)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/grumpy-carve-blue-heirloom",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Grumpy Carve (blue heirloom)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/grumpy-carve-cinderella-red",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Grumpy Carve (cinderella red)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/common/grumpy-carve-rotten",
+  "slot": "head",
+  "tier": "common",
+  "name": "Pumpkin Helmet: Grumpy Carve (rotten)",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/rare/pumpkin-king",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Pumpkin King",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/epic/chomper",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Chomper",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/legendary/headless-horseman",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Headless Horseman",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "head/pumpkin-helmet/legendary/possessed",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Possessed",
+  "halloween": true,
+  "page": "05"
+ },
+ {
+  "key": "shirt/skeleton-tee/common/classic-ribcage-black",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Skeleton Tee: Classic Ribcage (black)",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/common/classic-ribcage-charcoal",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Skeleton Tee: Classic Ribcage (charcoal)",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/common/classic-ribcage-witch-purple",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Skeleton Tee: Classic Ribcage (witch purple)",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/common/classic-ribcage-blood-red",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Skeleton Tee: Classic Ribcage (blood red)",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/common/classic-ribcage-swamp-green",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Skeleton Tee: Classic Ribcage (swamp green)",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/common/classic-ribcage-midnight-blue",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Skeleton Tee: Classic Ribcage (midnight blue)",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/rare/glow-bones",
+  "slot": "shirt",
+  "tier": "rare",
+  "name": "Glow Bones",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/epic/beating-heart",
+  "slot": "shirt",
+  "tier": "epic",
+  "name": "Beating Heart",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/legendary/lich-armor",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Lich Armor",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/legendary/ectoplasm",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Ectoplasm",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "shirt/skeleton-tee/legendary/rave-bones",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Rave Bones",
+  "halloween": true,
+  "page": "07"
+ },
+ {
+  "key": "pants/witch-stockings/common/classic-stripes-witch-purple",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Witch Stockings: Classic Stripes (witch purple)",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/common/classic-stripes-pumpkin",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Witch Stockings: Classic Stripes (pumpkin)",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/common/classic-stripes-slime",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Witch Stockings: Classic Stripes (slime)",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/common/classic-stripes-blood",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Witch Stockings: Classic Stripes (blood)",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/common/classic-stripes-bone",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Witch Stockings: Classic Stripes (bone)",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/common/classic-stripes-candy",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Witch Stockings: Classic Stripes (candy)",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/rare/mismatched",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "Mismatched",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/epic/marquee-stripes",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Marquee Stripes",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/epic/potion-belt",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Potion Belt",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/legendary/bubbling-brew",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Bubbling Brew",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "pants/witch-stockings/legendary/flame-stockings",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Flame Stockings",
+  "halloween": true,
+  "page": "09"
+ },
+ {
+  "key": "head/devil-horns/common/devil-red",
+  "slot": "head",
+  "tier": "common",
+  "name": "Devil Horns (devil red)",
+  "halloween": true,
+  "card": 101
+ },
+ {
+  "key": "head/devil-horns/common/coal-black",
+  "slot": "head",
+  "tier": "common",
+  "name": "Devil Horns (coal black)",
+  "halloween": true,
+  "card": 101
+ },
+ {
+  "key": "head/devil-horns/common/bone",
+  "slot": "head",
+  "tier": "common",
+  "name": "Devil Horns (bone)",
+  "halloween": true,
+  "card": 101
+ },
+ {
+  "key": "head/devil-horns/common/witch-purple",
+  "slot": "head",
+  "tier": "common",
+  "name": "Devil Horns (witch purple)",
+  "halloween": true,
+  "card": 101
+ },
+ {
+  "key": "head/devil-horns/common/pumpkin",
+  "slot": "head",
+  "tier": "common",
+  "name": "Devil Horns (pumpkin)",
+  "halloween": true,
+  "card": 101
+ },
+ {
+  "key": "head/devil-horns/common/slime-green",
+  "slot": "head",
+  "tier": "common",
+  "name": "Devil Horns (slime green)",
+  "halloween": true,
+  "card": 101
+ },
+ {
+  "key": "head/devil-horns/rare/bighorn-curls",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Bighorn Curls",
+  "halloween": true,
+  "card": 102
+ },
+ {
+  "key": "head/devil-horns/epic/smoking-horns",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Smoking Horns",
+  "halloween": true,
+  "card": 103
+ },
+ {
+  "key": "head/devil-horns/legendary/lava-horns",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Lava Horns",
+  "halloween": true,
+  "card": 104
+ },
+ {
+  "key": "head/cat-ears/common/black-cat",
+  "slot": "head",
+  "tier": "common",
+  "name": "Cat Ears (black cat)",
+  "halloween": true,
+  "card": 105
+ },
+ {
+  "key": "head/cat-ears/common/orange-tabby",
+  "slot": "head",
+  "tier": "common",
+  "name": "Cat Ears (orange tabby)",
+  "halloween": true,
+  "card": 105
+ },
+ {
+  "key": "head/cat-ears/common/snow-white",
+  "slot": "head",
+  "tier": "common",
+  "name": "Cat Ears (snow white)",
+  "halloween": true,
+  "card": 105
+ },
+ {
+  "key": "head/cat-ears/common/smoke-grey",
+  "slot": "head",
+  "tier": "common",
+  "name": "Cat Ears (smoke grey)",
+  "halloween": true,
+  "card": 105
+ },
+ {
+  "key": "head/cat-ears/common/chocolate",
+  "slot": "head",
+  "tier": "common",
+  "name": "Cat Ears (chocolate)",
+  "halloween": true,
+  "card": 105
+ },
+ {
+  "key": "head/cat-ears/common/witch-purple",
+  "slot": "head",
+  "tier": "common",
+  "name": "Cat Ears (witch purple)",
+  "halloween": true,
+  "card": 105
+ },
+ {
+  "key": "head/cat-ears/rare/calico-bell",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Calico Bell",
+  "halloween": true,
+  "card": 106
+ },
+ {
+  "key": "head/cat-ears/epic/flicking-ears",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Flicking Ears",
+  "halloween": true,
+  "card": 107
+ },
+ {
+  "key": "head/cat-ears/legendary/witchs-familiar",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Witch's Familiar",
+  "halloween": true,
+  "card": 108
+ },
+ {
+  "key": "head/mummy-wraps/common/linen",
+  "slot": "head",
+  "tier": "common",
+  "name": "Mummy Wraps (linen)",
+  "halloween": true,
+  "card": 109
+ },
+ {
+  "key": "head/mummy-wraps/common/ash-grey",
+  "slot": "head",
+  "tier": "common",
+  "name": "Mummy Wraps (ash grey)",
+  "halloween": true,
+  "card": 109
+ },
+ {
+  "key": "head/mummy-wraps/common/tea-stained",
+  "slot": "head",
+  "tier": "common",
+  "name": "Mummy Wraps (tea-stained)",
+  "halloween": true,
+  "card": 109
+ },
+ {
+  "key": "head/mummy-wraps/common/soot-black",
+  "slot": "head",
+  "tier": "common",
+  "name": "Mummy Wraps (soot black)",
+  "halloween": true,
+  "card": 109
+ },
+ {
+  "key": "head/mummy-wraps/common/moss",
+  "slot": "head",
+  "tier": "common",
+  "name": "Mummy Wraps (moss)",
+  "halloween": true,
+  "card": 109
+ },
+ {
+  "key": "head/mummy-wraps/common/dusty-rose",
+  "slot": "head",
+  "tier": "common",
+  "name": "Mummy Wraps (dusty rose)",
+  "halloween": true,
+  "card": 109
+ },
+ {
+  "key": "head/mummy-wraps/rare/pharaohs-headdress",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Pharaoh's Headdress",
+  "halloween": true,
+  "card": 110
+ },
+ {
+  "key": "head/mummy-wraps/epic/peekaboo",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Peekaboo",
+  "halloween": true,
+  "card": 111
+ },
+ {
+  "key": "head/mummy-wraps/legendary/tomb-king",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Tomb King",
+  "halloween": true,
+  "card": 112
+ },
+ {
+  "key": "head/reaper-hood/common/grave-black",
+  "slot": "head",
+  "tier": "common",
+  "name": "Reaper Hood (grave black)",
+  "halloween": true,
+  "card": 113
+ },
+ {
+  "key": "head/reaper-hood/common/ash-grey",
+  "slot": "head",
+  "tier": "common",
+  "name": "Reaper Hood (ash grey)",
+  "halloween": true,
+  "card": 113
+ },
+ {
+  "key": "head/reaper-hood/common/blood-red",
+  "slot": "head",
+  "tier": "common",
+  "name": "Reaper Hood (blood red)",
+  "halloween": true,
+  "card": 113
+ },
+ {
+  "key": "head/reaper-hood/common/bone",
+  "slot": "head",
+  "tier": "common",
+  "name": "Reaper Hood (bone)",
+  "halloween": true,
+  "card": 113
+ },
+ {
+  "key": "head/reaper-hood/common/midnight",
+  "slot": "head",
+  "tier": "common",
+  "name": "Reaper Hood (midnight)",
+  "halloween": true,
+  "card": 113
+ },
+ {
+  "key": "head/reaper-hood/common/moss",
+  "slot": "head",
+  "tier": "common",
+  "name": "Reaper Hood (moss)",
+  "halloween": true,
+  "card": 113
+ },
+ {
+  "key": "head/reaper-hood/rare/tattered-hood",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Tattered Hood",
+  "halloween": true,
+  "card": 114
+ },
+ {
+  "key": "head/reaper-hood/epic/smoldering-eyes",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Smoldering Eyes",
+  "halloween": true,
+  "card": 115
+ },
+ {
+  "key": "head/reaper-hood/legendary/void-hood",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Void Hood",
+  "halloween": true,
+  "card": 116
+ },
+ {
+  "key": "head/frankenstein-flat-top/common/jet-black",
+  "slot": "head",
+  "tier": "common",
+  "name": "Frankenstein Flat-Top (jet black)",
+  "halloween": true,
+  "card": 117
+ },
+ {
+  "key": "head/frankenstein-flat-top/common/swamp-green",
+  "slot": "head",
+  "tier": "common",
+  "name": "Frankenstein Flat-Top (swamp green)",
+  "halloween": true,
+  "card": 117
+ },
+ {
+  "key": "head/frankenstein-flat-top/common/ash-grey",
+  "slot": "head",
+  "tier": "common",
+  "name": "Frankenstein Flat-Top (ash grey)",
+  "halloween": true,
+  "card": 117
+ },
+ {
+  "key": "head/frankenstein-flat-top/common/dark-brown",
+  "slot": "head",
+  "tier": "common",
+  "name": "Frankenstein Flat-Top (dark brown)",
+  "halloween": true,
+  "card": 117
+ },
+ {
+  "key": "head/frankenstein-flat-top/common/navy",
+  "slot": "head",
+  "tier": "common",
+  "name": "Frankenstein Flat-Top (navy)",
+  "halloween": true,
+  "card": 117
+ },
+ {
+  "key": "head/frankenstein-flat-top/common/bruise-purple",
+  "slot": "head",
+  "tier": "common",
+  "name": "Frankenstein Flat-Top (bruise purple)",
+  "halloween": true,
+  "card": 117
+ },
+ {
+  "key": "head/frankenstein-flat-top/rare/monster-makeup",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Monster Makeup",
+  "halloween": true,
+  "card": 118
+ },
+ {
+  "key": "head/frankenstein-flat-top/epic/sparking-bolts",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Sparking Bolts",
+  "halloween": true,
+  "card": 119
+ },
+ {
+  "key": "head/frankenstein-flat-top/legendary/its-alive",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "It's Alive!",
+  "halloween": true,
+  "card": 120
+ },
+ {
+  "key": "head/skull-mask/common/bone",
+  "slot": "head",
+  "tier": "common",
+  "name": "Skull Mask (bone)",
+  "halloween": true,
+  "card": 121
+ },
+ {
+  "key": "head/skull-mask/common/ash",
+  "slot": "head",
+  "tier": "common",
+  "name": "Skull Mask (ash)",
+  "halloween": true,
+  "card": 121
+ },
+ {
+  "key": "head/skull-mask/common/obsidian",
+  "slot": "head",
+  "tier": "common",
+  "name": "Skull Mask (obsidian)",
+  "halloween": true,
+  "card": 121
+ },
+ {
+  "key": "head/skull-mask/common/blood",
+  "slot": "head",
+  "tier": "common",
+  "name": "Skull Mask (blood)",
+  "halloween": true,
+  "card": 121
+ },
+ {
+  "key": "head/skull-mask/common/jade",
+  "slot": "head",
+  "tier": "common",
+  "name": "Skull Mask (jade)",
+  "halloween": true,
+  "card": 121
+ },
+ {
+  "key": "head/skull-mask/common/pumpkin",
+  "slot": "head",
+  "tier": "common",
+  "name": "Skull Mask (pumpkin)",
+  "halloween": true,
+  "card": 121
+ },
+ {
+  "key": "head/skull-mask/rare/sugar-skull",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Sugar Skull",
+  "halloween": true,
+  "card": 122
+ },
+ {
+  "key": "head/skull-mask/epic/chattering-skull",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Chattering Skull",
+  "halloween": true,
+  "card": 123
+ },
+ {
+  "key": "head/skull-mask/legendary/flaming-skull",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Flaming Skull",
+  "halloween": true,
+  "card": 124
+ },
+ {
+  "key": "head/spider-friend/common/black",
+  "slot": "head",
+  "tier": "common",
+  "name": "Spider Friend (black)",
+  "halloween": true,
+  "card": 125
+ },
+ {
+  "key": "head/spider-friend/common/tarantula-brown",
+  "slot": "head",
+  "tier": "common",
+  "name": "Spider Friend (tarantula brown)",
+  "halloween": true,
+  "card": 125
+ },
+ {
+  "key": "head/spider-friend/common/ash-grey",
+  "slot": "head",
+  "tier": "common",
+  "name": "Spider Friend (ash grey)",
+  "halloween": true,
+  "card": 125
+ },
+ {
+  "key": "head/spider-friend/common/venom-purple",
+  "slot": "head",
+  "tier": "common",
+  "name": "Spider Friend (venom purple)",
+  "halloween": true,
+  "card": 125
+ },
+ {
+  "key": "head/spider-friend/common/poison-green",
+  "slot": "head",
+  "tier": "common",
+  "name": "Spider Friend (poison green)",
+  "halloween": true,
+  "card": 125
+ },
+ {
+  "key": "head/spider-friend/common/ghost-white",
+  "slot": "head",
+  "tier": "common",
+  "name": "Spider Friend (ghost white)",
+  "halloween": true,
+  "card": 125
+ },
+ {
+  "key": "head/spider-friend/rare/black-widow",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Black Widow",
+  "halloween": true,
+  "card": 126
+ },
+ {
+  "key": "head/spider-friend/epic/restless-spider",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Restless Spider",
+  "halloween": true,
+  "card": 127
+ },
+ {
+  "key": "head/spider-friend/legendary/spider-queen",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Spider Queen",
+  "halloween": true,
+  "card": 128
+ },
+ {
+  "key": "head/candle-crown/common/ivory",
+  "slot": "head",
+  "tier": "common",
+  "name": "Candle Crown (ivory)",
+  "halloween": true,
+  "card": 129
+ },
+ {
+  "key": "head/candle-crown/common/black",
+  "slot": "head",
+  "tier": "common",
+  "name": "Candle Crown (black)",
+  "halloween": true,
+  "card": 129
+ },
+ {
+  "key": "head/candle-crown/common/witch-purple",
+  "slot": "head",
+  "tier": "common",
+  "name": "Candle Crown (witch purple)",
+  "halloween": true,
+  "card": 129
+ },
+ {
+  "key": "head/candle-crown/common/blood-red",
+  "slot": "head",
+  "tier": "common",
+  "name": "Candle Crown (blood red)",
+  "halloween": true,
+  "card": 129
+ },
+ {
+  "key": "head/candle-crown/common/pumpkin",
+  "slot": "head",
+  "tier": "common",
+  "name": "Candle Crown (pumpkin)",
+  "halloween": true,
+  "card": 129
+ },
+ {
+  "key": "head/candle-crown/common/moss-green",
+  "slot": "head",
+  "tier": "common",
+  "name": "Candle Crown (moss green)",
+  "halloween": true,
+  "card": 129
+ },
+ {
+  "key": "head/candle-crown/rare/skull-candelabra",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Skull Candelabra",
+  "halloween": true,
+  "card": 130
+ },
+ {
+  "key": "head/candle-crown/epic/flickering-flames",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Flickering Flames",
+  "halloween": true,
+  "card": 131
+ },
+ {
+  "key": "head/candle-crown/legendary/witch-fire",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Witch Fire",
+  "halloween": true,
+  "card": 132
+ },
+ {
+  "key": "head/brain-dome/common/clear",
+  "slot": "head",
+  "tier": "common",
+  "name": "Brain Dome (clear)",
+  "halloween": true,
+  "card": 133
+ },
+ {
+  "key": "head/brain-dome/common/formula-green",
+  "slot": "head",
+  "tier": "common",
+  "name": "Brain Dome (formula green)",
+  "halloween": true,
+  "card": 133
+ },
+ {
+  "key": "head/brain-dome/common/ice-blue",
+  "slot": "head",
+  "tier": "common",
+  "name": "Brain Dome (ice blue)",
+  "halloween": true,
+  "card": 133
+ },
+ {
+  "key": "head/brain-dome/common/potion-purple",
+  "slot": "head",
+  "tier": "common",
+  "name": "Brain Dome (potion purple)",
+  "halloween": true,
+  "card": 133
+ },
+ {
+  "key": "head/brain-dome/common/amber",
+  "slot": "head",
+  "tier": "common",
+  "name": "Brain Dome (amber)",
+  "halloween": true,
+  "card": 133
+ },
+ {
+  "key": "head/brain-dome/common/blood",
+  "slot": "head",
+  "tier": "common",
+  "name": "Brain Dome (blood)",
+  "halloween": true,
+  "card": 133
+ },
+ {
+  "key": "head/brain-dome/rare/cyborg-brain",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Cyborg Brain",
+  "halloween": true,
+  "card": 134
+ },
+ {
+  "key": "head/brain-dome/epic/big-thinker",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Big Thinker",
+  "halloween": true,
+  "card": 135
+ },
+ {
+  "key": "head/brain-dome/legendary/galaxy-brain",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Galaxy Brain",
+  "halloween": true,
+  "card": 136
+ },
+ {
+  "key": "head/plague-doctor/common/black-leather",
+  "slot": "head",
+  "tier": "common",
+  "name": "Plague Doctor (black leather)",
+  "halloween": true,
+  "card": 137
+ },
+ {
+  "key": "head/plague-doctor/common/saddle-brown",
+  "slot": "head",
+  "tier": "common",
+  "name": "Plague Doctor (saddle brown)",
+  "halloween": true,
+  "card": 137
+ },
+ {
+  "key": "head/plague-doctor/common/bone-white",
+  "slot": "head",
+  "tier": "common",
+  "name": "Plague Doctor (bone white)",
+  "halloween": true,
+  "card": 137
+ },
+ {
+  "key": "head/plague-doctor/common/crimson",
+  "slot": "head",
+  "tier": "common",
+  "name": "Plague Doctor (crimson)",
+  "halloween": true,
+  "card": 137
+ },
+ {
+  "key": "head/plague-doctor/common/bronze",
+  "slot": "head",
+  "tier": "common",
+  "name": "Plague Doctor (bronze)",
+  "halloween": true,
+  "card": 137
+ },
+ {
+  "key": "head/plague-doctor/common/slate",
+  "slot": "head",
+  "tier": "common",
+  "name": "Plague Doctor (slate)",
+  "halloween": true,
+  "card": 137
+ },
+ {
+  "key": "head/plague-doctor/rare/brass-goggles",
+  "slot": "head",
+  "tier": "rare",
+  "name": "Brass Goggles",
+  "halloween": true,
+  "card": 138
+ },
+ {
+  "key": "head/plague-doctor/epic/herb-smoke",
+  "slot": "head",
+  "tier": "epic",
+  "name": "Herb Smoke",
+  "halloween": true,
+  "card": 139
+ },
+ {
+  "key": "head/plague-doctor/legendary/raven-lord",
+  "slot": "head",
+  "tier": "legendary",
+  "name": "Raven Lord",
+  "halloween": true,
+  "card": 140
+ },
+ {
+  "key": "shirt/candy-corn-stripes/common/classic",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Candy Corn Stripes (classic)",
+  "halloween": true,
+  "card": 141
+ },
+ {
+  "key": "shirt/candy-corn-stripes/common/witchs-brew",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Candy Corn Stripes (witch's brew)",
+  "halloween": true,
+  "card": 141
+ },
+ {
+  "key": "shirt/candy-corn-stripes/common/blood-moon",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Candy Corn Stripes (blood moon)",
+  "halloween": true,
+  "card": 141
+ },
+ {
+  "key": "shirt/candy-corn-stripes/common/ghostly",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Candy Corn Stripes (ghostly)",
+  "halloween": true,
+  "card": 141
+ },
+ {
+  "key": "shirt/candy-corn-stripes/common/swamp",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Candy Corn Stripes (swamp)",
+  "halloween": true,
+  "card": 141
+ },
+ {
+  "key": "shirt/candy-corn-stripes/common/midnight",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Candy Corn Stripes (midnight)",
+  "halloween": true,
+  "card": 141
+ },
+ {
+  "key": "shirt/candy-corn-stripes/rare/caramel-apple",
+  "slot": "shirt",
+  "tier": "rare",
+  "name": "Caramel Apple",
+  "halloween": true,
+  "card": 142
+ },
+ {
+  "key": "shirt/candy-corn-stripes/epic/sugar-rush",
+  "slot": "shirt",
+  "tier": "epic",
+  "name": "Sugar Rush",
+  "halloween": true,
+  "card": 143
+ },
+ {
+  "key": "shirt/candy-corn-stripes/legendary/candy-corn-king",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Candy Corn King",
+  "halloween": true,
+  "card": 144
+ },
+ {
+  "key": "shirt/pumpkin-flannel/common/pumpkin",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Pumpkin Flannel (pumpkin)",
+  "halloween": true,
+  "card": 145
+ },
+ {
+  "key": "shirt/pumpkin-flannel/common/moss",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Pumpkin Flannel (moss)",
+  "halloween": true,
+  "card": 145
+ },
+ {
+  "key": "shirt/pumpkin-flannel/common/blood",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Pumpkin Flannel (blood)",
+  "halloween": true,
+  "card": 145
+ },
+ {
+  "key": "shirt/pumpkin-flannel/common/violet",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Pumpkin Flannel (violet)",
+  "halloween": true,
+  "card": 145
+ },
+ {
+  "key": "shirt/pumpkin-flannel/common/ash",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Pumpkin Flannel (ash)",
+  "halloween": true,
+  "card": 145
+ },
+ {
+  "key": "shirt/pumpkin-flannel/common/midnight",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Pumpkin Flannel (midnight)",
+  "halloween": true,
+  "card": 145
+ },
+ {
+  "key": "shirt/pumpkin-flannel/rare/puffer-vest",
+  "slot": "shirt",
+  "tier": "rare",
+  "name": "Puffer Vest",
+  "halloween": true,
+  "card": 146
+ },
+ {
+  "key": "shirt/pumpkin-flannel/epic/leaf-fall",
+  "slot": "shirt",
+  "tier": "epic",
+  "name": "Leaf Fall",
+  "halloween": true,
+  "card": 147
+ },
+ {
+  "key": "shirt/pumpkin-flannel/legendary/bonfire-flannel",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Bonfire Flannel",
+  "halloween": true,
+  "card": 148
+ },
+ {
+  "key": "shirt/vampire-count/common/blood-red",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Vampire Count (blood red)",
+  "halloween": true,
+  "card": 149
+ },
+ {
+  "key": "shirt/vampire-count/common/royal-purple",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Vampire Count (royal purple)",
+  "halloween": true,
+  "card": 149
+ },
+ {
+  "key": "shirt/vampire-count/common/emerald",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Vampire Count (emerald)",
+  "halloween": true,
+  "card": 149
+ },
+ {
+  "key": "shirt/vampire-count/common/midnight-blue",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Vampire Count (midnight blue)",
+  "halloween": true,
+  "card": 149
+ },
+ {
+  "key": "shirt/vampire-count/common/old-gold",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Vampire Count (old gold)",
+  "halloween": true,
+  "card": 149
+ },
+ {
+  "key": "shirt/vampire-count/common/silver",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Vampire Count (silver)",
+  "halloween": true,
+  "card": 149
+ },
+ {
+  "key": "shirt/vampire-count/rare/royal-count",
+  "slot": "shirt",
+  "tier": "rare",
+  "name": "Royal Count",
+  "halloween": true,
+  "card": 150
+ },
+ {
+  "key": "shirt/vampire-count/epic/billowing-cape",
+  "slot": "shirt",
+  "tier": "epic",
+  "name": "Billowing Cape",
+  "halloween": true,
+  "card": 151
+ },
+ {
+  "key": "shirt/vampire-count/legendary/night-lord",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Night Lord",
+  "halloween": true,
+  "card": 152
+ },
+ {
+  "key": "shirt/mummy-wraps/common/linen",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Mummy Wraps (linen)",
+  "halloween": true,
+  "card": 153
+ },
+ {
+  "key": "shirt/mummy-wraps/common/bone-white",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Mummy Wraps (bone white)",
+  "halloween": true,
+  "card": 153
+ },
+ {
+  "key": "shirt/mummy-wraps/common/tea-stained",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Mummy Wraps (tea-stained)",
+  "halloween": true,
+  "card": 153
+ },
+ {
+  "key": "shirt/mummy-wraps/common/ash",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Mummy Wraps (ash)",
+  "halloween": true,
+  "card": 153
+ },
+ {
+  "key": "shirt/mummy-wraps/common/soot",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Mummy Wraps (soot)",
+  "halloween": true,
+  "card": 153
+ },
+ {
+  "key": "shirt/mummy-wraps/common/moss",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Mummy Wraps (moss)",
+  "halloween": true,
+  "card": 153
+ },
+ {
+  "key": "shirt/mummy-wraps/rare/pharaoh",
+  "slot": "shirt",
+  "tier": "rare",
+  "name": "Pharaoh",
+  "halloween": true,
+  "card": 154
+ },
+ {
+  "key": "shirt/mummy-wraps/epic/unraveling",
+  "slot": "shirt",
+  "tier": "epic",
+  "name": "Unraveling",
+  "halloween": true,
+  "card": 155
+ },
+ {
+  "key": "shirt/mummy-wraps/legendary/cursed-scarab",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Cursed Scarab",
+  "halloween": true,
+  "card": 156
+ },
+ {
+  "key": "shirt/bedsheet-ghost/common/white",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Bedsheet Ghost (white)",
+  "halloween": true,
+  "card": 157
+ },
+ {
+  "key": "shirt/bedsheet-ghost/common/lavender",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Bedsheet Ghost (lavender)",
+  "halloween": true,
+  "card": 157
+ },
+ {
+  "key": "shirt/bedsheet-ghost/common/mint",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Bedsheet Ghost (mint)",
+  "halloween": true,
+  "card": 157
+ },
+ {
+  "key": "shirt/bedsheet-ghost/common/peach",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Bedsheet Ghost (peach)",
+  "halloween": true,
+  "card": 157
+ },
+ {
+  "key": "shirt/bedsheet-ghost/common/sky",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Bedsheet Ghost (sky)",
+  "halloween": true,
+  "card": 157
+ },
+ {
+  "key": "shirt/bedsheet-ghost/common/dusty-grey",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Bedsheet Ghost (dusty grey)",
+  "halloween": true,
+  "card": 157
+ },
+ {
+  "key": "shirt/bedsheet-ghost/rare/too-cool-ghost",
+  "slot": "shirt",
+  "tier": "rare",
+  "name": "Too Cool Ghost",
+  "halloween": true,
+  "card": 158
+ },
+ {
+  "key": "shirt/bedsheet-ghost/epic/boo",
+  "slot": "shirt",
+  "tier": "epic",
+  "name": "Boo!",
+  "halloween": true,
+  "card": 159
+ },
+ {
+  "key": "shirt/bedsheet-ghost/legendary/true-phantom",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "True Phantom",
+  "halloween": true,
+  "card": 160
+ },
+ {
+  "key": "shirt/frankenstein-jacket/common/monster-green",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Frankenstein Jacket (monster green)",
+  "halloween": true,
+  "card": 165
+ },
+ {
+  "key": "shirt/frankenstein-jacket/common/charcoal",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Frankenstein Jacket (charcoal)",
+  "halloween": true,
+  "card": 165
+ },
+ {
+  "key": "shirt/frankenstein-jacket/common/rust",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Frankenstein Jacket (rust)",
+  "halloween": true,
+  "card": 165
+ },
+ {
+  "key": "shirt/frankenstein-jacket/common/navy",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Frankenstein Jacket (navy)",
+  "halloween": true,
+  "card": 165
+ },
+ {
+  "key": "shirt/frankenstein-jacket/common/lab-grey",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Frankenstein Jacket (lab grey)",
+  "halloween": true,
+  "card": 165
+ },
+ {
+  "key": "shirt/frankenstein-jacket/common/olive",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Frankenstein Jacket (olive)",
+  "halloween": true,
+  "card": 165
+ },
+ {
+  "key": "shirt/frankenstein-jacket/rare/bolted",
+  "slot": "shirt",
+  "tier": "rare",
+  "name": "Bolted",
+  "halloween": true,
+  "card": 166
+ },
+ {
+  "key": "shirt/frankenstein-jacket/epic/live-wires",
+  "slot": "shirt",
+  "tier": "epic",
+  "name": "Live Wires",
+  "halloween": true,
+  "card": 167
+ },
+ {
+  "key": "shirt/frankenstein-jacket/legendary/lightning-rods",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Lightning Rods",
+  "halloween": true,
+  "card": 168
+ },
+ {
+  "key": "shirt/spooky-club-jersey/common/black-and-orange",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Spooky Club Jersey (black & orange)",
+  "halloween": true,
+  "card": 169
+ },
+ {
+  "key": "shirt/spooky-club-jersey/common/purple-and-slime",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Spooky Club Jersey (purple & slime)",
+  "halloween": true,
+  "card": 169
+ },
+ {
+  "key": "shirt/spooky-club-jersey/common/white-and-black",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Spooky Club Jersey (white & black)",
+  "halloween": true,
+  "card": 169
+ },
+ {
+  "key": "shirt/spooky-club-jersey/common/orange-and-black",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Spooky Club Jersey (orange & black)",
+  "halloween": true,
+  "card": 169
+ },
+ {
+  "key": "shirt/spooky-club-jersey/common/green-and-purple",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Spooky Club Jersey (green & purple)",
+  "halloween": true,
+  "card": 169
+ },
+ {
+  "key": "shirt/spooky-club-jersey/common/red-and-white",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Spooky Club Jersey (red & white)",
+  "halloween": true,
+  "card": 169
+ },
+ {
+  "key": "shirt/spooky-club-jersey/rare/captains-jersey",
+  "slot": "shirt",
+  "tier": "rare",
+  "name": "Captain's Jersey",
+  "halloween": true,
+  "card": 170
+ },
+ {
+  "key": "shirt/spooky-club-jersey/epic/glow-numbers",
+  "slot": "shirt",
+  "tier": "epic",
+  "name": "Glow Numbers",
+  "halloween": true,
+  "card": 171
+ },
+ {
+  "key": "shirt/spooky-club-jersey/legendary/haunted-mvp",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Haunted MVP",
+  "halloween": true,
+  "card": 172
+ },
+ {
+  "key": "shirt/scarecrow/common/natural-burlap",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Scarecrow (natural burlap)",
+  "halloween": true,
+  "card": 173
+ },
+ {
+  "key": "shirt/scarecrow/common/faded-red",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Scarecrow (faded red)",
+  "halloween": true,
+  "card": 173
+ },
+ {
+  "key": "shirt/scarecrow/common/denim",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Scarecrow (denim)",
+  "halloween": true,
+  "card": 173
+ },
+ {
+  "key": "shirt/scarecrow/common/moss",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Scarecrow (moss)",
+  "halloween": true,
+  "card": 173
+ },
+ {
+  "key": "shirt/scarecrow/common/plum",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Scarecrow (plum)",
+  "halloween": true,
+  "card": 173
+ },
+ {
+  "key": "shirt/scarecrow/common/charcoal",
+  "slot": "shirt",
+  "tier": "common",
+  "name": "Scarecrow (charcoal)",
+  "halloween": true,
+  "card": 173
+ },
+ {
+  "key": "shirt/scarecrow/rare/windswept",
+  "slot": "shirt",
+  "tier": "rare",
+  "name": "Windswept",
+  "halloween": true,
+  "card": 174
+ },
+ {
+  "key": "shirt/scarecrow/epic/crows-perch",
+  "slot": "shirt",
+  "tier": "epic",
+  "name": "Crow's Perch",
+  "halloween": true,
+  "card": 175
+ },
+ {
+  "key": "shirt/scarecrow/legendary/harvest-wraith",
+  "slot": "shirt",
+  "tier": "legendary",
+  "name": "Harvest Wraith",
+  "halloween": true,
+  "card": 176
+ },
+ {
+  "key": "pants/skeleton-leggings/common/black",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Skeleton Leggings (black)",
+  "halloween": true,
+  "card": 181
+ },
+ {
+  "key": "pants/skeleton-leggings/common/charcoal",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Skeleton Leggings (charcoal)",
+  "halloween": true,
+  "card": 181
+ },
+ {
+  "key": "pants/skeleton-leggings/common/witch-purple",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Skeleton Leggings (witch purple)",
+  "halloween": true,
+  "card": 181
+ },
+ {
+  "key": "pants/skeleton-leggings/common/blood-red",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Skeleton Leggings (blood red)",
+  "halloween": true,
+  "card": 181
+ },
+ {
+  "key": "pants/skeleton-leggings/common/swamp-green",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Skeleton Leggings (swamp green)",
+  "halloween": true,
+  "card": 181
+ },
+ {
+  "key": "pants/skeleton-leggings/common/midnight-blue",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Skeleton Leggings (midnight blue)",
+  "halloween": true,
+  "card": 181
+ },
+ {
+  "key": "pants/skeleton-leggings/rare/x-ray-film",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "X-Ray Film",
+  "halloween": true,
+  "card": 182
+ },
+ {
+  "key": "pants/skeleton-leggings/epic/rattle-pulse",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Rattle Pulse",
+  "halloween": true,
+  "card": 183
+ },
+ {
+  "key": "pants/skeleton-leggings/legendary/bone-lord",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Bone Lord",
+  "halloween": true,
+  "card": 184
+ },
+ {
+  "key": "pants/jack-o-lantern-shorts/common/orange",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Jack-o'-Lantern Shorts (orange)",
+  "halloween": true,
+  "card": 185
+ },
+ {
+  "key": "pants/jack-o-lantern-shorts/common/ghost-white",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Jack-o'-Lantern Shorts (ghost white)",
+  "halloween": true,
+  "card": 185
+ },
+ {
+  "key": "pants/jack-o-lantern-shorts/common/gourd-green",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Jack-o'-Lantern Shorts (gourd green)",
+  "halloween": true,
+  "card": 185
+ },
+ {
+  "key": "pants/jack-o-lantern-shorts/common/blue-heirloom",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Jack-o'-Lantern Shorts (blue heirloom)",
+  "halloween": true,
+  "card": 185
+ },
+ {
+  "key": "pants/jack-o-lantern-shorts/common/cinderella-red",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Jack-o'-Lantern Shorts (cinderella red)",
+  "halloween": true,
+  "card": 185
+ },
+ {
+  "key": "pants/jack-o-lantern-shorts/common/rotten",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Jack-o'-Lantern Shorts (rotten)",
+  "halloween": true,
+  "card": 185
+ },
+ {
+  "key": "pants/jack-o-lantern-shorts/rare/vine-belt",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "Vine Belt",
+  "halloween": true,
+  "card": 186
+ },
+ {
+  "key": "pants/jack-o-lantern-shorts/epic/candlelit",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Candlelit",
+  "halloween": true,
+  "card": 187
+ },
+ {
+  "key": "pants/jack-o-lantern-shorts/legendary/inferno-jack",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Inferno Jack",
+  "halloween": true,
+  "card": 188
+ },
+ {
+  "key": "pants/mummy-wraps/common/cream",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Mummy Wraps (cream)",
+  "halloween": true,
+  "card": 189
+ },
+ {
+  "key": "pants/mummy-wraps/common/ash-grey",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Mummy Wraps (ash grey)",
+  "halloween": true,
+  "card": 189
+ },
+ {
+  "key": "pants/mummy-wraps/common/tea-stained",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Mummy Wraps (tea-stained)",
+  "halloween": true,
+  "card": 189
+ },
+ {
+  "key": "pants/mummy-wraps/common/midnight",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Mummy Wraps (midnight)",
+  "halloween": true,
+  "card": 189
+ },
+ {
+  "key": "pants/mummy-wraps/common/moss",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Mummy Wraps (moss)",
+  "halloween": true,
+  "card": 189
+ },
+ {
+  "key": "pants/mummy-wraps/common/rust",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Mummy Wraps (rust)",
+  "halloween": true,
+  "card": 189
+ },
+ {
+  "key": "pants/mummy-wraps/rare/ancient-gold",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "Ancient Gold",
+  "halloween": true,
+  "card": 190
+ },
+ {
+  "key": "pants/mummy-wraps/epic/unraveling",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Unraveling",
+  "halloween": true,
+  "card": 191
+ },
+ {
+  "key": "pants/mummy-wraps/legendary/cursed-pharaoh",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Cursed Pharaoh",
+  "halloween": true,
+  "card": 192
+ },
+ {
+  "key": "pants/scarecrow-jeans/common/blue-denim",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Scarecrow Jeans (blue denim)",
+  "halloween": true,
+  "card": 193
+ },
+ {
+  "key": "pants/scarecrow-jeans/common/black-denim",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Scarecrow Jeans (black denim)",
+  "halloween": true,
+  "card": 193
+ },
+ {
+  "key": "pants/scarecrow-jeans/common/faded",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Scarecrow Jeans (faded)",
+  "halloween": true,
+  "card": 193
+ },
+ {
+  "key": "pants/scarecrow-jeans/common/corduroy-brown",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Scarecrow Jeans (corduroy brown)",
+  "halloween": true,
+  "card": 193
+ },
+ {
+  "key": "pants/scarecrow-jeans/common/field-green",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Scarecrow Jeans (field green)",
+  "halloween": true,
+  "card": 193
+ },
+ {
+  "key": "pants/scarecrow-jeans/common/barn-red",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Scarecrow Jeans (barn red)",
+  "halloween": true,
+  "card": 193
+ },
+ {
+  "key": "pants/scarecrow-jeans/rare/crow-perch",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "Crow Perch",
+  "halloween": true,
+  "card": 194
+ },
+ {
+  "key": "pants/scarecrow-jeans/epic/windblown",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Windblown",
+  "halloween": true,
+  "card": 195
+ },
+ {
+  "key": "pants/scarecrow-jeans/legendary/haunted-field",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Haunted Field",
+  "halloween": true,
+  "card": 196
+ },
+ {
+  "key": "pants/werewolf-rips/common/blue",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Werewolf Rips (blue)",
+  "halloween": true,
+  "card": 197
+ },
+ {
+  "key": "pants/werewolf-rips/common/black",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Werewolf Rips (black)",
+  "halloween": true,
+  "card": 197
+ },
+ {
+  "key": "pants/werewolf-rips/common/grey",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Werewolf Rips (grey)",
+  "halloween": true,
+  "card": 197
+ },
+ {
+  "key": "pants/werewolf-rips/common/brown",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Werewolf Rips (brown)",
+  "halloween": true,
+  "card": 197
+ },
+ {
+  "key": "pants/werewolf-rips/common/navy",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Werewolf Rips (navy)",
+  "halloween": true,
+  "card": 197
+ },
+ {
+  "key": "pants/werewolf-rips/common/olive",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Werewolf Rips (olive)",
+  "halloween": true,
+  "card": 197
+ },
+ {
+  "key": "pants/werewolf-rips/rare/silver-wolf",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "Silver Wolf",
+  "halloween": true,
+  "card": 198
+ },
+ {
+  "key": "pants/werewolf-rips/epic/full-moon-shift",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Full Moon Shift",
+  "halloween": true,
+  "card": 199
+ },
+ {
+  "key": "pants/werewolf-rips/legendary/moonlit-beast",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Moonlit Beast",
+  "halloween": true,
+  "card": 200
+ },
+ {
+  "key": "pants/ghost-tail/common/classic-white",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Ghost Tail (classic white)",
+  "halloween": true,
+  "card": 201
+ },
+ {
+  "key": "pants/ghost-tail/common/lavender",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Ghost Tail (lavender)",
+  "halloween": true,
+  "card": 201
+ },
+ {
+  "key": "pants/ghost-tail/common/mint",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Ghost Tail (mint)",
+  "halloween": true,
+  "card": 201
+ },
+ {
+  "key": "pants/ghost-tail/common/sky",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Ghost Tail (sky)",
+  "halloween": true,
+  "card": 201
+ },
+ {
+  "key": "pants/ghost-tail/common/peach",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Ghost Tail (peach)",
+  "halloween": true,
+  "card": 201
+ },
+ {
+  "key": "pants/ghost-tail/common/smoke",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Ghost Tail (smoke)",
+  "halloween": true,
+  "card": 201
+ },
+ {
+  "key": "pants/ghost-tail/rare/chained-spirit",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "Chained Spirit",
+  "halloween": true,
+  "card": 202
+ },
+ {
+  "key": "pants/ghost-tail/epic/curling-wisp",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Curling Wisp",
+  "halloween": true,
+  "card": 203
+ },
+ {
+  "key": "pants/ghost-tail/legendary/poltergeist",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Poltergeist",
+  "halloween": true,
+  "card": 204
+ },
+ {
+  "key": "pants/slime-pants/common/toxic-green",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Slime Pants (toxic green)",
+  "halloween": true,
+  "card": 205
+ },
+ {
+  "key": "pants/slime-pants/common/purple-ooze",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Slime Pants (purple ooze)",
+  "halloween": true,
+  "card": 205
+ },
+ {
+  "key": "pants/slime-pants/common/orange-goo",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Slime Pants (orange goo)",
+  "halloween": true,
+  "card": 205
+ },
+ {
+  "key": "pants/slime-pants/common/blood-red",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Slime Pants (blood red)",
+  "halloween": true,
+  "card": 205
+ },
+ {
+  "key": "pants/slime-pants/common/ghost-blue",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Slime Pants (ghost blue)",
+  "halloween": true,
+  "card": 205
+ },
+ {
+  "key": "pants/slime-pants/common/tar-black",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Slime Pants (tar black)",
+  "halloween": true,
+  "card": 205
+ },
+ {
+  "key": "pants/slime-pants/rare/eyeball-goo",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "Eyeball Goo",
+  "halloween": true,
+  "card": 206
+ },
+ {
+  "key": "pants/slime-pants/epic/dripping",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Dripping",
+  "halloween": true,
+  "card": 207
+ },
+ {
+  "key": "pants/slime-pants/legendary/toxic-meltdown",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Toxic Meltdown",
+  "halloween": true,
+  "card": 208
+ },
+ {
+  "key": "pants/candy-corn-track-pants/common/black",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Candy Corn Track Pants (black)",
+  "halloween": true,
+  "card": 213
+ },
+ {
+  "key": "pants/candy-corn-track-pants/common/navy",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Candy Corn Track Pants (navy)",
+  "halloween": true,
+  "card": 213
+ },
+ {
+  "key": "pants/candy-corn-track-pants/common/purple",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Candy Corn Track Pants (purple)",
+  "halloween": true,
+  "card": 213
+ },
+ {
+  "key": "pants/candy-corn-track-pants/common/charcoal",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Candy Corn Track Pants (charcoal)",
+  "halloween": true,
+  "card": 213
+ },
+ {
+  "key": "pants/candy-corn-track-pants/common/forest",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Candy Corn Track Pants (forest)",
+  "halloween": true,
+  "card": 213
+ },
+ {
+  "key": "pants/candy-corn-track-pants/common/maroon",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Candy Corn Track Pants (maroon)",
+  "halloween": true,
+  "card": 213
+ },
+ {
+  "key": "pants/candy-corn-track-pants/rare/sprinkles",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "Sprinkles",
+  "halloween": true,
+  "card": 214
+ },
+ {
+  "key": "pants/candy-corn-track-pants/epic/sugar-rush",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Sugar Rush",
+  "halloween": true,
+  "card": 215
+ },
+ {
+  "key": "pants/candy-corn-track-pants/legendary/candy-comet",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Candy Comet",
+  "halloween": true,
+  "card": 216
+ },
+ {
+  "key": "pants/vampire-tux-pants/common/black",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Vampire Tux Pants (black)",
+  "halloween": true,
+  "card": 217
+ },
+ {
+  "key": "pants/vampire-tux-pants/common/midnight-blue",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Vampire Tux Pants (midnight blue)",
+  "halloween": true,
+  "card": 217
+ },
+ {
+  "key": "pants/vampire-tux-pants/common/burgundy",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Vampire Tux Pants (burgundy)",
+  "halloween": true,
+  "card": 217
+ },
+ {
+  "key": "pants/vampire-tux-pants/common/charcoal",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Vampire Tux Pants (charcoal)",
+  "halloween": true,
+  "card": 217
+ },
+ {
+  "key": "pants/vampire-tux-pants/common/plum",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Vampire Tux Pants (plum)",
+  "halloween": true,
+  "card": 217
+ },
+ {
+  "key": "pants/vampire-tux-pants/common/white",
+  "slot": "pants",
+  "tier": "common",
+  "name": "Vampire Tux Pants (white)",
+  "halloween": true,
+  "card": 217
+ },
+ {
+  "key": "pants/vampire-tux-pants/rare/bat-cummerbund",
+  "slot": "pants",
+  "tier": "rare",
+  "name": "Bat Cummerbund",
+  "halloween": true,
+  "card": 218
+ },
+ {
+  "key": "pants/vampire-tux-pants/epic/blood-drip-stripe",
+  "slot": "pants",
+  "tier": "epic",
+  "name": "Blood Drip Stripe",
+  "halloween": true,
+  "card": 219
+ },
+ {
+  "key": "pants/vampire-tux-pants/legendary/counts-swarm",
+  "slot": "pants",
+  "tier": "legendary",
+  "name": "Count's Swarm",
+  "halloween": true,
+  "card": 220
+ },
+ {
+  "key": "shoes/pumpkin-sneakers/common/orange",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Pumpkin Sneakers (orange)",
+  "halloween": true,
+  "card": 221
+ },
+ {
+  "key": "shoes/pumpkin-sneakers/common/ghost-white",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Pumpkin Sneakers (ghost white)",
+  "halloween": true,
+  "card": 221
+ },
+ {
+  "key": "shoes/pumpkin-sneakers/common/gourd-green",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Pumpkin Sneakers (gourd green)",
+  "halloween": true,
+  "card": 221
+ },
+ {
+  "key": "shoes/pumpkin-sneakers/common/blue-heirloom",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Pumpkin Sneakers (blue heirloom)",
+  "halloween": true,
+  "card": 221
+ },
+ {
+  "key": "shoes/pumpkin-sneakers/common/cinderella-red",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Pumpkin Sneakers (cinderella red)",
+  "halloween": true,
+  "card": 221
+ },
+ {
+  "key": "shoes/pumpkin-sneakers/common/rotten",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Pumpkin Sneakers (rotten)",
+  "halloween": true,
+  "card": 221
+ },
+ {
+  "key": "shoes/pumpkin-sneakers/rare/jack-o-kicks",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Jack-o'-Kicks",
+  "halloween": true,
+  "card": 222
+ },
+ {
+  "key": "shoes/pumpkin-sneakers/epic/candlelit-kicks",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Candlelit Kicks",
+  "halloween": true,
+  "card": 223
+ },
+ {
+  "key": "shoes/pumpkin-sneakers/legendary/hellfire-pumpkins",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Hellfire Pumpkins",
+  "halloween": true,
+  "card": 224
+ },
+ {
+  "key": "shoes/witch-boots/common/black",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Witch Boots (black)",
+  "halloween": true,
+  "card": 225
+ },
+ {
+  "key": "shoes/witch-boots/common/witch-purple",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Witch Boots (witch purple)",
+  "halloween": true,
+  "card": 225
+ },
+ {
+  "key": "shoes/witch-boots/common/swamp-green",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Witch Boots (swamp green)",
+  "halloween": true,
+  "card": 225
+ },
+ {
+  "key": "shoes/witch-boots/common/blood-red",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Witch Boots (blood red)",
+  "halloween": true,
+  "card": 225
+ },
+ {
+  "key": "shoes/witch-boots/common/midnight-blue",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Witch Boots (midnight blue)",
+  "halloween": true,
+  "card": 225
+ },
+ {
+  "key": "shoes/witch-boots/common/pumpkin",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Witch Boots (pumpkin)",
+  "halloween": true,
+  "card": 225
+ },
+ {
+  "key": "shoes/witch-boots/rare/spiderweb-boots",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Spiderweb Boots",
+  "halloween": true,
+  "card": 226
+ },
+ {
+  "key": "shoes/witch-boots/epic/starlit-boots",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Starlit Boots",
+  "halloween": true,
+  "card": 227
+ },
+ {
+  "key": "shoes/witch-boots/legendary/broomflight-boots",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Broomflight Boots",
+  "halloween": true,
+  "card": 228
+ },
+ {
+  "key": "shoes/skeleton-feet/common/bone-white",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Skeleton Feet (bone white)",
+  "halloween": true,
+  "card": 229
+ },
+ {
+  "key": "shoes/skeleton-feet/common/ash-grey",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Skeleton Feet (ash grey)",
+  "halloween": true,
+  "card": 229
+ },
+ {
+  "key": "shoes/skeleton-feet/common/old-ivory",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Skeleton Feet (old ivory)",
+  "halloween": true,
+  "card": 229
+ },
+ {
+  "key": "shoes/skeleton-feet/common/charred",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Skeleton Feet (charred)",
+  "halloween": true,
+  "card": 229
+ },
+ {
+  "key": "shoes/skeleton-feet/common/moss",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Skeleton Feet (moss)",
+  "halloween": true,
+  "card": 229
+ },
+ {
+  "key": "shoes/skeleton-feet/common/blood-stained",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Skeleton Feet (blood-stained)",
+  "halloween": true,
+  "card": 229
+ },
+ {
+  "key": "shoes/skeleton-feet/rare/painted-toenails",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Painted Toenails",
+  "halloween": true,
+  "card": 230
+ },
+ {
+  "key": "shoes/skeleton-feet/epic/tapping-toes",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Tapping Toes",
+  "halloween": true,
+  "card": 231
+ },
+ {
+  "key": "shoes/skeleton-feet/legendary/soul-fire-feet",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Soul Fire Feet",
+  "halloween": true,
+  "card": 232
+ },
+ {
+  "key": "shoes/monster-slippers/common/grape",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Monster Slippers (grape)",
+  "halloween": true,
+  "card": 233
+ },
+ {
+  "key": "shoes/monster-slippers/common/lime",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Monster Slippers (lime)",
+  "halloween": true,
+  "card": 233
+ },
+ {
+  "key": "shoes/monster-slippers/common/tangerine",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Monster Slippers (tangerine)",
+  "halloween": true,
+  "card": 233
+ },
+ {
+  "key": "shoes/monster-slippers/common/sky",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Monster Slippers (sky)",
+  "halloween": true,
+  "card": 233
+ },
+ {
+  "key": "shoes/monster-slippers/common/bubblegum",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Monster Slippers (bubblegum)",
+  "halloween": true,
+  "card": 233
+ },
+ {
+  "key": "shoes/monster-slippers/common/dust-bunny",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Monster Slippers (dust bunny)",
+  "halloween": true,
+  "card": 233
+ },
+ {
+  "key": "shoes/monster-slippers/rare/cyclops-slippers",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Cyclops Slippers",
+  "halloween": true,
+  "card": 234
+ },
+ {
+  "key": "shoes/monster-slippers/epic/chomp-slippers",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Chomp Slippers",
+  "halloween": true,
+  "card": 235
+ },
+ {
+  "key": "shoes/monster-slippers/legendary/shadow-beasts",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Shadow Beasts",
+  "halloween": true,
+  "card": 236
+ },
+ {
+  "key": "shoes/coffin-clogs/common/oak",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Coffin Clogs (oak)",
+  "halloween": true,
+  "card": 237
+ },
+ {
+  "key": "shoes/coffin-clogs/common/ebony",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Coffin Clogs (ebony)",
+  "halloween": true,
+  "card": 237
+ },
+ {
+  "key": "shoes/coffin-clogs/common/red-lacquer",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Coffin Clogs (red lacquer)",
+  "halloween": true,
+  "card": 237
+ },
+ {
+  "key": "shoes/coffin-clogs/common/bone-white",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Coffin Clogs (bone white)",
+  "halloween": true,
+  "card": 237
+ },
+ {
+  "key": "shoes/coffin-clogs/common/mossy",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Coffin Clogs (mossy)",
+  "halloween": true,
+  "card": 237
+ },
+ {
+  "key": "shoes/coffin-clogs/common/royal-purple",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Coffin Clogs (royal purple)",
+  "halloween": true,
+  "card": 237
+ },
+ {
+  "key": "shoes/coffin-clogs/rare/gilded-coffins",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Gilded Coffins",
+  "halloween": true,
+  "card": 238
+ },
+ {
+  "key": "shoes/coffin-clogs/epic/creaking-lids",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Creaking Lids",
+  "halloween": true,
+  "card": 239
+ },
+ {
+  "key": "shoes/coffin-clogs/legendary/vampires-rest",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Vampire's Rest",
+  "halloween": true,
+  "card": 240
+ },
+ {
+  "key": "shoes/ghost-sneakers/common/sheet-white",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Ghost Sneakers (sheet white)",
+  "halloween": true,
+  "card": 241
+ },
+ {
+  "key": "shoes/ghost-sneakers/common/mint",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Ghost Sneakers (mint)",
+  "halloween": true,
+  "card": 241
+ },
+ {
+  "key": "shoes/ghost-sneakers/common/lavender",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Ghost Sneakers (lavender)",
+  "halloween": true,
+  "card": 241
+ },
+ {
+  "key": "shoes/ghost-sneakers/common/pale-blue",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Ghost Sneakers (pale blue)",
+  "halloween": true,
+  "card": 241
+ },
+ {
+  "key": "shoes/ghost-sneakers/common/peach",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Ghost Sneakers (peach)",
+  "halloween": true,
+  "card": 241
+ },
+ {
+  "key": "shoes/ghost-sneakers/common/fog-grey",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Ghost Sneakers (fog grey)",
+  "halloween": true,
+  "card": 241
+ },
+ {
+  "key": "shoes/ghost-sneakers/rare/fading-kicks",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Fading Kicks",
+  "halloween": true,
+  "card": 242
+ },
+ {
+  "key": "shoes/ghost-sneakers/epic/sheet-kicks",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Sheet Kicks",
+  "halloween": true,
+  "card": 243
+ },
+ {
+  "key": "shoes/ghost-sneakers/legendary/poltergeist",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Poltergeist",
+  "halloween": true,
+  "card": 244
+ },
+ {
+  "key": "shoes/frankenstein-stompers/common/black",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Frankenstein Stompers (black)",
+  "halloween": true,
+  "card": 245
+ },
+ {
+  "key": "shoes/frankenstein-stompers/common/gunmetal",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Frankenstein Stompers (gunmetal)",
+  "halloween": true,
+  "card": 245
+ },
+ {
+  "key": "shoes/frankenstein-stompers/common/monster-green",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Frankenstein Stompers (monster green)",
+  "halloween": true,
+  "card": 245
+ },
+ {
+  "key": "shoes/frankenstein-stompers/common/mud-brown",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Frankenstein Stompers (mud brown)",
+  "halloween": true,
+  "card": 245
+ },
+ {
+  "key": "shoes/frankenstein-stompers/common/navy",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Frankenstein Stompers (navy)",
+  "halloween": true,
+  "card": 245
+ },
+ {
+  "key": "shoes/frankenstein-stompers/common/lab-white",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Frankenstein Stompers (lab white)",
+  "halloween": true,
+  "card": 245
+ },
+ {
+  "key": "shoes/frankenstein-stompers/rare/stitched-stompers",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Stitched Stompers",
+  "halloween": true,
+  "card": 246
+ },
+ {
+  "key": "shoes/frankenstein-stompers/epic/stomp-quake",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Stomp Quake",
+  "halloween": true,
+  "card": 247
+ },
+ {
+  "key": "shoes/frankenstein-stompers/legendary/lightning-stompers",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Lightning Stompers",
+  "halloween": true,
+  "card": 248
+ },
+ {
+  "key": "shoes/candy-corn-high-tops/common/classic-corn",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Candy Corn High-Tops (classic corn)",
+  "halloween": true,
+  "card": 253
+ },
+ {
+  "key": "shoes/candy-corn-high-tops/common/harvest-corn",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Candy Corn High-Tops (harvest corn)",
+  "halloween": true,
+  "card": 253
+ },
+ {
+  "key": "shoes/candy-corn-high-tops/common/witchs-brew",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Candy Corn High-Tops (witch's brew)",
+  "halloween": true,
+  "card": 253
+ },
+ {
+  "key": "shoes/candy-corn-high-tops/common/mint-corn",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Candy Corn High-Tops (mint corn)",
+  "halloween": true,
+  "card": 253
+ },
+ {
+  "key": "shoes/candy-corn-high-tops/common/bloody-corn",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Candy Corn High-Tops (bloody corn)",
+  "halloween": true,
+  "card": 253
+ },
+ {
+  "key": "shoes/candy-corn-high-tops/common/midnight-corn",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Candy Corn High-Tops (midnight corn)",
+  "halloween": true,
+  "card": 253
+ },
+ {
+  "key": "shoes/candy-corn-high-tops/rare/wrapped-candy",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Wrapped Candy",
+  "halloween": true,
+  "card": 254
+ },
+ {
+  "key": "shoes/candy-corn-high-tops/epic/sugar-rush",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Sugar Rush",
+  "halloween": true,
+  "card": 255
+ },
+ {
+  "key": "shoes/candy-corn-high-tops/legendary/candy-burst",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Candy Burst",
+  "halloween": true,
+  "card": 256
+ },
+ {
+  "key": "shoes/bat-wing-sneakers/common/black",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Bat-Wing Sneakers (black)",
+  "halloween": true,
+  "card": 257
+ },
+ {
+  "key": "shoes/bat-wing-sneakers/common/purple",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Bat-Wing Sneakers (purple)",
+  "halloween": true,
+  "card": 257
+ },
+ {
+  "key": "shoes/bat-wing-sneakers/common/red",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Bat-Wing Sneakers (red)",
+  "halloween": true,
+  "card": 257
+ },
+ {
+  "key": "shoes/bat-wing-sneakers/common/grey",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Bat-Wing Sneakers (grey)",
+  "halloween": true,
+  "card": 257
+ },
+ {
+  "key": "shoes/bat-wing-sneakers/common/orange",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Bat-Wing Sneakers (orange)",
+  "halloween": true,
+  "card": 257
+ },
+ {
+  "key": "shoes/bat-wing-sneakers/common/white",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Bat-Wing Sneakers (white)",
+  "halloween": true,
+  "card": 257
+ },
+ {
+  "key": "shoes/bat-wing-sneakers/rare/vampire-bat-kicks",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Vampire Bat Kicks",
+  "halloween": true,
+  "card": 258
+ },
+ {
+  "key": "shoes/bat-wing-sneakers/epic/flapping-wings",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Flapping Wings",
+  "halloween": true,
+  "card": 259
+ },
+ {
+  "key": "shoes/bat-wing-sneakers/legendary/night-flight",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Night Flight",
+  "halloween": true,
+  "card": 260
+ },
+ {
+  "key": "shoes/slime-kicks/common/toxic-green",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks (toxic green)",
+  "halloween": true,
+  "card": 261
+ },
+ {
+  "key": "shoes/slime-kicks/common/purple-ooze",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks (purple ooze)",
+  "halloween": true,
+  "card": 261
+ },
+ {
+  "key": "shoes/slime-kicks/common/orange-goo",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks (orange goo)",
+  "halloween": true,
+  "card": 261
+ },
+ {
+  "key": "shoes/slime-kicks/common/blood-red",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks (blood red)",
+  "halloween": true,
+  "card": 261
+ },
+ {
+  "key": "shoes/slime-kicks/common/ghost-blue",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks (ghost blue)",
+  "halloween": true,
+  "card": 261
+ },
+ {
+  "key": "shoes/slime-kicks/common/tar-black",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks (tar black)",
+  "halloween": true,
+  "card": 261
+ },
+ {
+  "key": "shoes/slime-kicks/rare/eyeball-goo",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Eyeball Goo",
+  "halloween": true,
+  "card": 262
+ },
+ {
+  "key": "shoes/slime-kicks/epic/bubbling",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Bubbling",
+  "halloween": true,
+  "card": 263
+ },
+ {
+  "key": "shoes/slime-kicks/legendary/radioactive",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Radioactive",
+  "halloween": true,
+  "card": 264
+ },
+ {
+  "key": "shoes/slime-kicks-ii/common/toxic-green",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks II (toxic green)",
+  "halloween": true,
+  "card": 265
+ },
+ {
+  "key": "shoes/slime-kicks-ii/common/purple-ooze",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks II (purple ooze)",
+  "halloween": true,
+  "card": 265
+ },
+ {
+  "key": "shoes/slime-kicks-ii/common/orange-goo",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks II (orange goo)",
+  "halloween": true,
+  "card": 265
+ },
+ {
+  "key": "shoes/slime-kicks-ii/common/blood-red",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks II (blood red)",
+  "halloween": true,
+  "card": 265
+ },
+ {
+  "key": "shoes/slime-kicks-ii/common/ghost-blue",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks II (ghost blue)",
+  "halloween": true,
+  "card": 265
+ },
+ {
+  "key": "shoes/slime-kicks-ii/common/tar-black",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks II (tar black)",
+  "halloween": true,
+  "card": 265
+ },
+ {
+  "key": "shoes/slime-kicks-ii/rare/bug-in-jelly",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Bug in Jelly",
+  "halloween": true,
+  "card": 266
+ },
+ {
+  "key": "shoes/slime-kicks-ii/epic/squishy-jelly",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Squishy Jelly",
+  "halloween": true,
+  "card": 267
+ },
+ {
+  "key": "shoes/slime-kicks-ii/legendary/slime-critters",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Slime Critters",
+  "halloween": true,
+  "card": 268
+ },
+ {
+  "key": "shoes/slime-kicks-iii/common/toxic-green",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks III (toxic green)",
+  "halloween": true,
+  "card": 269
+ },
+ {
+  "key": "shoes/slime-kicks-iii/common/purple-ooze",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks III (purple ooze)",
+  "halloween": true,
+  "card": 269
+ },
+ {
+  "key": "shoes/slime-kicks-iii/common/orange-goo",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks III (orange goo)",
+  "halloween": true,
+  "card": 269
+ },
+ {
+  "key": "shoes/slime-kicks-iii/common/blood-red",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks III (blood red)",
+  "halloween": true,
+  "card": 269
+ },
+ {
+  "key": "shoes/slime-kicks-iii/common/ghost-blue",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks III (ghost blue)",
+  "halloween": true,
+  "card": 269
+ },
+ {
+  "key": "shoes/slime-kicks-iii/common/tar-black",
+  "slot": "shoes",
+  "tier": "common",
+  "name": "Slime Kicks III (tar black)",
+  "halloween": true,
+  "card": 269
+ },
+ {
+  "key": "shoes/slime-kicks-iii/rare/biohazard",
+  "slot": "shoes",
+  "tier": "rare",
+  "name": "Biohazard",
+  "halloween": true,
+  "card": 270
+ },
+ {
+  "key": "shoes/slime-kicks-iii/epic/slime-trail",
+  "slot": "shoes",
+  "tier": "epic",
+  "name": "Slime Trail",
+  "halloween": true,
+  "card": 271
+ },
+ {
+  "key": "shoes/slime-kicks-iii/legendary/slime-jets",
+  "slot": "shoes",
+  "tier": "legendary",
+  "name": "Slime Jets",
+  "halloween": true,
+  "card": 272
+ },
+ {
+  "key": "transformation/legendary/spectral-horseman",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Spectral Horseman",
+  "halloween": true,
+  "card": 301
+ },
+ {
+  "key": "transformation/legendary/lich-king",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Lich King",
+  "halloween": true,
+  "card": 302
+ },
+ {
+  "key": "transformation/legendary/draculas-bat-form",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Dracula's Bat Form",
+  "halloween": true,
+  "card": 303
+ },
+ {
+  "key": "transformation/legendary/great-pumpkin-king",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Great Pumpkin King",
+  "halloween": true,
+  "card": 304
+ },
+ {
+  "key": "transformation/legendary/swamp-kraken",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Swamp Kraken",
+  "halloween": true,
+  "card": 305
+ },
+ {
+  "key": "transformation/legendary/ash-phoenix",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Ash Phoenix",
+  "halloween": true,
+  "card": 306
+ },
+ {
+  "key": "transformation/legendary/shadow-wraith",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Shadow Wraith",
+  "halloween": true,
+  "card": 307
+ },
+ {
+  "key": "transformation/legendary/ghost-ship",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Ghost Ship",
+  "halloween": true,
+  "card": 308
+ },
+ {
+  "key": "transformation/legendary/haunted-mansion",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Haunted Mansion",
+  "halloween": true,
+  "card": 309
+ },
+ {
+  "key": "transformation/legendary/witch-queen-on-a-broom",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Witch Queen on a Broom",
+  "halloween": true,
+  "card": 310
+ },
+ {
+  "key": "transformation/legendary/cerberus",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Cerberus",
+  "halloween": true,
+  "card": 311
+ },
+ {
+  "key": "transformation/legendary/bone-dragon",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Bone Dragon",
+  "halloween": true,
+  "card": 312
+ },
+ {
+  "key": "transformation/legendary/demon-lord",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Demon Lord",
+  "halloween": true,
+  "card": 313
+ },
+ {
+  "key": "transformation/legendary/mothman-supreme",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Mothman Supreme",
+  "halloween": true,
+  "card": 314
+ },
+ {
+  "key": "transformation/legendary/wisp-swarm",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Wisp Swarm",
+  "halloween": true,
+  "card": 315
+ },
+ {
+  "key": "transformation/legendary/storm-golem",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Storm Golem",
+  "halloween": true,
+  "card": 316
+ },
+ {
+  "key": "transformation/legendary/crystal-ball-seer",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Crystal Ball Seer",
+  "halloween": true,
+  "card": 317
+ },
+ {
+  "key": "transformation/legendary/jack-o-lantern-totem",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Jack-o'-Lantern Totem",
+  "halloween": true,
+  "card": 318
+ },
+ {
+  "key": "transformation/legendary/ectoplasm-giant",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Ectoplasm Giant",
+  "halloween": true,
+  "card": 319
+ },
+ {
+  "key": "transformation/legendary/banshee-queen",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Banshee Queen",
+  "halloween": true,
+  "card": 320
+ },
+ {
+  "key": "transformation/legendary/grim-reaper-supreme",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Grim Reaper Supreme",
+  "halloween": true,
+  "card": 321
+ },
+ {
+  "key": "transformation/legendary/alpha-werewolf",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Alpha Werewolf",
+  "halloween": true,
+  "card": 322
+ },
+ {
+  "key": "transformation/legendary/its-alive",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "It's Alive!",
+  "halloween": true,
+  "card": 323
+ },
+ {
+  "key": "transformation/legendary/pharaoh-rising",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Pharaoh Rising",
+  "halloween": true,
+  "card": 324
+ },
+ {
+  "key": "transformation/legendary/haunted-music-box",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Haunted Music Box",
+  "halloween": true,
+  "card": 325
+ },
+ {
+  "key": "transformation/legendary/spider-queen",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Spider Queen",
+  "halloween": true,
+  "card": 326
+ },
+ {
+  "key": "transformation/legendary/swamp-hydra",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Swamp Hydra",
+  "halloween": true,
+  "card": 327
+ },
+ {
+  "key": "transformation/legendary/candy-golem",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Candy Golem",
+  "halloween": true,
+  "card": 328
+ },
+ {
+  "key": "transformation/legendary/disco-skeleton",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Disco Skeleton",
+  "halloween": true,
+  "card": 329
+ },
+ {
+  "key": "transformation/legendary/black-cat-familiar",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Black Cat Familiar",
+  "halloween": true,
+  "card": 330
+ },
+ {
+  "key": "transformation/legendary/cosmic-ghost",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Cosmic Ghost",
+  "halloween": true,
+  "card": 331
+ },
+ {
+  "key": "transformation/legendary/gargoyle-awakened",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Gargoyle Awakened",
+  "halloween": true,
+  "card": 332
+ },
+ {
+  "key": "transformation/legendary/hellhound",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Hellhound",
+  "halloween": true,
+  "card": 333
+ },
+ {
+  "key": "transformation/legendary/plague-alchemist",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Plague Alchemist",
+  "halloween": true,
+  "card": 334
+ },
+ {
+  "key": "transformation/legendary/phantom-knight",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Phantom Knight",
+  "halloween": true,
+  "card": 335
+ },
+ {
+  "key": "transformation/legendary/eldritch-eye",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Eldritch Eye",
+  "halloween": true,
+  "card": 336
+ },
+ {
+  "key": "transformation/legendary/graveyard-rising",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Graveyard Rising",
+  "halloween": true,
+  "card": 337
+ },
+ {
+  "key": "transformation/legendary/haunted-volleyball-comet",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Haunted Volleyball Comet",
+  "halloween": true,
+  "card": 338
+ },
+ {
+  "key": "transformation/legendary/poltergeist-storm",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Poltergeist Storm",
+  "halloween": true,
+  "card": 339
+ },
+ {
+  "key": "transformation/legendary/scarecrow-king",
+  "slot": "transformation",
+  "tier": "legendary",
+  "name": "Scarecrow King",
+  "halloween": true,
+  "card": 340
+ },
+ {
+  "key": "transformation/epic/headless-horseman",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Headless Horseman",
+  "halloween": true,
+  "card": 341
+ },
+ {
+  "key": "transformation/epic/grim-reaper",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Grim Reaper",
+  "halloween": true,
+  "card": 342
+ },
+ {
+  "key": "transformation/epic/werewolf",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Werewolf",
+  "halloween": true,
+  "card": 343
+ },
+ {
+  "key": "transformation/epic/frankensteins-monster",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Frankenstein's Monster",
+  "halloween": true,
+  "card": 344
+ },
+ {
+  "key": "transformation/epic/vampire-count",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Vampire Count",
+  "halloween": true,
+  "card": 345
+ },
+ {
+  "key": "transformation/epic/swamp-creature",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Swamp Creature",
+  "halloween": true,
+  "card": 346
+ },
+ {
+  "key": "transformation/epic/living-scarecrow",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Living Scarecrow",
+  "halloween": true,
+  "card": 347
+ },
+ {
+  "key": "transformation/epic/big-boo",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Big Boo",
+  "halloween": true,
+  "card": 348
+ },
+ {
+  "key": "transformation/epic/zombie-athlete",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Zombie Athlete",
+  "halloween": true,
+  "card": 349
+ },
+ {
+  "key": "transformation/epic/pumpkin-golem",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Pumpkin Golem",
+  "halloween": true,
+  "card": 350
+ },
+ {
+  "key": "transformation/epic/black-cat",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Black Cat",
+  "halloween": true,
+  "card": 351
+ },
+ {
+  "key": "transformation/epic/giant-bat",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Giant Bat",
+  "halloween": true,
+  "card": 352
+ },
+ {
+  "key": "transformation/epic/haunted-coffin",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Haunted Coffin",
+  "halloween": true,
+  "card": 353
+ },
+ {
+  "key": "transformation/epic/cauldron-creature",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Cauldron Creature",
+  "halloween": true,
+  "card": 354
+ },
+ {
+  "key": "transformation/epic/candy-bucket-mimic",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Candy Bucket Mimic",
+  "halloween": true,
+  "card": 355
+ },
+ {
+  "key": "transformation/epic/mummy",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Mummy",
+  "halloween": true,
+  "card": 356
+ },
+ {
+  "key": "transformation/epic/skeleton",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Skeleton",
+  "halloween": true,
+  "card": 357
+ },
+ {
+  "key": "transformation/epic/witch-on-a-broom",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Witch on a Broom",
+  "halloween": true,
+  "card": 358
+ },
+ {
+  "key": "transformation/epic/giant-spider",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Giant Spider",
+  "halloween": true,
+  "card": 359
+ },
+ {
+  "key": "transformation/epic/walking-tombstone",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Walking Tombstone",
+  "halloween": true,
+  "card": 360
+ },
+ {
+  "key": "transformation/epic/haunted-armor",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Haunted Armor",
+  "halloween": true,
+  "card": 361
+ },
+ {
+  "key": "transformation/epic/gargoyle",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Gargoyle",
+  "halloween": true,
+  "card": 362
+ },
+ {
+  "key": "transformation/epic/cyclops-blob",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Cyclops Blob",
+  "halloween": true,
+  "card": 363
+ },
+ {
+  "key": "transformation/epic/great-horned-owl",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Great Horned Owl",
+  "halloween": true,
+  "card": 364
+ },
+ {
+  "key": "transformation/epic/haunted-doll",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Haunted Doll",
+  "halloween": true,
+  "card": 365
+ },
+ {
+  "key": "transformation/epic/imp",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Imp",
+  "halloween": true,
+  "card": 366
+ },
+ {
+  "key": "transformation/epic/banshee",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Banshee",
+  "halloween": true,
+  "card": 367
+ },
+ {
+  "key": "transformation/epic/living-candle",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Living Candle",
+  "halloween": true,
+  "card": 368
+ },
+ {
+  "key": "transformation/epic/jack-in-the-box",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Jack-in-the-Box",
+  "halloween": true,
+  "card": 369
+ },
+ {
+  "key": "transformation/epic/goblin",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Goblin",
+  "halloween": true,
+  "card": 371
+ },
+ {
+  "key": "transformation/epic/flytrap-monster",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Flytrap Monster",
+  "halloween": true,
+  "card": 372
+ },
+ {
+  "key": "transformation/epic/haunted-grandfather-clock",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Haunted Grandfather Clock",
+  "halloween": true,
+  "card": 373
+ },
+ {
+  "key": "transformation/epic/creature-in-a-jar",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Creature in a Jar",
+  "halloween": true,
+  "card": 374
+ },
+ {
+  "key": "transformation/epic/wendigo",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Wendigo",
+  "halloween": true,
+  "card": 375
+ },
+ {
+  "key": "transformation/epic/mothman",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Mothman",
+  "halloween": true,
+  "card": 376
+ },
+ {
+  "key": "transformation/epic/candy-corn-monster",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Candy Corn Monster",
+  "halloween": true,
+  "card": 377
+ },
+ {
+  "key": "transformation/epic/ghost-pirate",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Ghost Pirate",
+  "halloween": true,
+  "card": 378
+ },
+ {
+  "key": "transformation/epic/alien-in-a-saucer",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Alien in a Saucer",
+  "halloween": true,
+  "card": 379
+ },
+ {
+  "key": "transformation/epic/haunted-volleyball",
+  "slot": "transformation",
+  "tier": "epic",
+  "name": "Haunted Volleyball",
+  "halloween": true,
+  "card": 380
+ }
+]
