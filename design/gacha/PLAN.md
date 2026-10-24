@@ -1,8 +1,9 @@
 # Loot, tokens and pixel avatars: where we are
 
-Status as of 2026-10-24: **designed, nothing built.** The app is unchanged and
-nobody earns tokens yet. Everything here is design work: preview pages,
-drawing code and screenshots. It lives on the branch
+Status as of 2026-10-24: **designed; only the home-screen rally is built**
+(live on `main`, everyone plain grey). Nobody earns tokens or owns gear
+yet. Everything else here is design work: preview pages, drawing code and
+screenshots. It lives on the branch
 `claude/gacha-avatars-design` and hasn't been merged into `main`.
 
 ## The idea in one paragraph
@@ -117,8 +118,9 @@ Waiting for the owner to name what to **cut** (everything not named stays in):
    the gear zones) into a real component, plus the chosen item art.
 3. **Profile card (option A):** `profile-mock/_AvatarMock.jsx` has a rough
    version.
-4. **Home-screen rally:** draw both players' avatars instead of the current
-   figures.
+4. **Home-screen rally: done** (2026-10-24, on `main`). The avatar body is
+   in `src/avatar/engine.js` there; once gear exists, set each player's
+   `gear` in `src/avatar/useRallyPlayers.js`. Names show under the feet.
 5. **Cauldron pull screen:** token balance, the animation and the reveal.
 6. **Locker (option A, page 15):** equip items and switch transformations
    on and off.
