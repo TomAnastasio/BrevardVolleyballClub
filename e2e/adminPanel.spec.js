@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signInAsAdmin } from "./signInAsTestUser.js";
+import { ADMIN_NAME, signInAsAdmin } from "./signInAsTestUser.js";
 
 // Covers the admin-only "Add Manual Profile" flow (AddManualProfileView.jsx)
 // -- creating a player profile with no Google account -- then confirming
@@ -33,4 +33,32 @@ test("admin can add a manual profile and it's searchable afterward", async ({ pa
 
   await page.getByLabel("First side, player 1 name").fill("ManualTestPlayer");
   await expect(page.getByRole("option", { name: "ManualTestPlayer" }).first()).toBeVisible();
+});
+
+// Covers the "Find a player" box on Merge Profiles (PlayerLookup in
+// MergeProfilesView.jsx): an existing name shows up as a match, a new name
+// can be added right there, and the new profile is then pickable as the
+// manual profile to remove. Timestamped name so the "Add" button shows on
+// every run (it's hidden once a profile with exactly that name exists).
+test("admin can look up a player on Merge Profiles and add a missing one", async ({ page }) => {
+  const newName = `Lookup${Date.now().toString().slice(-8)}`;
+  await signInAsAdmin(page);
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Admin Panel" }).click();
+  await page.getByRole("button", { name: "Merge Profiles" }).click();
+
+  const lookup = page.getByLabel("Find a player");
+  await lookup.fill(ADMIN_NAME);
+  const matches = page.getByRole("list", { name: "Matching players" });
+  await expect(matches.getByText(ADMIN_NAME, { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /as a new player/ })).toHaveCount(0);
+
+  await lookup.fill(newName);
+  await expect(matches.getByText(`No players match "${newName}".`)).toBeVisible();
+  await page.getByRole("button", { name: `+ Add "${newName}" as a new player` }).click();
+  await expect(page.getByText(`Added ${newName} as a manual profile.`)).toBeVisible();
+
+  await page.getByLabel("Manual profile to remove").fill(newName);
+  await expect(page.getByRole("option", { name: newName })).toBeVisible();
 });

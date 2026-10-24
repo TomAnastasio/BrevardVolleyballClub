@@ -257,7 +257,11 @@ contains:
 - **Recompute Elo Ratings** — reset and replay every ranked game's rating.
 - **Merge Profiles** — combine a manual profile into the player's real
   Google profile (e.g. after someone who played as a manual profile signs up
-  via the QR code).
+  via the QR code). Its **Find a player** box checks whether someone
+  already exists: matching players show up tagged Google or Manual, and if
+  nobody has exactly that name, **+ Add "Name" as a new player** creates them
+  as a manual profile on the spot (name only; use Add Manual Profile for a
+  photo).
 
 Admins also see an **Admin only** box on every player's profile (open a
 player from Rankings): their sign-in email, how they sign in, when they
