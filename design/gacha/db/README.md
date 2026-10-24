@@ -11,3 +11,7 @@ pulls and outfits.
 `migration-template.sql` + the catalog is how
 `20261024200000_tokens_items_and_pulls.sql` was made; the catalog comes from
 `node ../source/catalog.mjs > ../source/catalog.json`.
+
+Now that the tokens migration is on `main`, run the tests against the
+migrations folder as-is: `echo 'select 1;' > empty.sql && node tokens.test.mjs empty.sql`
+and `node look.test.mjs` (avatar and skin color, migration 20261024230000).

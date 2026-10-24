@@ -1,10 +1,11 @@
 # Loot, tokens and pixel avatars: where we are
 
-Status as of 2026-10-24: **the database and the home-screen rally are live
-on `main`**. Ranked games have earned tokens since 2026-10-24 18:17 UTC, but
-there's no screen to see or spend them yet, and the rally draws everyone
-plain grey. Everything else here is design work: preview pages, drawing code
-and screenshots, on the branch `claude/gacha-avatars-design` (not merged).
+Status as of 2026-10-24: **everything in "Still to build" is live on
+`main`** (commit 2795628): tokens, item art, profile card, Locker, Cauldron,
+outfits in the rally, plus Avatar 1 / Avatar 2 and four skin colors. How it
+works now is in README "Tokens, the Cauldron and the Locker" on `main`.
+Everything here is design work: preview pages, drawing code and
+screenshots, on the branch `claude/gacha-avatars-design` (not merged).
 
 ## The idea in one paragraph
 
@@ -103,22 +104,21 @@ Odds are final at 76% / 20% / 3.8% / 0.2% (owner, 2026-10-24).
    colors, fonts and effects, photo borders, profile banners, and the
    non-Halloween set.
 
-## Still to build, in order
+## Built (all on `main`, 2026-10-24)
 
-1. **Database: done** (2026-10-24, migration
-   `20261024200000_tokens_items_and_pulls.sql` on `main`). How it works is in
-   `DATABASE.md`; its scenario tests are in `db/`.
-2. **Avatar drawing** in the app: turn `source/engine.js` (the 16-Bit Pro and
-   the gear zones) into a real component, plus the chosen item art.
-3. **Profile card (option A):** `profile-mock/_AvatarMock.jsx` has a rough
-   version.
-4. **Home-screen rally: done** (2026-10-24, on `main`). The avatar body is
-   in `src/avatar/engine.js` there; once gear exists, set each player's
-   `gear` in `src/avatar/useRallyPlayers.js`. Names show under the feet.
-5. **Cauldron pull screen:** token balance, the animation and the reveal.
-6. **Locker (option A, page 15):** equip items and switch transformations
-   on and off.
-7. README and TODO updates in the same push as each user-visible piece.
+1. **Database:** migration `20261024200000_tokens_items_and_pulls.sql`; how it
+   works is in `DATABASE.md`, scenario tests in `db/`.
+2. **Item art:** `src/avatar/art/` on `main`. The `source/data/*.js` files
+   are copied in as-is; the four first sets (pages 03, 05, 07, 09) were
+   ported by hand into `src/avatar/art/picked/` and match their pages pixel
+   for pixel. If you change art here, copy it there too.
+3. **Profile card, Locker, Cauldron, rally outfits:** `src/components/loot/`.
+4. **Avatar 1 / Avatar 2 and skin color 1-4** (owner's ask, 2026-10-24):
+   same body and zones, Avatar 2 has longer hair and a rosier mouth; free
+   from the start; labels never use gendered words. Migration
+   `20261024230000_avatar_and_skin_color.sql`, tests in `db/look.test.mjs`.
+5. Owner kept "Slime Kicks II / III" (Roman numerals) for the three slime
+   shoe sets.
 
 ## What's in this folder
 
