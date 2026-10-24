@@ -1,0 +1,463 @@
+<title>BVC Halloween Pants</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: one long night-sky column; three stacked sections (boxes, avatars, odds), cards in auto-fit grids. Single dark look that matches the app's Halloween skin. */
+:root {
+  --night-0: #07040f;
+  --night-1: #140a26;
+  --card: #1f1338;
+  --card-2: #2a1a4a;
+  --line: #4b3f70;
+  --fg: #f6f0ff;
+  --muted: #a99bc9;
+  --orange: #ff7a1a;
+  --common: #c9c2d9;
+  --rare: #4fb2ff;
+  --epic: #c46bff;
+  --legendary: #ffc53a;
+  --display: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tag: "Press Start 2P", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: radial-gradient(1200px 600px at 50% -200px, #24123f, transparent 70%), var(--night-1);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+header { display: flex; flex-direction: column; gap: 10px; max-width: 70ch; }
+.eyebrow { font-family: var(--tag); font-size: 10px; letter-spacing: 0.08em; color: var(--orange); text-transform: uppercase; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.1; }
+h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 700; }
+h1 .glow { color: var(--legendary); text-shadow: 0 0 18px rgb(255 197 58 / 0.45); }
+h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; }
+h3 { font-size: 22px; font-weight: 600; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: 17px; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+.sec-head p { color: var(--muted); }
+
+.grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid > * { min-width: 0; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.letter { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.stage {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  image-rendering: pixelated;
+  display: block;
+  border-radius: 4px;
+  background: var(--night-0);
+  cursor: pointer;
+}
+.pitch { color: var(--muted); font-size: 15px; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.n { font-family: var(--body); font-weight: 700; }
+.kinds { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+.kinds div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.kinds dt { font-weight: 700; }
+.kinds dd { margin: 0; min-width: 0; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 600 14px var(--display);
+  color: var(--fg);
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] { border-color: currentColor; background: #33205a; }
+.chip:focus-visible, .open:focus-visible, .stage:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.chip.c0 { color: var(--common); } .chip.c1 { color: var(--rare); } .chip.c2 { color: var(--epic); } .chip.c3 { color: var(--legendary); }
+.open {
+  font: 700 16px var(--display);
+  background: var(--orange);
+  color: var(--night-0);
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.result { min-height: 24px; font: 600 16px var(--display); }
+.result .tier { font-family: var(--tag); font-size: 10px; margin-right: 8px; }
+.t0 { color: var(--common); } .t1 { color: var(--rare); } .t2 { color: var(--epic); } .t3 { color: var(--legendary); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
+.toolbar .label { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.av-stage { width: 100%; aspect-ratio: 1; image-rendering: pixelated; display: block; background: var(--night-0); border-radius: 4px; }
+.av-small { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+.av-small canvas { image-rendering: pixelated; background: var(--night-0); border-radius: 3px; flex: none; }
+.pros { margin: 0; padding-left: 18px; font-size: 14px; display: flex; flex-direction: column; gap: 3px; }
+
+.split { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+.split > * { min-width: 0; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 400 9px var(--tag); color: var(--muted); letter-spacing: 0.05em; }
+td.num, th.num { text-align: right; }
+td.wrap { white-space: normal; min-width: 180px; }
+.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.inputs label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.inputs input {
+  font: 700 16px var(--body);
+  background: var(--card-2);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 8px;
+  width: 100%;
+}
+.inputs input:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+.note { font-size: 14px; color: var(--muted); }
+.agreed { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.bar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; }
+.bar span { display: block; height: 100%; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+.mixer-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+.mixer { display: flex; flex-direction: column; gap: 8px; }
+.mix-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mix-row .label { width: 64px; flex: none; }
+.chip.c0[aria-pressed="true"], .chip.c1[aria-pressed="true"], .chip.c2[aria-pressed="true"], .chip.c3[aria-pressed="true"] { border-color: currentColor; }
+.grid.one { grid-template-columns: minmax(0, 520px); }
+.chip[data-preset] { font-family: var(--body); font-weight: 700; }
+.views { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.views figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.views canvas { width: 100%; image-rendering: pixelated; background: var(--night-0); border-radius: 4px; display: block; }
+.views .close { aspect-ratio: 24 / 22; }
+.views .prof { aspect-ratio: 34 / 46; max-height: 100%; }
+.views figcaption { font-family: var(--tag); font-size: 9px; color: var(--muted); }
+.tiers { font-size: 14px; color: var(--muted); }
+.tiers b { color: var(--fg); }
+.grid.hats { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.views { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+.views figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.views canvas { width: 100%; image-rendering: pixelated; background: var(--night-0); border-radius: 4px; display: block; }
+.views .close { aspect-ratio: 20 / 16; }
+.views .prof { aspect-ratio: 24 / 34; }
+.views figcaption { font-family: var(--tag); font-size: 9px; color: var(--muted); }
+.grid.pants { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+</style>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Brevard Volleyball Club · fourth item set, nothing built yet</span>
+    <h1>Ten <span class="glow">Halloween pants</span></h1>
+    <p class="lede">Ten very different pants themes on the 16-Bit Pro, all with the default grey tee and white sneakers. Pick one (or a few) and I'll make three options per tier, like before. Shorts show the legs and knee pads; long pants cover them.</p>
+  </header>
+  <div class="grid pants" id="pants-grid"></div>
+</div>
+<script>
+(() => {
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TAU = Math.PI * 2;
+
+function R(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function spr(c, rows, pal, x, y) {
+  rows.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) { const col = pal[row[i]]; if (col) R(c, x + i, y + j, 1, 1, col); }
+  });
+}
+function glow(c, cx, cy, r, col, a) {
+  const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, col); g.addColorStop(1, "transparent");
+  c.save(); c.globalAlpha = a; c.fillStyle = g; c.fillRect(cx - r, cy - r, r * 2, r * 2); c.restore();
+}
+
+// 16-Bit Pro (athlete D), zone-coded: gear fills zones.
+const BODY = [".....hhhh.....", "....hhhhhH....", "....hhhhhHH...", "....hsssssH...", "....sesseS....", "....sssssS....", ".....smmS.....", "......sS......", "...ttttttttT..", "..uttttttttTu.", "..uutttttttTuu", "..uu.ttttTT.uu", "..ll.ttttTT.ll", "..ll.ttttTT.ll", "..nn.ttttTT.nn", ".....pppppP...", ".....pppPPP...", ".....pp..PP...", ".....qq..qQ...", ".....kk..kk...", ".....kk..kk...", ".....qq..qQ...", ".....qq..qQ...", ".....ww..ww...", ".....ww..ww...", "....fff..ffF..", "....FFF..FFF.."];
+const SKIN = "#c9b49a", SKIN_D = "#a8927a";
+const OUTFITS = [
+  { t: "#b9b2c9", T: "#9d96b0", u: SKIN, l: SKIN, p: "#7d7591", P: "#6b6380" },
+  { t: "#ff7a1a", T: "#c4550a", u: SKIN, l: SKIN, p: "#2f3a63", P: "#232c4d", stripe: "#ffe14d" },
+  { t: "#6b3fa8", T: "#52308a", u: "#6b3fa8", l: "#52308a", p: "#1f1a30", P: "#17131f" },
+];
+let outfit = 0;
+function bodyPal(rival) {
+  const o = OUTFITS[rival ? 0 : outfit];
+  const pal = { h: "#6b6380", H: "#55506b", s: SKIN, S: SKIN_D, e: "#1a1024", m: "#8a5a5a", k: "#5a5078", n: SKIN, w: "#e8dff5", f: "#e8dff5", F: "#a49db0", q: SKIN, Q: SKIN_D, ...o };
+  if (rival) Object.assign(pal, { t: "#6e5d8f", T: "#55467a", p: "#3a3150", P: "#2a2340" });
+  return pal;
+}
+function drawBody(c, left, top, rival) {
+  const pal = bodyPal(rival), o = OUTFITS[rival ? 0 : outfit];
+  BODY.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      let col = pal[row[i]];
+      if (!col) continue;
+      if (o.stripe && (row[i] === "t" || row[i] === "T") && j % 2 === 0) col = o.stripe;
+      R(c, left + i, top + j, 1, 1, col);
+    }
+  });
+}
+
+// ---------- Hat builder: fill shapes, then auto-outline ----------
+// Coordinates are relative to the body: x 0..13, y 0 = top of hair. Head centre is x 7.
+const CX = 7;
+function makeGrid() {
+  const m = new Map();
+  return {
+    m,
+    set(x, y, c) { m.set(`${Math.round(x)},${Math.round(y)}`, { x: Math.round(x), y: Math.round(y), c }); },
+    row(x0, x1, y, c) { for (let x = Math.round(x0); x <= Math.round(x1); x++) this.set(x, y, c); },
+    has(x, y) { return m.has(`${x},${y}`); },
+    get(x, y) { return m.get(`${x},${y}`); },
+  };
+}
+function outline(g, col) {
+  const add = [];
+  for (const { x, y } of g.m.values())
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, -1], [1, -1], [-1, -1]])
+      if (!g.has(x + dx, y + dy)) add.push([x + dx, y + dy]);
+  // only the sides and top get an outline; the brim's underside sits on the head
+  for (const [x, y] of add) g.set(x, y, col);
+}
+// shaded row: highlight on the left edge, shadow on the right two pixels
+function shadedRow(g, x0, x1, y, P) {
+  x0 = Math.round(x0); x1 = Math.round(x1);
+  for (let x = x0; x <= x1; x++) g.set(x, y, x === x0 ? P.hi : x >= x1 - 1 && x1 - x0 > 2 ? P.sh : P.base);
+}
+const OUT = "#0b0614";
+const WITCH = { base: "#3b2a5c", sh: "#271b3f", hi: "#5d4688" };
+// ---------- Pants: each one recolors the leg zones pixel by pixel ----------
+// Zones on the 16-Bit Pro: p/P hips and thighs (rows 15-17, P = shade), q/Q shins (rows 18, 21-22),
+// k knee pads (rows 19-20), w socks (rows 23-24). Legs are x 5-6 and x 9-10.
+const darken = (hex, f = 0.72) => {
+  const n = parseInt(hex.slice(1), 16);
+  const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v * f));
+  return "#" + c.map((v) => v.toString(16).padStart(2, "0")).join("");
+};
+const at = (list, x, y) => list.some(([a, b]) => a === x && b === y);
+const shade = (col, x, z) => (z === "P" || z === "Q" || x === 6 || x === 10 ? darken(col, 0.8) : col);
+const LEG = (x) => x === 5 || x === 6 || x === 9 || x === 10;
+
+const PANTS = [
+  {
+    name: "Skeleton Leggings",
+    pitch: "Black leggings with a white leg bone down each leg and a round kneecap at the knee. Pairs perfectly with the Skeleton Tee.",
+    long: true,
+    px(x, y, z) {
+      const bone = (x === 5 || x === 10) && y >= 17 && y <= 22 || (y === 19 || y === 20) && LEG(x) || y === 15 && x >= 6 && x <= 9;
+      return bone ? "#ece6d6" : shade("#231d33", x, z);
+    },
+  },
+  {
+    name: "Jack-o'-Lantern Shorts",
+    pitch: "Bright orange shorts with a carved jack-o'-lantern face across the front, eyes on each thigh and a grin at the waist.",
+    long: false,
+    px(x, y, z) {
+      if (at([[5, 16], [6, 16], [9, 16], [10, 16], [6, 17], [9, 17]], x, y)) return "#1a1024";
+      if (y === 15 && x >= 6 && x <= 9) return x % 2 ? "#1a1024" : "#ff7a1a";
+      return shade("#ff7a1a", x, z);
+    },
+  },
+  {
+    name: "Mummy Wraps",
+    pitch: "Both legs wrapped in old, layered bandages all the way to the ankles, with a loose strip dangling from one knee.",
+    long: true,
+    px(x, y, z) {
+      const band = (x + y * 2) % 5;
+      if (band === 0) return "#3a3044";
+      return shade(band === 2 ? "#e8e0c8" : band === 4 ? "#b9ae94" : "#d9cfb2", x, z);
+    },
+    over(c, left, top, t) {
+      const fl = reduced ? 0 : Math.round(Math.sin(t * 4));
+      R(c, left + 11, top + 20, 1, 1, "#d9cfb2"); R(c, left + 12, top + 21, 1, 1, "#d9cfb2"); R(c, left + 12 + fl, top + 22, 1, 1, "#b9ae94");
+    },
+  },
+  {
+    name: "Witch Stockings",
+    pitch: "A short black skirt over purple-and-black striped stockings that run all the way into the shoes. The witch hat's best friend.",
+    long: true,
+    socks: true,
+    px(x, y, z) {
+      if (y <= 17) return y === 17 || z === "P" ? "#14101c" : "#231d33";
+      return y % 2 ? "#6b3fa8" : "#14101c";
+    },
+    over(c, left, top) {
+      R(c, left + 4, top + 17, 8, 1, "#14101c"); R(c, left + 4, top + 18, 1, 1, "#14101c"); R(c, left + 11, top + 18, 1, 1, "#14101c");
+    },
+  },
+  {
+    name: "Scarecrow Jeans",
+    pitch: "Faded, patched blue jeans with a rope belt and straw poking out of both cuffs.",
+    long: true,
+    px(x, y, z) {
+      if (y === 15) return x === 7 ? "#d9a441" : "#a8792a";
+      if (at([[5, 18], [6, 18], [5, 21], [10, 17], [9, 17]], x, y)) return x > 8 ? "#c4550a" : "#5a8a3a";
+      return shade((x * 3 + y * 5) % 7 === 0 ? "#6f8fc0" : "#4a6aa8", x, z);
+    },
+    over(c, left, top) {
+      const STRAW = ["#ffd84a", "#d9a441", "#f3d27a"];
+      [[4, 23], [5, 24], [7, 23], [8, 24], [11, 23], [9, 23]].forEach(([x, y], i) => R(c, left + x, top + y, 1, 1, STRAW[i % 3]));
+    },
+  },
+  {
+    name: "Werewolf Rips",
+    pitch: "Jeans that didn't survive the full moon: torn off at the knee with ragged edges and brown fur bursting out of the legs.",
+    long: false,
+    fur: true,
+    px(x, y, z) {
+      if (y === 17 && (x === 5 || x === 10)) return "#8a6a3e";
+      return shade("#3a4a78", x, z);
+    },
+    shin(x, y, z) {
+      if (y === 18) return x % 2 ? "#4a6aa8" : "#6b4a28";
+      return (x + y) % 3 === 0 ? "#4a3018" : z === "Q" || x === 6 || x === 10 ? "#5a3a20" : "#7a5230";
+    },
+    over(c, left, top) {
+      [[4, 18], [11, 18], [4, 21], [11, 20]].forEach(([x, y]) => R(c, left + x, top + y, 1, 1, "#6b4a28"));
+    },
+  },
+  {
+    name: "Ghost Tail",
+    pitch: "No legs at all. From the waist down you're a wispy ghost tail that sways and curls, floating just above the floor.",
+    long: true,
+    ghost: true,
+    px() { return null; },
+    over(c, left, top, t) {
+      const sway = reduced ? 0 : Math.sin(t * 2.2);
+      for (let y = 15; y <= 26; y++) {
+        const k = (y - 15) / 11;
+        const half = Math.max(0.5, 3.2 * (1 - k * 0.8));
+        const cx = 7.5 + sway * k * k * 3;
+        for (let x = Math.round(cx - half); x <= Math.round(cx + half - 1); x++) {
+          const edge = x === Math.round(cx + half - 1);
+          R(c, left + x, top + y, 1, 1, edge ? "#b9b0d9" : y % 4 === 0 && !edge ? "#e8e0f0" : "#f3efe6");
+        }
+      }
+      glow(c, left + 7, top + 22, 8, "#e8e0f0", 0.25);
+    },
+  },
+  {
+    name: "Slime Pants",
+    pitch: "Toxic-green pants that look like they were dipped in a vat of slime, with gooey drips hanging off the cuffs and the knees.",
+    long: true,
+    px(x, y, z) {
+      if (y === 15) return "#3a3044";
+      return shade((x + y) % 4 === 0 ? "#7dff5a" : "#3fb02f", x, z);
+    },
+    over(c, left, top, t) {
+      [[5, 23, 0], [9, 23, 0.4], [6, 21, 0.7], [10, 23, 0.2]].forEach(([x, y, sp]) => {
+        const len = 1 + Math.round(((Math.sin(t * 2 + sp * 6) + 1) / 2) * 2);
+        R(c, left + x, top + y, 1, len, "#5ee84a");
+      });
+    },
+  },
+  {
+    name: "Haunted Pajamas",
+    pitch: "Cozy purple pajama bottoms with a pattern of tiny white ghosts and a drawstring. For the late-night pickup game.",
+    long: true,
+    px(x, y, z) {
+      if (y === 15) return x === 7 || x === 8 ? "#f3efe6" : "#3d2470";
+      const ghost = (x * 5 + y * 3) % 9 === 0;
+      return ghost ? "#f3efe6" : shade("#52308a", x, z);
+    },
+    over(c, left, top) { R(c, left + 7, top + 16, 1, 2, "#f3efe6"); },
+  },
+  {
+    name: "Candy Corn Track Pants",
+    pitch: "Black track pants with a fat candy-corn side stripe, yellow, orange and white from ankle to hip. Sporty and seasonal.",
+    long: true,
+    px(x, y, z) {
+      if (x === 5 || x === 10) return y >= 21 ? "#ffd84a" : y >= 18 ? "#ff7a1a" : "#fff6e0";
+      return shade("#1f1a2a", x, z);
+    },
+  },
+];
+
+const BASE = { h: "#6b6380", H: "#55506b", s: SKIN, S: SKIN_D, e: "#1a1024", m: "#8a5a5a", k: "#5a5078", n: SKIN, w: "#e8dff5", f: "#e8dff5", F: "#a49db0", q: SKIN, Q: SKIN_D, t: "#b9b2c9", T: "#9d96b0", u: SKIN, l: SKIN };
+function drawPants(c, pants, x, bottom, t, rival = false) {
+  const bob = reduced ? 0 : Math.round((Math.sin(t * 3) + 1) / 2);
+  const left = Math.round(x - 7), top = bottom - BODY.length - bob;
+  BODY.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      const z = row[i];
+      let col = BASE[z];
+      if (!rival) {
+        if (pants.ghost && (z === "p" || z === "P" || z === "q" || z === "Q" || z === "k" || z === "w" || z === "f" || z === "F")) continue;
+        if (z === "p" || z === "P") col = pants.px(i, j, z, t);
+        else if ((z === "q" || z === "Q" || z === "k") && pants.long) col = pants.px(i, j, z, t);
+        else if ((z === "q" || z === "Q" || z === "k") && pants.shin) col = pants.shin(i, j, z, t);
+        else if (z === "w" && pants.socks) col = pants.px(i, j, z, t);
+      } else if (z === "p" || z === "P") col = z === "P" ? "#2a2340" : "#3a3150";
+      if (col) R(c, left + i, top + j, 1, 1, col);
+    }
+  });
+  if (!rival && pants.over) pants.over(c, left, top, t);
+}
+
+const grid = document.getElementById("pants-grid");
+const cards = [];
+PANTS.forEach((p, i) => {
+  const card = document.createElement("article");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="card-top"><h3>${p.name}</h3><span class="letter">#${i + 1}</span></div>
+    <div class="views">
+      <figure><canvas class="close" width="20" height="16" aria-label="${p.name} close-up"></canvas><figcaption>Close-up</figcaption></figure>
+      <figure><canvas class="prof" width="24" height="34" aria-label="${p.name} at profile size"></canvas><figcaption>Profile</figcaption></figure>
+    </div>
+    <div class="av-small"><canvas width="96" height="34" style="width:96px;height:34px" aria-label="${p.name} at real home-screen size"></canvas><span>Real size in the rally</span></div>
+    <p class="pitch">${p.pitch}</p>`;
+  grid.appendChild(card);
+  const [close, prof, small] = card.querySelectorAll("canvas");
+  cards.push({ p, close: close.getContext("2d"), prof: prof.getContext("2d"), small: small.getContext("2d") });
+});
+
+function frame(t) {
+  for (const { p, close, prof, small } of cards) {
+    R(close, 0, 0, 20, 16, "#140a26");
+    glow(close, 10, 8, 12, "#4b3f70", 0.45);
+    R(close, 0, 15, 20, 1, "#3a2a5c");
+    drawPants(close, p, 10, 15, t);
+
+    R(prof, 0, 0, 24, 34, "#140a26");
+    glow(prof, 12, 18, 14, "#4b3f70", 0.4);
+    R(prof, 0, 31, 24, 3, "#1c1030"); R(prof, 0, 31, 24, 1, "#3a2a5c");
+    drawPants(prof, p, 12, 31, t);
+
+    R(small, 0, 0, 96, 34, "#140a26");
+    R(small, 0, 31, 96, 3, "#1c1030"); R(small, 0, 31, 96, 1, "#3a2a5c");
+    R(small, 47, 16, 1, 15, "#6b5f8d"); R(small, 44, 16, 7, 1, "#a99bc9");
+    drawPants(small, p, 20, 31, t);
+    small.save(); small.translate(96, 0); small.scale(-1, 1);
+    drawPants(small, p, 20, 31, t + 1.3, true);
+    small.restore();
+    const ph = reduced ? 0.3 : (t * 0.8) % 2, f = ph < 1 ? ph : 2 - ph;
+    R(small, 28 + 38 * f, 4 + (1 - Math.sin(f * Math.PI)) * 8, 2, 2, "#ffcf3a");
+  }
+}
+const start = performance.now();
+(function loop(now) { frame(Math.max(0, (now - start) / 1000)); requestAnimationFrame(loop); })(start);
+})();
+</script>

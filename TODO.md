@@ -5,6 +5,12 @@ shape future work. How things work today lives in `README.md`; history lives
 in `git log`. When something here ships or gets confirmed, shrink it to a
 one-line decision (or delete it) rather than leaving the old detail.
 
+## Next big feature: tokens, Cauldron pulls and pixel avatars
+
+Designed, not built. Decisions, picked items, what's left to decide and
+the build order are in `design/gacha/PLAN.md` (branch
+`claude/gacha-avatars-design`, not merged).
+
 ## Halloween theme (auto-off 2026-11-21)
 
 After Halloween, ask the owner whether to delete `src/themes/halloween/`

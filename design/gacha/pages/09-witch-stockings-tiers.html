@@ -1,0 +1,537 @@
+<title>BVC Witch Stockings Tiers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: one long night-sky column; three stacked sections (boxes, avatars, odds), cards in auto-fit grids. Single dark look that matches the app's Halloween skin. */
+:root {
+  --night-0: #07040f;
+  --night-1: #140a26;
+  --card: #1f1338;
+  --card-2: #2a1a4a;
+  --line: #4b3f70;
+  --fg: #f6f0ff;
+  --muted: #a99bc9;
+  --orange: #ff7a1a;
+  --common: #c9c2d9;
+  --rare: #4fb2ff;
+  --epic: #c46bff;
+  --legendary: #ffc53a;
+  --display: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tag: "Press Start 2P", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: radial-gradient(1200px 600px at 50% -200px, #24123f, transparent 70%), var(--night-1);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+header { display: flex; flex-direction: column; gap: 10px; max-width: 70ch; }
+.eyebrow { font-family: var(--tag); font-size: 10px; letter-spacing: 0.08em; color: var(--orange); text-transform: uppercase; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.1; }
+h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 700; }
+h1 .glow { color: var(--legendary); text-shadow: 0 0 18px rgb(255 197 58 / 0.45); }
+h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; }
+h3 { font-size: 22px; font-weight: 600; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: 17px; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+.sec-head p { color: var(--muted); }
+
+.grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid > * { min-width: 0; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.letter { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.stage {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  image-rendering: pixelated;
+  display: block;
+  border-radius: 4px;
+  background: var(--night-0);
+  cursor: pointer;
+}
+.pitch { color: var(--muted); font-size: 15px; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.n { font-family: var(--body); font-weight: 700; }
+.kinds { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+.kinds div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.kinds dt { font-weight: 700; }
+.kinds dd { margin: 0; min-width: 0; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 600 14px var(--display);
+  color: var(--fg);
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] { border-color: currentColor; background: #33205a; }
+.chip:focus-visible, .open:focus-visible, .stage:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.chip.c0 { color: var(--common); } .chip.c1 { color: var(--rare); } .chip.c2 { color: var(--epic); } .chip.c3 { color: var(--legendary); }
+.open {
+  font: 700 16px var(--display);
+  background: var(--orange);
+  color: var(--night-0);
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.result { min-height: 24px; font: 600 16px var(--display); }
+.result .tier { font-family: var(--tag); font-size: 10px; margin-right: 8px; }
+.t0 { color: var(--common); } .t1 { color: var(--rare); } .t2 { color: var(--epic); } .t3 { color: var(--legendary); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
+.toolbar .label { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.av-stage { width: 100%; aspect-ratio: 1; image-rendering: pixelated; display: block; background: var(--night-0); border-radius: 4px; }
+.av-small { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+.av-small canvas { image-rendering: pixelated; background: var(--night-0); border-radius: 3px; flex: none; }
+.pros { margin: 0; padding-left: 18px; font-size: 14px; display: flex; flex-direction: column; gap: 3px; }
+
+.split { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+.split > * { min-width: 0; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 400 9px var(--tag); color: var(--muted); letter-spacing: 0.05em; }
+td.num, th.num { text-align: right; }
+td.wrap { white-space: normal; min-width: 180px; }
+.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.inputs label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.inputs input {
+  font: 700 16px var(--body);
+  background: var(--card-2);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 8px;
+  width: 100%;
+}
+.inputs input:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+.note { font-size: 14px; color: var(--muted); }
+.agreed { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.bar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; }
+.bar span { display: block; height: 100%; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+.mixer-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+.mixer { display: flex; flex-direction: column; gap: 8px; }
+.mix-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mix-row .label { width: 64px; flex: none; }
+.chip.c0[aria-pressed="true"], .chip.c1[aria-pressed="true"], .chip.c2[aria-pressed="true"], .chip.c3[aria-pressed="true"] { border-color: currentColor; }
+.grid.one { grid-template-columns: minmax(0, 520px); }
+.chip[data-preset] { font-family: var(--body); font-weight: 700; }
+.views { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.views figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.views canvas { width: 100%; image-rendering: pixelated; background: var(--night-0); border-radius: 4px; display: block; }
+.views .close { aspect-ratio: 24 / 22; }
+.views .prof { aspect-ratio: 34 / 46; max-height: 100%; }
+.views figcaption { font-family: var(--tag); font-size: 9px; color: var(--muted); }
+.tiers { font-size: 14px; color: var(--muted); }
+.tiers b { color: var(--fg); }
+.grid.hats { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.views { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+.views figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.views canvas { width: 100%; image-rendering: pixelated; background: var(--night-0); border-radius: 4px; display: block; }
+.views .close { aspect-ratio: 20 / 16; }
+.views .prof { aspect-ratio: 24 / 34; }
+.views figcaption { font-family: var(--tag); font-size: 9px; color: var(--muted); }
+.code { font-family: var(--tag); font-size: 12px; }
+.tier { gap: 16px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.sw { padding: 2px; background: var(--card-2); border: 2px solid var(--line); border-radius: 4px; cursor: pointer; line-height: 0; }
+.sw canvas { width: 30px; height: 42px; image-rendering: pixelated; }
+.sw[aria-pressed="true"] { border-color: var(--common); }
+.sw:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.swname { font: 600 14px var(--display); color: var(--common); margin-top: -4px; }
+</style>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Brevard Volleyball Club · witch stockings set, nothing built yet</span>
+    <h1>Witch Stockings, <span class="glow">four tiers</span></h1>
+    <p class="lede">Three options for each tier of the Witch Stockings. Pick one per tier by its code (for example C2, R1, E3, L1). Commons are plain recolors, so each Common option comes in six colors; tap a swatch to try it. Rares add a new detail, Epics move a little, and Legendaries get the big effects.</p>
+  </header>
+
+
+
+  <section class="tier" id="common">
+    <div class="sec-head"><span class="eyebrow t0">Common · many colors each</span><h2 class="t0">Common</h2><p>Same shape, plain colors. Whichever you pick becomes about six pairs, one per color scheme.</p></div>
+    <div class="grid" data-tier="0"></div>
+  </section>
+  <section class="tier" id="rare">
+    <div class="sec-head"><span class="eyebrow t1">Rare · a few each</span><h2 class="t1">Rare</h2><p>A new detail or a whole new character. No movement yet.</p></div>
+    <div class="grid" data-tier="1"></div>
+  </section>
+  <section class="tier" id="epic">
+    <div class="sec-head"><span class="eyebrow t2">Epic · one or two</span><h2 class="t2">Epic</h2><p>Small animations that catch the eye.</p></div>
+    <div class="grid" data-tier="2"></div>
+  </section>
+  <section class="tier" id="legendary">
+    <div class="sec-head"><span class="eyebrow t3">Legendary · just one</span><h2 class="t3">Legendary</h2><p>The showpiece. Glow and motion nothing else has.</p></div>
+    <div class="grid" data-tier="3"></div>
+  </section>
+</div>
+<script>
+(() => {
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TAU = Math.PI * 2;
+
+function R(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function spr(c, rows, pal, x, y) {
+  rows.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) { const col = pal[row[i]]; if (col) R(c, x + i, y + j, 1, 1, col); }
+  });
+}
+function glow(c, cx, cy, r, col, a) {
+  const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, col); g.addColorStop(1, "transparent");
+  c.save(); c.globalAlpha = a; c.fillStyle = g; c.fillRect(cx - r, cy - r, r * 2, r * 2); c.restore();
+}
+
+// 16-Bit Pro (athlete D), zone-coded: gear fills zones.
+const BODY = [".....hhhh.....", "....hhhhhH....", "....hhhhhHH...", "....hsssssH...", "....sesseS....", "....sssssS....", ".....smmS.....", "......sS......", "...ttttttttT..", "..uttttttttTu.", "..uutttttttTuu", "..uu.ttttTT.uu", "..ll.ttttTT.ll", "..ll.ttttTT.ll", "..nn.ttttTT.nn", ".....pppppP...", ".....pppPPP...", ".....pp..PP...", ".....qq..qQ...", ".....kk..kk...", ".....kk..kk...", ".....qq..qQ...", ".....qq..qQ...", ".....ww..ww...", ".....ww..ww...", "....fff..ffF..", "....FFF..FFF.."];
+const SKIN = "#c9b49a", SKIN_D = "#a8927a";
+const OUTFITS = [
+  { t: "#b9b2c9", T: "#9d96b0", u: SKIN, l: SKIN, p: "#7d7591", P: "#6b6380" },
+  { t: "#ff7a1a", T: "#c4550a", u: SKIN, l: SKIN, p: "#2f3a63", P: "#232c4d", stripe: "#ffe14d" },
+  { t: "#6b3fa8", T: "#52308a", u: "#6b3fa8", l: "#52308a", p: "#1f1a30", P: "#17131f" },
+];
+let outfit = 0;
+function bodyPal(rival) {
+  const o = OUTFITS[rival ? 0 : outfit];
+  const pal = { h: "#6b6380", H: "#55506b", s: SKIN, S: SKIN_D, e: "#1a1024", m: "#8a5a5a", k: "#5a5078", n: SKIN, w: "#e8dff5", f: "#e8dff5", F: "#a49db0", q: SKIN, Q: SKIN_D, ...o };
+  if (rival) Object.assign(pal, { t: "#6e5d8f", T: "#55467a", p: "#3a3150", P: "#2a2340" });
+  return pal;
+}
+function drawBody(c, left, top, rival) {
+  const pal = bodyPal(rival), o = OUTFITS[rival ? 0 : outfit];
+  BODY.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      let col = pal[row[i]];
+      if (!col) continue;
+      if (o.stripe && (row[i] === "t" || row[i] === "T") && j % 2 === 0) col = o.stripe;
+      R(c, left + i, top + j, 1, 1, col);
+    }
+  });
+}
+
+// ---------- Hat builder: fill shapes, then auto-outline ----------
+// Coordinates are relative to the body: x 0..13, y 0 = top of hair. Head centre is x 7.
+const CX = 7;
+function makeGrid() {
+  const m = new Map();
+  return {
+    m,
+    set(x, y, c) { m.set(`${Math.round(x)},${Math.round(y)}`, { x: Math.round(x), y: Math.round(y), c }); },
+    row(x0, x1, y, c) { for (let x = Math.round(x0); x <= Math.round(x1); x++) this.set(x, y, c); },
+    has(x, y) { return m.has(`${x},${y}`); },
+    get(x, y) { return m.get(`${x},${y}`); },
+  };
+}
+function outline(g, col) {
+  const add = [];
+  for (const { x, y } of g.m.values())
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, -1], [1, -1], [-1, -1]])
+      if (!g.has(x + dx, y + dy)) add.push([x + dx, y + dy]);
+  // only the sides and top get an outline; the brim's underside sits on the head
+  for (const [x, y] of add) g.set(x, y, col);
+}
+// shaded row: highlight on the left edge, shadow on the right two pixels
+function shadedRow(g, x0, x1, y, P) {
+  x0 = Math.round(x0); x1 = Math.round(x1);
+  for (let x = x0; x <= x1; x++) g.set(x, y, x === x0 ? P.hi : x >= x1 - 1 && x1 - x0 > 2 ? P.sh : P.base);
+}
+const OUT = "#0b0614";
+const WITCH = { base: "#3b2a5c", sh: "#271b3f", hi: "#5d4688" };
+const darken = (hex, f = 0.72) => {
+  const n = parseInt(hex.slice(1), 16);
+  const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v * f));
+  return "#" + c.map((v) => v.toString(16).padStart(2, "0")).join("");
+};
+const at = (list, x, y) => list.some(([a, b]) => a === x && b === y);
+// ---------- Witch Stockings, parameterised ----------
+// A short skirt (rows 15-17, flaring at 17-18) over stockings that run from row 18 into the shoes.
+const SCHEMES = [
+  { name: "Witch purple", a: "#6b3fa8", b: "#14101c", skirt: "#231d33" },
+  { name: "Pumpkin", a: "#ff7a1a", b: "#14101c", skirt: "#231d33" },
+  { name: "Slime", a: "#5ee84a", b: "#14101c", skirt: "#231d33" },
+  { name: "Blood", a: "#c42a3e", b: "#14101c", skirt: "#231d33" },
+  { name: "Bone", a: "#ece6d6", b: "#14101c", skirt: "#231d33" },
+  { name: "Candy", a: "#ff7a1a", b: "#6b3fa8", skirt: "#3d2470" },
+];
+const WP = SCHEMES[0];
+function sparkle(c, x, y, col, big) {
+  R(c, x, y - (big ? 2 : 1), 1, big ? 5 : 3, col);
+  R(c, x - (big ? 2 : 1), y, big ? 5 : 3, 1, col);
+}
+// base skirt hem, drawn over the hips
+function skirt(c, left, top, col, hem = "flat") {
+  R(c, left + 4, top + 17, 8, 1, darken(col, 0.75));
+  if (hem === "flat") { R(c, left + 4, top + 18, 1, 1, darken(col, 0.75)); R(c, left + 11, top + 18, 1, 1, darken(col, 0.75)); }
+  if (hem === "jagged") [4, 7, 8, 11].forEach((x) => R(c, left + x, top + 18, 1, 1, darken(col, 0.75)));
+}
+function witch(o) {
+  return {
+    long: true, socks: true,
+    px(x, y, z, t) {
+      if (y <= 17) return o.skirtPx ? o.skirtPx(x, y, z, t) : z === "P" || x === 10 ? darken(o.skirt, 0.75) : o.skirt;
+      return o.leg(x, y, z, t);
+    },
+    over(c, left, top, t) { skirt(c, left, top, o.skirt, o.hem); if (o.over) o.over(c, left, top, t); },
+    under: o.under,
+  };
+}
+
+const OPTIONS = [
+  // ---------- Common ----------
+  {
+    tier: 0, code: "C1", name: "Classic Stripes",
+    pitch: "The stockings you picked: thin one-pixel stripes from the knee into the shoes, under a short dark skirt.",
+    make: (s) => witch({ skirt: s.skirt, leg: (x, y) => (y % 2 ? s.a : s.b) }),
+  },
+  {
+    tier: 0, code: "C2", name: "Bold Bands",
+    pitch: "Fat two-pixel stripes that read clearly from across the court, and a pointy, jagged skirt hem.",
+    make: (s) => witch({ skirt: s.skirt, hem: "jagged", leg: (x, y) => (Math.floor(y / 2) % 2 ? s.a : s.b) }),
+  },
+  {
+    tier: 0, code: "C3", name: "Knee-Highs",
+    pitch: "Plain black tights to the knee, then striped knee-high socks with a solid cuff at the top.",
+    make: (s) => witch({ skirt: s.skirt, leg: (x, y) => (y < 20 ? "#14101c" : y === 20 ? s.a : y % 2 ? s.a : s.b) }),
+  },
+  // ---------- Rare ----------
+  {
+    tier: 1, code: "R1", name: "Spiderweb Tights",
+    pitch: "Black tights with a white cobweb pattern running down both legs and a little red-backed spider on one knee.",
+    make: () => witch({
+      skirt: "#14101c",
+      leg: (x, y) => (x === 9 && y === 19 ? "#ff3b4d" : x === 9 && y === 20 ? "#0b0614" : (x + y) % 3 === 0 ? "#d8d0ec" : "#14101c"),
+    }),
+  },
+  {
+    tier: 1, code: "R2", name: "Mismatched",
+    pitch: "Every witch loses a sock. One leg is purple and black, the other orange and green, under a patched skirt.",
+    make: () => witch({
+      skirt: "#2a2433",
+      skirtPx: (x, y) => (x >= 8 && x <= 9 && y >= 15 && y <= 16 ? "#5a8a3a" : x === 10 ? "#1a1622" : "#2a2433"),
+      leg: (x, y) => (x <= 6 ? (y % 2 ? "#6b3fa8" : "#14101c") : y % 2 ? "#ff7a1a" : "#3f6b3a"),
+    }),
+  },
+  {
+    tier: 1, code: "R3", name: "Starry Skirt",
+    pitch: "A midnight-blue skirt sprinkled with gold stars and a moon, over gold-and-navy stockings.",
+    make: () => witch({
+      skirt: "#1c2a5c",
+      skirtPx: (x, y) => (at([[5, 15], [8, 16], [10, 15], [6, 17]], x, y) ? "#ffd84a" : x === 10 ? "#121c40" : "#1c2a5c"),
+      leg: (x, y) => (y % 2 ? "#e8c45a" : "#121c40"),
+      over: (c, left, top) => { R(c, left + 9, top + 17, 1, 1, "#fff6d0"); R(c, left + 5, top + 17, 1, 1, "#ffd84a"); },
+    }),
+  },
+  // ---------- Epic ----------
+  {
+    tier: 2, code: "E1", name: "Marquee Stripes",
+    pitch: "Neon purple stripes that scroll down the legs like a theater marquee, with a faint glow.",
+    make: () => witch({
+      skirt: "#231d33",
+      leg: (x, y, z, t) => (Math.floor(y / 2 + t * 4) % 2 ? "#d18bff" : "#2a1a4a"),
+      under: (c, left, top, t) => glow(c, left + 7, top + 21, 9, "#c46bff", 0.25 + 0.08 * Math.sin(t * 4)),
+    }),
+  },
+  {
+    tier: 2, code: "E2", name: "Bat-Wing Skirt",
+    pitch: "The skirt's hem is a row of bat wings. Every few seconds they flap like they're about to fly off.",
+    make: () => witch({
+      skirt: "#231d33", hem: "none",
+      leg: (x, y) => (y % 2 ? "#6b3fa8" : "#14101c"),
+      over: (c, left, top, t) => {
+        const flap = !reduced && t % 3 > 2.4 && Math.floor(t * 10) % 2;
+        for (const [sx, dir] of [[4, -1], [11, 1]]) {
+          if (flap) { R(c, left + sx + dir, top + 16, 1, 1, "#14101c"); R(c, left + sx + dir * 2, top + 15, 1, 1, "#14101c"); R(c, left + sx, top + 17, 1, 1, "#14101c"); }
+          else { R(c, left + sx, top + 18, 1, 1, "#14101c"); R(c, left + sx + dir, top + 19, 1, 1, "#14101c"); R(c, left + sx, top + 17, 1, 1, "#14101c"); }
+        }
+        R(c, left + 7, top + 18, 2, 1, "#14101c"); R(c, left + 7, top + 19, 1, 1, "#14101c"); R(c, left + 8, top + 19, 1, 1, "#14101c");
+        R(c, left + 7, top + 18, 1, 1, "#ff3b4d");
+      },
+    }),
+  },
+  {
+    tier: 2, code: "E3", name: "Potion Belt",
+    pitch: "A belt of tiny potion vials across the hips. The green, purple and orange brews bubble away inside.",
+    make: () => witch({
+      skirt: "#231d33",
+      leg: (x, y) => (y % 2 ? "#6b3fa8" : "#14101c"),
+      over: (c, left, top, t) => {
+        R(c, left + 4, top + 15, 8, 1, "#6b4a28");
+        [[4, "#5ee84a"], [7, "#c46bff"], [10, "#ff7a1a"]].forEach(([x, col], i) => {
+          R(c, left + x, top + 14, 1, 1, "#d8d0ec");
+          R(c, left + x, top + 15, 1, 2, col);
+          const ph = (t * 1.2 + i * 0.33) % 1;
+          if (ph < 0.5) R(c, left + x, top + 13 - Math.round(ph * 4), 1, 1, col);
+        });
+      },
+    }),
+  },
+  // ---------- Legendary ----------
+  {
+    tier: 3, code: "L1", name: "Midnight Coven",
+    pitch: "The skirt is a slice of night sky with drifting stars. Glowing runes light up one by one down each stocking, and sparkles circle the legs.",
+    make: () => witch({
+      skirt: "#0f1640",
+      skirtPx: (x, y, z, t) => {
+        const s = (x * 7 + y * 3 + Math.floor(t * 2)) % 9 === 0;
+        return s ? "#ffffff" : x === 10 ? "#0a0f2e" : "#0f1640";
+      },
+      leg: (x, y, z, t) => {
+        const lit = Math.floor(t * 4) % 6 === (y - 18) % 6;
+        if (y % 2 === 0) return lit ? "#f0d8ff" : "#7a4ad9";
+        return "#14101c";
+      },
+      under: (c, left, top, t) => glow(c, left + 7, top + 20, 12, "#7a4ad9", 0.35 + 0.1 * Math.sin(t * 2)),
+      over: (c, left, top, t) => {
+        for (let k = 0; k < 3; k++) {
+          const a = t * 1.4 + (k * TAU) / 3;
+          const tw = Math.sin(t * 6 + k) > 0.3;
+          sparkle(c, Math.round(left + 7.5 + Math.cos(a) * 6), Math.round(top + 21 + Math.sin(a) * 3), tw ? "#ffffff" : "#b9a0ff", tw);
+        }
+      },
+    }),
+  },
+  {
+    tier: 3, code: "L2", name: "Bubbling Brew",
+    pitch: "The skirt is a cauldron of green brew that bubbles and steams, and the stockings are streams of potion pouring down the legs.",
+    make: () => witch({
+      skirt: "#241d33",
+      skirtPx: (x, y, z, t) => (y === 15 ? (Math.sin(t * 6 + x) > 0.3 ? "#b7ff9e" : "#5ee84a") : x === 10 ? "#1a1622" : "#2f2742"),
+      leg: (x, y, z, t) => {
+        const f = Math.sin(y * 1.1 - t * 8 + x);
+        return f > 0.6 ? "#b7ff9e" : f > -0.3 ? "#5ee84a" : "#2f8a3a";
+      },
+      under: (c, left, top, t) => glow(c, left + 7, top + 18, 12, "#5ee84a", 0.3 + 0.1 * Math.sin(t * 5)),
+      over: (c, left, top, t) => {
+        for (let k = 0; k < 4; k++) {
+          const ph = (t * 0.9 + k / 4) % 1;
+          c.save(); c.globalAlpha = 1 - ph;
+          R(c, left + 5 + k * 2 + Math.round(Math.sin(t * 3 + k)), top + 14 - ph * 7, 1, 1, ph < 0.3 ? "#b7ff9e" : "#a99bc9");
+          c.restore();
+        }
+      },
+    }),
+  },
+  {
+    tier: 3, code: "L3", name: "Flame Stockings",
+    pitch: "Stripes of living fire climb up the legs from the shoes, the skirt's hem smolders, and embers float away.",
+    make: () => witch({
+      skirt: "#2a1410",
+      leg: (x, y, z, t) => {
+        const f = Math.sin(y * 1.3 + t * 9 + x * 0.8);
+        return f > 0.7 ? "#fff3a0" : f > 0.1 ? "#ffd84a" : f > -0.5 ? "#ff7a1a" : "#8f2a0a";
+      },
+      under: (c, left, top, t) => glow(c, left + 7, top + 21, 12, "#ff7a1a", 0.3 + 0.12 * Math.sin(t * 11)),
+      over: (c, left, top, t) => {
+        [4, 6, 9, 11].forEach((x, i) => R(c, left + x, top + 17, 1, 1, Math.sin(t * 10 + i) > 0 ? "#ff7a1a" : "#c4300a"));
+        for (let k = 0; k < 4; k++) {
+          const ph = (t * 0.7 + k / 4) % 1;
+          c.save(); c.globalAlpha = 1 - ph;
+          R(c, left + 4 + k * 2 + Math.round(Math.sin(t * 2 + k) * 2), top + 22 - ph * 14, 1, 1, "#ffd84a");
+          c.restore();
+        }
+      },
+    }),
+  },
+];
+
+// ---------- Rendering ----------
+const BASE = { h: "#6b6380", H: "#55506b", s: SKIN, S: SKIN_D, e: "#1a1024", m: "#8a5a5a", k: "#5a5078", n: SKIN, w: "#e8dff5", f: "#e8dff5", F: "#a49db0", q: SKIN, Q: SKIN_D, t: "#b9b2c9", T: "#9d96b0", u: SKIN, l: SKIN };
+function drawPants(c, pants, x, bottom, t, still = false) {
+  const bob = reduced || still ? 0 : Math.round((Math.sin(t * 3) + 1) / 2);
+  const left = Math.round(x - 7), top = bottom - BODY.length - bob;
+  if (pants.under) pants.under(c, left, top, t);
+  BODY.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      const z = row[i];
+      let col = BASE[z];
+      if ("pPqQkw".includes(z)) col = pants.px(i, j, z, t);
+      if (col) R(c, left + i, top + j, 1, 1, col);
+    }
+  });
+  pants.over(c, left, top, t);
+}
+
+const cards = [];
+OPTIONS.forEach((opt) => {
+  const grid = document.querySelector(`[data-tier="${opt.tier}"]`);
+  const card = document.createElement("article");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="card-top"><h3>${opt.name}</h3><span class="code t${opt.tier}">${opt.code}</span></div>
+    <div class="views">
+      <figure><canvas class="close" width="20" height="16" aria-label="${opt.name} close-up"></canvas><figcaption>Close-up</figcaption></figure>
+      <figure><canvas class="prof" width="24" height="34" aria-label="${opt.name} at profile size"></canvas><figcaption>Profile</figcaption></figure>
+    </div>
+    ${opt.tier === 0 ? `<div class="swatches" role="group" aria-label="${opt.name} colors">${SCHEMES.map((s, i) => `<button class="sw" data-i="${i}" aria-pressed="${i === 0}" aria-label="${s.name}" title="${s.name}"><canvas width="10" height="14"></canvas></button>`).join("")}</div><p class="swname">Witch purple</p>` : ""}
+    <p class="pitch">${opt.pitch}</p>`;
+  grid.appendChild(card);
+  const [close, prof] = card.querySelectorAll(".views canvas");
+  const entry = { close: close.getContext("2d"), prof: prof.getContext("2d"), o: opt.make(WP) };
+  if (opt.tier === 0) {
+    card.querySelectorAll(".sw").forEach((b) => {
+      const i = Number(b.dataset.i);
+      const sc = b.querySelector("canvas").getContext("2d");
+      R(sc, 0, 0, 10, 14, "#140a26");
+      drawPants(sc, opt.make(SCHEMES[i]), 5, BODY.length - 14, 0, true);
+      b.addEventListener("click", () => {
+        entry.o = opt.make(SCHEMES[i]);
+        card.querySelectorAll(".sw").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+        card.querySelector(".swname").textContent = SCHEMES[i].name;
+      });
+    });
+  }
+  cards.push(entry);
+});
+
+function frame(t) {
+  for (const e of cards) {
+    R(e.close, 0, 0, 20, 16, "#140a26");
+    glow(e.close, 10, 8, 12, "#4b3f70", 0.45);
+    R(e.close, 0, 15, 20, 1, "#3a2a5c");
+    drawPants(e.close, e.o, 10, 15, t);
+    R(e.prof, 0, 0, 24, 34, "#140a26");
+    glow(e.prof, 12, 18, 14, "#4b3f70", 0.4);
+    R(e.prof, 0, 31, 24, 3, "#1c1030"); R(e.prof, 0, 31, 24, 1, "#3a2a5c");
+    drawPants(e.prof, e.o, 12, 31, t);
+  }
+}
+const start = performance.now();
+(function loop(now) { frame(Math.max(0, (now - start) / 1000)); requestAnimationFrame(loop); })(start);
+})();
+</script>

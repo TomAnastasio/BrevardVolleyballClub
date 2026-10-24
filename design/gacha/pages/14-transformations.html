@@ -1,0 +1,3252 @@
+<title>BVC Monster Transformations</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: one long night-sky column; three stacked sections (boxes, avatars, odds), cards in auto-fit grids. Single dark look that matches the app's Halloween skin. */
+:root {
+  --night-0: #07040f;
+  --night-1: #140a26;
+  --card: #1f1338;
+  --card-2: #2a1a4a;
+  --line: #4b3f70;
+  --fg: #f6f0ff;
+  --muted: #a99bc9;
+  --orange: #ff7a1a;
+  --common: #c9c2d9;
+  --rare: #4fb2ff;
+  --epic: #c46bff;
+  --legendary: #ffc53a;
+  --display: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tag: "Press Start 2P", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: radial-gradient(1200px 600px at 50% -200px, #24123f, transparent 70%), var(--night-1);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+header { display: flex; flex-direction: column; gap: 10px; max-width: 70ch; }
+.eyebrow { font-family: var(--tag); font-size: 10px; letter-spacing: 0.08em; color: var(--orange); text-transform: uppercase; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.1; }
+h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 700; }
+h1 .glow { color: var(--legendary); text-shadow: 0 0 18px rgb(255 197 58 / 0.45); }
+h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; }
+h3 { font-size: 22px; font-weight: 600; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: 17px; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+.sec-head p { color: var(--muted); }
+
+.grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid > * { min-width: 0; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.letter { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.stage {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  image-rendering: pixelated;
+  display: block;
+  border-radius: 4px;
+  background: var(--night-0);
+  cursor: pointer;
+}
+.pitch { color: var(--muted); font-size: 15px; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.n { font-family: var(--body); font-weight: 700; }
+.kinds { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+.kinds div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.kinds dt { font-weight: 700; }
+.kinds dd { margin: 0; min-width: 0; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 600 14px var(--display);
+  color: var(--fg);
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] { border-color: currentColor; background: #33205a; }
+.chip:focus-visible, .open:focus-visible, .stage:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.chip.c0 { color: var(--common); } .chip.c1 { color: var(--rare); } .chip.c2 { color: var(--epic); } .chip.c3 { color: var(--legendary); }
+.open {
+  font: 700 16px var(--display);
+  background: var(--orange);
+  color: var(--night-0);
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.result { min-height: 24px; font: 600 16px var(--display); }
+.result .tier { font-family: var(--tag); font-size: 10px; margin-right: 8px; }
+.t0 { color: var(--common); } .t1 { color: var(--rare); } .t2 { color: var(--epic); } .t3 { color: var(--legendary); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
+.toolbar .label { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.av-stage { width: 100%; aspect-ratio: 1; image-rendering: pixelated; display: block; background: var(--night-0); border-radius: 4px; }
+.av-small { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+.av-small canvas { image-rendering: pixelated; background: var(--night-0); border-radius: 3px; flex: none; }
+.pros { margin: 0; padding-left: 18px; font-size: 14px; display: flex; flex-direction: column; gap: 3px; }
+
+.split { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+.split > * { min-width: 0; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 400 9px var(--tag); color: var(--muted); letter-spacing: 0.05em; }
+td.num, th.num { text-align: right; }
+td.wrap { white-space: normal; min-width: 180px; }
+.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.inputs label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.inputs input {
+  font: 700 16px var(--body);
+  background: var(--card-2);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 8px;
+  width: 100%;
+}
+.inputs input:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+.note { font-size: 14px; color: var(--muted); }
+.agreed { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.bar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; }
+.bar span { display: block; height: 100%; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+.mixer-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+.mixer { display: flex; flex-direction: column; gap: 8px; }
+.mix-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mix-row .label { width: 64px; flex: none; }
+.chip.c0[aria-pressed="true"], .chip.c1[aria-pressed="true"], .chip.c2[aria-pressed="true"], .chip.c3[aria-pressed="true"] { border-color: currentColor; }
+.grid.one { grid-template-columns: minmax(0, 520px); }
+.chip[data-preset] { font-family: var(--body); font-weight: 700; }
+.slot { display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 16px; }
+.nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.nav a { text-decoration: none; }
+.nav .n { font-family: var(--body); font-weight: 700; }
+.code { font-family: var(--tag); font-size: 12px; }
+.xgrid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.xcard { scroll-margin-top: 16px; }
+.xbig { width: 100%; aspect-ratio: 30 / 38; image-rendering: pixelated; background: var(--night-0); border-radius: 4px; display: block; }
+.how { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; color: var(--muted); font-size: 15px; }
+.how b { color: var(--fg); }
+</style>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Brevard Volleyball Club · special rewards, nothing built yet</span>
+    <h1>Monster <span class="glow">transformations</span></h1>
+    <p class="lede">One-off rewards that replace the whole avatar, whatever is equipped. <b id="xtotal" class="n">0</b> ideas: Legendaries with every effect, and Epics with strong shapes and one small animation each. Each card also shows the real size in the home-screen rally.</p>
+    <p class="how"><b>To cut something,</b> reply with its code, like <b>XL12</b> or <b>XE3</b>. Everything you don't name stays in.</p>
+    <nav class="nav" id="xnav" aria-label="Jump to a tier"></nav>
+  </header>
+  <main id="xslots" style="display:flex;flex-direction:column;gap:48px"></main>
+</div>
+<script>
+(() => {
+// =====================================================================
+// BVC cosmetics engine: one 16-Bit Pro body, gear layered by zone.
+// Data files call addTheme(slot, theme). See FORMAT below.
+// =====================================================================
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TAU = Math.PI * 2;
+
+// ---------- drawing helpers ----------
+function R(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function spr(c, rows, pal, x, y) {
+  rows.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) { const col = pal[row[i]]; if (col) R(c, x + i, y + j, 1, 1, col); }
+  });
+}
+function glow(c, cx, cy, r, col, a) {
+  const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, col); g.addColorStop(1, "transparent");
+  c.save(); c.globalAlpha = Math.max(0, a); c.fillStyle = g; c.fillRect(cx - r, cy - r, r * 2, r * 2); c.restore();
+}
+function sparkle(c, x, y, col, big) {
+  R(c, x, y - (big ? 2 : 1), 1, big ? 5 : 3, col);
+  R(c, x - (big ? 2 : 1), y, big ? 5 : 3, 1, col);
+}
+function fade(c, alpha, fn) { c.save(); c.globalAlpha = Math.max(0, Math.min(1, alpha)); fn(); c.restore(); }
+const darken = (hex, f = 0.72) => {
+  const n = parseInt(hex.slice(1), 16);
+  const v = [n >> 16, (n >> 8) & 255, n & 255].map((x) => Math.round(x * f));
+  return "#" + v.map((x) => Math.min(255, x).toString(16).padStart(2, "0")).join("");
+};
+const lighten = (hex, f = 0.3) => {
+  const n = parseInt(hex.slice(1), 16);
+  const v = [n >> 16, (n >> 8) & 255, n & 255].map((x) => Math.round(x + (255 - x) * f));
+  return "#" + v.map((x) => x.toString(16).padStart(2, "0")).join("");
+};
+const at = (list, x, y) => list.some(([a, b]) => a === x && b === y);
+// deterministic 0..1 noise from integers, for stable speckles
+const hash = (a, b = 0, c2 = 0) => { let h = (a * 374761393 + b * 668265263 + c2 * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+
+// ---------- head grid builder: fill shapes, then auto-outline ----------
+const CX = 7; // head centre column
+const OUT = "#0b0614";
+function makeGrid() {
+  const m = new Map();
+  return {
+    m,
+    set(x, y, c) { m.set(`${Math.round(x)},${Math.round(y)}`, { x: Math.round(x), y: Math.round(y), c }); },
+    row(x0, x1, y, c) { for (let x = Math.round(x0); x <= Math.round(x1); x++) this.set(x, y, c); },
+    has(x, y) { return m.has(`${x},${y}`); },
+    get(x, y) { return m.get(`${x},${y}`); },
+    del(x, y) { m.delete(`${x},${y}`); },
+  };
+}
+// outlines the sides and top of everything in the grid (not underneath: it sits on the head)
+function outline(g, col = OUT) {
+  const add = [];
+  for (const { x, y } of g.m.values())
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, -1], [1, -1], [-1, -1]])
+      if (!g.has(x + dx, y + dy)) add.push([x + dx, y + dy]);
+  for (const [x, y] of add) g.set(x, y, col);
+}
+// shaded row: highlight on the left edge, shadow on the right two pixels
+function shadedRow(g, x0, x1, y, P) {
+  x0 = Math.round(x0); x1 = Math.round(x1);
+  for (let x = x0; x <= x1; x++) g.set(x, y, x === x0 ? P.hi : x >= x1 - 1 && x1 - x0 > 2 ? P.sh : P.base);
+}
+// filled ellipse into a grid (cx, cy centre; rx, ry radii), colored by fn(x, y, x0, x1) or a palette
+function ellipse(g, cx, cy, rx, ry, colorFn) {
+  for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+    const d = 1 - ((y - cy) / ry) ** 2;
+    if (d <= 0) continue;
+    const half = Math.sqrt(d) * rx;
+    const x0 = Math.round(cx - half), x1 = Math.round(cx + half);
+    for (let x = x0; x <= x1; x++) g.set(x, y, colorFn(x, y, x0, x1));
+  }
+}
+
+// ---------- the 16-Bit Pro ----------
+// Zone letters: h/H hair, s/S skin, e eye, m mouth, k knee pad, n hand,
+// t/T torso (T = right shade), u upper arm, l forearm,
+// p/P hips+thighs (rows 15-17), q/Q shins (rows 18, 21, 22), w socks (rows 23-24), f/F shoes (rows 25-26).
+// Head: hair rows 0-2, face rows 3-6 (eyes at x 5 and 8, row 4), neck row 7. Head spans x 4-10, centre x 7.
+// Torso rows 8-14 (x 3-11 at the shoulders, x 5-10 lower), arms x 2-3 and 12-13.
+// Legs: left x 5-6, right x 9-10. Shoes: left x 4-6, right x 9-11, toes point outward (x 4 and x 11).
+const BODY = [".....hhhh.....", "....hhhhhH....", "....hhhhhHH...", "....hsssssH...", "....sesseS....", "....sssssS....", ".....smmS.....", "......sS......", "...ttttttttT..", "..uttttttttTu.", "..uutttttttTuu", "..uu.ttttTT.uu", "..ll.ttttTT.ll", "..ll.ttttTT.ll", "..nn.ttttTT.nn", ".....pppppP...", ".....pppPPP...", ".....pp..PP...", ".....qq..qQ...", ".....kk..kk...", ".....kk..kk...", ".....qq..qQ...", ".....qq..qQ...", ".....ww..ww...", ".....ww..ww...", "....fff..ffF..", "....FFF..FFF.."];
+const SKIN = "#c9b49a", SKIN_D = "#a8927a";
+const BASE = { h: "#6b6380", H: "#55506b", s: SKIN, S: SKIN_D, e: "#1a1024", m: "#8a5a5a", k: "#5a5078", n: SKIN, w: "#e8dff5", f: "#e8dff5", F: "#a49db0", q: SKIN, Q: SKIN_D, t: "#b9b2c9", T: "#9d96b0", u: SKIN, l: SKIN, p: "#7d7591", P: "#6b6380" };
+
+/* FORMAT — what an item is, per slot. Every hook is optional unless noted.
+   All x/y are body pixel coordinates (0..13, 0..26); left/top are canvas offsets of the body.
+   head:  { build(t) -> grid (required; draw with makeGrid/outline/ellipse; may cover face rows 0-7),
+            under(c,left,top,t), over(c,left,top,t), float(t) -> extra pixels up (int) }
+   shirt: { sleeve: "short"|"long", px(x,y,zone,t) -> color (required; zones t T u l; null = skin),
+            under, over }
+   pants: { long: bool (covers shins/knees), socks: bool (also colors w), ghost: bool (hide legs+shoes),
+            px(x,y,zone,t) -> color (required; zones p P, plus q Q k if long, w if socks; null = see-through),
+            shin(x,y,zone,t) (shorts only: color the bare shins), under, over }
+   shoes: { high: bool (also colors socks w), lift: int (hover/platform px), px(x,y,zone,t) -> color (required; zones f F, w if high; null = hidden),
+            under(c,left,groundTop,t) (groundTop ignores lift), over }
+   theme: { name, pitch,
+            common: { pitch, colors: [ {name, ...your fields} x6 ], make(color) -> item },
+            rare: { name, pitch, item }, epic: { name, pitch, item }, legendary: { name, pitch, item } }
+*/
+const THEMES = { head: [], shirt: [], pants: [], shoes: [] };
+function addTheme(slot, theme) { THEMES[slot].push(theme); }
+
+function drawAvatar(c, gear, x, bottom, t, still = false) {
+  const { head, shirt, pants, shoes } = gear;
+  const bob = reduced || still ? 0 : Math.round((Math.sin(t * 3) + 1) / 2);
+  const lift = shoes && shoes.lift ? shoes.lift : 0;
+  const left = Math.round(x - 7), groundTop = bottom - BODY.length - bob, top = groundTop - lift;
+  for (const it of [pants, shirt]) if (it && it.under) it.under(c, left, top, t);
+  if (shoes && shoes.under) shoes.under(c, left, groundTop, t);
+  BODY.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      const z = row[i];
+      if (z === ".") continue;
+      let col = BASE[z];
+      if (pants && pants.ghost && "pPqQkwfF".includes(z)) continue;
+      if (shirt && "tTul".includes(z)) col = z === "l" && shirt.sleeve !== "long" ? SKIN : shirt.px(i, j, z, t) ?? (z === "u" || z === "l" ? SKIN : col);
+      if (pants) {
+        if (z === "p" || z === "P") col = pants.px(i, j, z, t);
+        else if ("qQk".includes(z)) col = pants.long ? pants.px(i, j, z, t) : pants.shin ? pants.shin(i, j, z, t) ?? col : col;
+        else if (z === "w" && pants.socks) col = pants.px(i, j, z, t);
+      }
+      if (shoes && (z === "f" || z === "F" || (z === "w" && shoes.high))) col = shoes.px(i, j, z, t);
+      if (col) R(c, left + i, top + j, 1, 1, col);
+    }
+  });
+  for (const it of [pants, shirt, shoes]) if (it && it.over) it.over(c, left, top, t);
+  if (head) {
+    const hTop = top - (head.float ? head.float(t) : 0);
+    if (head.under) head.under(c, left, hTop, t);
+    for (const { x: px, y: py, c: col } of head.build(t).m.values()) R(c, left + px, hTop + py, 1, 1, col);
+    if (head.over) head.over(c, left, hTop, t);
+  }
+}
+// ---------- Transformations gallery ----------
+/* FORMAT for a transformation (call addSkin(tier, skin), tier "epic" or "legendary"):
+   { name, pitch,
+     rows: [...] pixel map, at most 18 wide x 28 tall ("." = see-through); the last row sits on the ground,
+     pal: { letter: color },
+     float(t) -> pixels to hover (optional), animPal(t) -> palette overrides per frame (optional),
+     under(c, left, top, t), over(c, left, top, t)  (optional; left/top = the map's top-left on the canvas) }
+   The 18x28 box is the whole space: x 0..17, y 0..27 measured from the map's top-left when the map is 28 tall.
+   Epic: a great silhouette plus at most one small animation. Legendary: glow, particles and motion. */
+const SKINS2 = { epic: [], legendary: [] };
+function addSkin(tier, s) { SKINS2[tier].push(s); }
+
+function drawSkin2(c, s, cx, ground, t, still = false) {
+  const tt = still ? 0 : t;
+  const bob = reduced || still ? 0 : Math.round((Math.sin(t * 3) + 1) / 2);
+  const f = s.float ? s.float(tt) : 0;
+  const w = Math.max(...s.rows.map((r) => r.length));
+  const rows = s.rows.map((r) => r.padEnd(w, "."));
+  const left = Math.round(cx - w / 2), top = ground - rows.length - bob - f;
+  if (s.under) s.under(c, left, top, tt);
+  spr(c, rows, s.animPal ? { ...s.pal, ...s.animPal(tt) } : s.pal, left, top);
+  if (s.over) s.over(c, left, top, tt);
+}
+
+// Epic transformations 1-20. Strong silhouettes, one small animation each.
+(() => {
+  // tiny pixel-map builder for shapes that are easier to compute than to type
+  const M = (w, h) => Array.from({ length: h }, () => Array(w).fill("."));
+  const put = (m, x, y, ch) => { if (y >= 0 && y < m.length && x >= 0 && x < m[0].length) m[y][x] = ch; };
+  const rect = (m, x, y, w, h, ch) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) put(m, i, j, ch); };
+  const oval = (m, cx, cy, rx, ry, ch) => {
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+      const d = 1 - ((y - cy) / ry) ** 2;
+      if (d < 0) continue;
+      const half = Math.sqrt(d) * rx;
+      for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) put(m, x, y, ch);
+    }
+  };
+  const line = (m, x0, y0, x1, y1, ch) => {
+    const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+    for (let k = 0; k <= n; k++) put(m, Math.round(x0 + ((x1 - x0) * k) / (n || 1)), Math.round(y0 + ((y1 - y0) * k) / (n || 1)), ch);
+  };
+  const rows = (m) => m.map((r) => r.join(""));
+  const blink = (t, every = 3.6) => t % every > every - 0.18;
+
+  // 1 ---------------------------------------------------------------
+  addSkin("epic", {
+    name: "Headless Horseman",
+    pitch: "A towering rider whose long coat flares out to the ground, with a flickering stump of fire for a neck and a jack-o'-lantern held high over where his head should be.",
+    pal: { f: "#ff7a1a", F: "#ffd84a", k: "#1a1024", c: "#2e2546", C: "#1c1630", r: "#8f1426", y: "#c9a24a", g: "#4a4060", p: "#3a3646", b: "#4a3020", B: "#2a1a0e", o: "#ff7a1a", O: "#c4550a", Y: "#ffd84a", v: "#4a7a28" },
+    animPal: (t) => (Math.floor(t * 8) % 2 ? { f: "#ffd84a", F: "#ff7a1a" } : {}),
+    rows: [
+      "...............v..",
+      "..............ooOo",
+      ".............oYoYO",
+      ".............oooOO",
+      ".............oYYYO",
+      "..............oOO.",
+      "...............g..",
+      "........fF.....c..",
+      ".......fFFf....c..",
+      "........kk.....c..",
+      "......cCrrCc..cc..",
+      "....cccCrrCcccc...",
+      "...cccccccccccc...",
+      "..gccccccyccccC...",
+      "..cccccccccccccC..",
+      "..ccccccyccccccC..",
+      ".cccccccccccccccC.",
+      ".ccccccccccccccccC",
+      "ccccccc.pp.ccccccC",
+      "cccccc..pp..cccccC",
+      "ccccc..pp.pp.ccccC",
+      ".ccc...pp.pp..ccC.",
+      "..c....pp.pp...c..",
+      "......bbb.bbb.....",
+      "......bbb.bbb.....",
+      "......bbb.bbb.....",
+      ".....bbbb.bbbb....",
+      ".....BBBB.BBBB....",
+    ],
+  });
+
+  // 2 ---------------------------------------------------------------
+  addSkin("epic", {
+    name: "Grim Reaper",
+    pitch: "A huge hooded robe that spreads into a ragged bell as it floats, two red pinpricks for eyes, and a scythe whose blade arcs over the whole figure.",
+    pal: { r: "#262036", R: "#16121f", k: "#07040f", e: "#ff3b4d", h: "#d8d0c0", s: "#5a3a20", b: "#c9c2d9", B: "#ffffff" },
+    float: () => 1,
+    animPal: (t) => (blink(t, 4) ? { e: "#07040f" } : {}),
+    rows: [
+      "..bbbbbbbbB.......",
+      ".bb.......bbB.....",
+      ".s..........B.....",
+      ".s......rrr.......",
+      ".s.....rrrrr......",
+      ".s....rrrrrrr.....",
+      ".s....rRkkkRr.....",
+      ".s....rkekekr.....",
+      ".s....rkkkkkr.....",
+      ".s...rrRkkkRrr....",
+      ".s..rrrrrrrrrrr...",
+      ".s.rrrrrrrrrrrrr..",
+      ".hrrrrrrrrrrrrrrr.",
+      ".srrrrrrrrrrrrrRr.",
+      ".s.rrrrrrrrrrrrRr.",
+      ".s.rrrrrrrrrrrrRr.",
+      ".s.rrrrrrrrrrrrRr.",
+      ".s..rrrrrrrrrrrR..",
+      ".s.rrrrrrrrrrrrRr.",
+      ".s.rrrrrrrrrrrrRr.",
+      ".srrrrrrrrrrrrrrRr",
+      ".srrrrrrrrrrrrrrRr",
+      "rrrrrrrrrrrrrrrrRr",
+      "rrrrrrrrrrrrrrrrRr",
+      "r.rr.rrr.rrr.rr.r.",
+    ],
+  });
+
+  // 3 ---------------------------------------------------------------
+  addSkin("epic", {
+    name: "Werewolf",
+    pitch: "A hulking wolf hunched on all fours, knuckles on the ground, jaws open, glowing eyes, and shorts in tatters.",
+    pal: { F: "#3a2614", f: "#6b4a28", l: "#a8844e", y: "#ffd84a", n: "#8a6a3e", k: "#1a1024", w: "#f3efe6", p: "#3a4a78", c: "#ece6d6" },
+    animPal: (t) => (blink(t, 3.4) ? { y: "#6b4a28" } : {}),
+    rows: [
+      "...F.......F......",
+      "...FF.....FF......",
+      "...FffffffffF.....",
+      "..ffffffffffff....",
+      "..ffyyffffyyff....",
+      "..ffffffffffffnn..",
+      "...ffffffffnnnnk..",
+      "...ffffwfwfwnnn...",
+      "...ffffffffwfw....",
+      ".fffffllllllffff..",
+      "ffffflllllllfffff.",
+      "fffffllllllllffff.",
+      "ffff.lllllll.ffff.",
+      "fff..lllllll..fff.",
+      "fff..fffffff..fff.",
+      "fff..ppppppp..fff.",
+      "ff...pppp.ppp..ff.",
+      "ff...ff.....ff..ff",
+      "cc..fff.....fff.cc",
+      "....ff.......ff...",
+      "...fff.......fff..",
+      "..ffff.......ffff.",
+      ".cfcf.........fcfc",
+    ],
+  });
+
+  // 4 ---------------------------------------------------------------
+  addSkin("epic", {
+    name: "Frankenstein's Monster",
+    pitch: "A giant, square-shouldered monster that fills the whole box: flat-topped green head, stitched brow, neck bolts that spark now and then, and enormous boots.",
+    pal: { h: "#14101c", g: "#6b9a52", G: "#4a7038", b: "#a49db0", k: "#1a1024", w: "#f3efe6", m: "#2f3a2a", j: "#2e2840", J: "#1c1828", p: "#3a3646", B: "#14101c" },
+    animPal: (t) => (Math.floor(t * 3) % 7 === 0 ? { b: "#ffffff" } : {}),
+    rows: [
+      "....hhhhhhhhhh....",
+      "....hhhhhhhhhh....",
+      "....gkgkgkgggg....",
+      "...bGGGGGGGGGGb...",
+      "...bgwkggggwkgb...",
+      "....ggggggggggG...",
+      "....ggmmmmmmggG...",
+      "....gggwgwggggG...",
+      ".....gggggggg.....",
+      ".......gggg.......",
+      ".jjjjjjjjjjjjjjjJ.",
+      "jjjjjjjjjjjjjjjjJJ",
+      "jjj.jjjjjjjjjJ.jjj",
+      "jjj.jjjjjjjjjJ.jjj",
+      "jjj.jjjjjjjjjJ.jjj",
+      "ggg.jjjjjjjjjJ.ggg",
+      "ggg.pppppppppp.ggg",
+      "GGG.ppppp.pppp.GGG",
+      "....pppp..pppp....",
+      "....pppp..pppp....",
+      "....ggpp..ppgg....",
+      "....pppp..pppp....",
+      "...BBBBB..BBBBB...",
+      "..BBBBBB..BBBBBB..",
+      "..BBBBBB..BBBBBB..",
+    ],
+  });
+
+  // 5 ---------------------------------------------------------------
+  addSkin("epic", {
+    name: "Vampire Count",
+    pitch: "The cape is the whole silhouette: it rises into tall points either side of a pale, red-eyed face and drapes all the way out to the edges.",
+    pal: { h: "#14101c", s: "#e0d8e8", S: "#b8aec8", e: "#ff3b4d", f: "#ffffff", m: "#5c0c18", c: "#16111f", C: "#8f1426", w: "#f3efe6", v: "#8f1426", p: "#1a1622", b: "#0b0614" },
+    animPal: (t) => (blink(t, 4.2) ? { e: "#e0d8e8" } : {}),
+    rows: [
+      "CC..............CC",
+      "CC....hhhhhh....CC",
+      "CCC..hhhhhhhh..CCC",
+      "cCCC.hhhshhhh.CCCc",
+      "cCCC.hsssssSh.CCCc",
+      "ccCC.seSsseSs.CCcc",
+      "ccCC.sssssssS.CCcc",
+      "cccC..smffmS..Cccc",
+      "cccCC..ssss..CCccc",
+      "cccCCcwwvvwwcCCccc",
+      "ccccCcwwvvwwcCcccc",
+      "ccccCcvvvvvvcCcccc",
+      "ccccCcvvvvvvcCcccc",
+      "ccccCcvvvvvvcCcccc",
+      "cccc.cppppppc.cccc",
+      ".ccc.cppppppc.ccc.",
+      ".ccc..pp..pp..ccc.",
+      "..cc..pp..pp..cc..",
+      "..c...pp..pp...c..",
+      "......pp..pp......",
+      "......pp..pp......",
+      ".....bbb..bbb.....",
+      ".....bbb..bbb.....",
+    ],
+  });
+
+  // 6 ---------------------------------------------------------------
+  {
+    const m = M(18, 20);
+    oval(m, 8.5, 5, 6, 4.6, "g");
+    ["f", "f", "f"].forEach((_, i) => { put(m, 5 + i * 3, 0, "f"); put(m, 5 + i * 3, 1, "f"); });
+    put(m, 2, 3, "f"); put(m, 1, 2, "f"); put(m, 15, 3, "f"); put(m, 16, 2, "f");
+    rect(m, 4, 4, 3, 3, "e"); rect(m, 11, 4, 3, 3, "e"); put(m, 4, 4, "w"); put(m, 11, 4, "w");
+    rect(m, 6, 8, 6, 1, "m");
+    oval(m, 8.5, 12, 6, 3.4, "g");
+    rect(m, 6, 10, 6, 4, "l");
+    put(m, 4, 11, "G"); put(m, 4, 12, "G"); put(m, 13, 11, "G"); put(m, 13, 12, "G");
+    // arms with webbed hands on the ground
+    line(m, 2, 10, 1, 15, "g"); line(m, 15, 10, 16, 15, "g");
+    rect(m, 0, 16, 3, 1, "f"); rect(m, 15, 16, 3, 1, "f");
+    // the tail curls round in front instead of legs
+    oval(m, 8.5, 16, 5, 2.4, "g");
+    rect(m, 5, 18, 8, 1, "G");
+    line(m, 13, 17, 16, 19, "f"); line(m, 12, 18, 17, 18, "f"); put(m, 17, 19, "f"); put(m, 15, 19, "f");
+    put(m, 7, 14, "s"); put(m, 10, 15, "s"); put(m, 3, 9, "s");
+    addSkin("epic", {
+      name: "Swamp Creature",
+      pitch: "A short, round lagoon merman with a crest of fins, huge black eyes, webbed hands propped on the ground and a fish tail curled up in front.",
+      pal: { g: "#3f7a5a", G: "#2a5a40", l: "#8ac49a", f: "#2a9a8a", e: "#07040f", w: "#b8feff", m: "#1a3a2a", s: "#5a7a28" },
+      animPal: (t) => (blink(t, 3) ? { e: "#3f7a5a", w: "#3f7a5a" } : {}),
+      rows: rows(m),
+    });
+  }
+
+  // 7 ---------------------------------------------------------------
+  addSkin("epic", {
+    name: "Living Scarecrow",
+    pitch: "A scarecrow strung across its crossbar from edge to edge, burlap head under a wide straw hat, straw bursting from its sleeves, standing on its post.",
+    pal: { y: "#d9a441", Y: "#a8792a", b: "#a8844e", k: "#1a1024", o: "#ff7a1a", r: "#8f2a1a", R: "#c4402a", x: "#3a2a1a", s: "#f3d27a", w: "#6b4a28", W: "#3a2614", c: "#231d33", C: "#ffd84a" },
+    animPal: (t) => (Math.sin(t * 7) > 0 ? { o: "#ffd84a" } : {}),
+    rows: [
+      ".............cc...",
+      "......YyyyyY.cccC.",
+      ".....YyyyyyyYc....",
+      "...yyyyrrrrryyyy..",
+      "..yyyyyyyyyyyyyy..",
+      ".....bbbbbbbb.....",
+      ".....bkobbkob.....",
+      ".....bbbbbbbb.....",
+      ".....bkxkxkxk.....",
+      "......bbbbbb......",
+      "wwwwwwwwwwwwwwwwww",
+      "sRRRRRrRRRRrRRRRRs",
+      "ssRRRRrRRRRrRRRRss",
+      "s....RRrRRRrR....s",
+      ".....RRRrRRRr.....",
+      ".....RrRRRrRR.....",
+      ".....xxxxxxxx.....",
+      "......sswwss......",
+      "........wW........",
+      "........wW........",
+      "........wW........",
+      "........wW........",
+      "........wW........",
+      "........wW........",
+      "........wW........",
+      "......wwwWWW......",
+    ],
+  });
+
+  // 8 ---------------------------------------------------------------
+  addSkin("epic", {
+    name: "Big Boo",
+    pitch: "One enormous, friendly bedsheet ghost that fills the whole space, bobbing gently in the air with its stubby arms out.",
+    pal: { w: "#f3efe6", W: "#d0c8e0", k: "#1a1024", m: "#ff8fb8" },
+    float: (t) => (reduced ? 2 : 2 + Math.round((Math.sin(t * 1.8) + 1) * 1.5)),
+    rows: [
+      "......wwwwww......",
+      "....wwwwwwwwww....",
+      "...wwwwwwwwwwwwW..",
+      "..wwwwwwwwwwwwwWW.",
+      ".wwwwwwwwwwwwwwWW.",
+      ".wwwkkkwwwwkkkwWW.",
+      ".wwwkkkwwwwkkkwWW.",
+      ".wwwwwwwwwwwwwwWW.",
+      ".wwmmwwwkkwwwmmWW.",
+      ".wwwwwwkkkkwwwwWW.",
+      "wwwwwwwwkkwwwwwWWW",
+      "wwwwwwwwwwwwwwwWWW",
+      "ww.wwwwwwwwwwww.WW",
+      "w..wwwwwwwwwwww..W",
+      "...wwwwwwwwwwwwW..",
+      "..wwwwwwwwwwwwwWW.",
+      "..wwwwwwwwwwwwwWW.",
+      "..wwwwwwwwwwwwwWW.",
+      ".wwwwwwwwwwwwwwwWW",
+      ".wwwwwwwwwwwwwwwWW",
+      "wwwwwwwwwwwwwwwwWW",
+      "ww.www.www.www.wW.",
+      "w...w...w...w...w.",
+    ],
+  });
+
+  // 9 ---------------------------------------------------------------
+  addSkin("epic", {
+    name: "Zombie Athlete",
+    pitch: "A BVC player who never left the court, shambling with both arms out, torn #00 club jersey, one knee pad, one bare foot, and a volleyball tucked under an arm.",
+    pal: { h: "#3a3646", z: "#8a9a72", Z: "#6a7a54", e: "#f3efe6", r: "#8f1426", k: "#1a1024", j: "#ff7a1a", J: "#c4550a", n: "#1a1024", p: "#2a2433", d: "#5a5078", w: "#e8dff5", s: "#e8dff5", S: "#a49db0", b: "#f3efe6", u: "#3d6fd1", x: "#5c0c18" },
+    animPal: (t) => (Math.floor(t * 2) % 3 === 0 ? { x: "#1a1024" } : {}),
+    rows: [
+      "......hhhh........",
+      ".....hh.hhh.......",
+      ".....hzzzzZ.......",
+      ".....zekzzkZ......",
+      ".....zzzzzZr......",
+      "......zxxxZ.......",
+      ".......zZ.........",
+      "....jjjjjjjJ......",
+      "...zjjnjjnjJzzzzzz",
+      "...zjjnjjnjJzzzzzz",
+      ".bbbjnjjnjJ..zzzzz",
+      "bbubbjjjjjJ.......",
+      "bbbubjjj.jJ.......",
+      ".bbbzppppP........",
+      "......ppppP.......",
+      "......pp..P.......",
+      "......zz..zZ......",
+      "......dd..zZ......",
+      "......dd..zr......",
+      "......zz..zZ......",
+      "......zz..zZ......",
+      "......ww..zZ......",
+      "......ww..zZ......",
+      ".....sss..zzz.....",
+      ".....SSS..ZZZ.....",
+    ],
+  });
+
+  // 10 --------------------------------------------------------------
+  addSkin("epic", {
+    name: "Pumpkin Golem",
+    pitch: "A hulking pile of the pumpkin patch: carved pumpkin head, a giant pumpkin chest, thick twisting vine limbs and leafy hands that reach the ground.",
+    pal: { o: "#ff7a1a", O: "#c4550a", r: "#e0661a", y: "#ffd84a", v: "#3f6b3a", V: "#2a4a26", l: "#5a8a3a", s: "#4a7a28" },
+    animPal: (t) => ({ y: Math.sin(t * 9) + Math.sin(t * 5.1) > -0.6 ? "#fff3a0" : "#ffd84a" }),
+    rows: [
+      "........ss........",
+      "....oooooooooo....",
+      "...ooroooooroOo...",
+      "..oooyyoooyyooOO..",
+      "..ooyyyoooyyyoOO..",
+      "..oooooyyooooOOO..",
+      "..ooyoyyyyyoyoOO..",
+      "...ooyyoooyyoOO...",
+      ".....oooooooo.....",
+      ".......vVvV.......",
+      "..oooooooooooooo..",
+      ".ooorooooooroooOO.",
+      "vvoooroooooroooOvv",
+      "vvoooroooooroooOvv",
+      "vv.ooorooooroOO.vv",
+      "vv..ooorooroOO..vv",
+      "vv...oooooooO...vv",
+      "lll...vv..vV...lll",
+      "lll...vV..vV...lll",
+      ".l...vV....vV...l.",
+      ".....vV....vV.....",
+      ".....vV....vV.....",
+      "....vvV....vVV....",
+      "...llvV....vVll...",
+      "..llll......llll..",
+    ],
+  });
+
+  // 11 --------------------------------------------------------------
+  {
+    const m = M(18, 25);
+    oval(m, 7.5, 6, 6, 4.8, "k");
+    line(m, 2, 0, 3, 3, "k"); line(m, 3, 0, 4, 3, "k"); put(m, 2, 1, "k");
+    line(m, 13, 0, 12, 3, "k"); line(m, 12, 0, 11, 3, "k"); put(m, 13, 1, "k");
+    put(m, 3, 2, "p"); put(m, 12, 2, "p");
+    rect(m, 4, 5, 2, 2, "y"); rect(m, 9, 5, 2, 2, "y"); put(m, 5, 5, "g"); put(m, 5, 6, "g"); put(m, 10, 5, "g"); put(m, 10, 6, "g");
+    put(m, 7, 8, "p"); put(m, 8, 8, "p");
+    put(m, 0, 7, "w"); put(m, 1, 8, "w"); put(m, 0, 9, "w"); put(m, 15, 7, "w"); put(m, 14, 8, "w"); put(m, 15, 9, "w");
+    oval(m, 7.5, 18, 7, 7, "k");
+    rect(m, 0, 11, 16, 1, ".");
+    oval(m, 7.5, 18, 7, 7, "k");
+    rect(m, 5, 13, 6, 6, "K");
+    rect(m, 3, 23, 4, 2, "K"); rect(m, 9, 23, 4, 2, "K");
+    // tail up the right side, curling at the top
+    line(m, 14, 23, 16, 20, "k"); line(m, 16, 20, 16, 12, "k"); line(m, 17, 12, 17, 9, "k"); put(m, 16, 8, "k"); put(m, 15, 8, "k");
+    addSkin("epic", {
+      name: "Black Cat",
+      pitch: "A giant black cat sitting upright and filling the box, with yellow eyes that blink slowly and a tail curling up its side.",
+      pal: { k: "#2e2840", K: "#3e3656", p: "#ff8fb8", y: "#ffd84a", g: "#1a1024", w: "#a99bc9" },
+      animPal: (t) => (blink(t, 3.2) ? { y: "#2e2840", g: "#2e2840" } : {}),
+      rows: rows(m),
+    });
+  }
+
+  // 12 --------------------------------------------------------------
+  addSkin("epic", {
+    name: "Giant Bat",
+    pitch: "A huge bat hovering with its wings spread to both edges, pointed ears, red eyes and two tiny fangs.",
+    pal: { k: "#2e2840", w: "#4a3270", W: "#14101c", r: "#ff3b4d", f: "#ffffff", p: "#ff8fb8" },
+    float: (t) => (reduced ? 6 : 6 + Math.round((Math.sin(t * 2.4) + 1) * 1.5)),
+    rows: [
+      "......k....k......",
+      "......kk..kk......",
+      "W.....kkkkkk.....W",
+      "WW...kkrkkrkk...WW",
+      "WwW.kkkkkkkkkk.WwW",
+      "WwwWwkkfkkfkkwWwwW",
+      "WwwwWwkkkkkkwWwwwW",
+      "WwwwwWkkkkkkWwwwwW",
+      "WwwwwwWkkkkWwwwwwW",
+      "WwwwwwWkkkkWwwwwwW",
+      "Wwww.wWkkkkWw.wwwW",
+      "Www..wWkkkkWw..wwW",
+      "Ww...W..kk..W...wW",
+      "W....W..kk..W....W",
+      "W...........W....W",
+      ".......k..k.......",
+    ],
+  });
+
+  // 13 --------------------------------------------------------------
+  {
+    const m = M(14, 27);
+    for (let y = 0; y < 27; y++) {
+      const w = y < 7 ? 8 + Math.round((y / 7) * 6) : 14 - Math.round(((y - 7) / 19) * 4);
+      const x0 = Math.round((14 - w) / 2);
+      for (let x = x0; x < x0 + w; x++) put(m, x, y, x === x0 || x === x0 + w - 1 ? "W" : y > 1 && y < 25 ? "l" : "W");
+    }
+    // the lid has slid open a crack: something peeks out
+    line(m, 3, 8, 10, 13, "k"); line(m, 4, 8, 11, 13, "k"); line(m, 3, 9, 10, 14, "k");
+    put(m, 5, 10, "e"); put(m, 7, 11, "e");
+    rect(m, 6, 16, 2, 6, "c"); rect(m, 4, 18, 6, 2, "c");
+    put(m, 13, 15, "z"); put(m, 13, 16, "z"); put(m, 13, 17, "z"); put(m, 12, 16, "z");
+    addSkin("epic", {
+      name: "Haunted Coffin",
+      pitch: "You are the coffin: a tall wooden casket standing on end, its lid slid open a crack so two glowing eyes can peek out, with grey fingers curled round the edge.",
+      pal: { W: "#2a1712", l: "#5a3428", k: "#07040f", e: "#ffd84a", c: "#c9a96e", z: "#8a9a72" },
+      animPal: (t) => (blink(t, 2.8) ? { e: "#07040f" } : {}),
+      rows: rows(m),
+    });
+  }
+
+  // 14 --------------------------------------------------------------
+  {
+    const m = M(18, 24);
+    oval(m, 8.5, 5, 6.5, 4, "g");
+    put(m, 5, 4, "k"); put(m, 6, 4, "k"); put(m, 11, 4, "k"); put(m, 12, 4, "k"); put(m, 6, 3, "y"); put(m, 11, 3, "y");
+    rect(m, 6, 6, 6, 1, "k"); put(m, 7, 7, "k"); put(m, 10, 7, "k");
+    put(m, 3, 1, "g"); put(m, 14, 2, "g"); put(m, 9, 0, "g");
+    rect(m, 0, 8, 18, 2, "r"); rect(m, 1, 8, 16, 1, "R");
+    oval(m, 8.5, 13.5, 8, 6, "c");
+    for (let y = 10; y < 20; y++) put(m, 4, y, "C");
+    rect(m, 5, 18, 2, 1, "C");
+    // chicken legs
+    line(m, 5, 19, 5, 22, "o"); line(m, 12, 19, 12, 22, "o");
+    rect(m, 3, 23, 4, 1, "o"); rect(m, 10, 23, 4, 1, "o");
+    addSkin("epic", {
+      name: "Cauldron Creature",
+      pitch: "A big iron cauldron trotting around on chicken legs, its bubbling green brew bulging up into a grinning face.",
+      pal: { g: "#5ee84a", y: "#ffffff", k: "#1a3a1a", r: "#3a3150", R: "#5a5078", c: "#241d33", C: "#3a3150", o: "#ffa020" },
+      animPal: (t) => (Math.floor(t * 3) % 2 ? { g: "#7dff5a" } : {}),
+      rows: rows(m),
+    });
+  }
+
+  // 15 --------------------------------------------------------------
+  {
+    const m = M(18, 26);
+    // handle
+    for (let x = 3; x <= 14; x++) { const y = Math.round(5 - Math.sin(((x - 3) / 11) * Math.PI) * 5); put(m, x, y, "h"); }
+    for (let y = 6; y < 23; y++) {
+      const w = 16 - Math.round(((y - 6) / 16) * 2);
+      const x0 = Math.round((18 - w) / 2);
+      for (let x = x0; x < x0 + w; x++) put(m, x, y, x === x0 ? "O" : x >= x0 + w - 2 ? "O" : (x - x0) % 4 === 0 ? "r" : "o");
+    }
+    rect(m, 1, 6, 16, 1, "O");
+    [[4, 9], [5, 9], [4, 10], [12, 9], [13, 9], [13, 10]].forEach(([x, y]) => put(m, x, y, "k"));
+    rect(m, 3, 13, 12, 6, "k");
+    [4, 6, 8, 10, 12, 14].forEach((x) => put(m, x, 13, "w"));
+    [5, 7, 11, 13].forEach((x) => put(m, x, 18, "w"));
+    rect(m, 8, 16, 3, 3, "t"); rect(m, 9, 19, 3, 3, "t"); put(m, 10, 22, "t");
+    rect(m, 4, 23, 3, 3, "O"); rect(m, 11, 23, 3, 3, "O");
+    put(m, 6, 2, "c"); put(m, 11, 1, "C"); put(m, 8, 3, "c");
+    addSkin("epic", {
+      name: "Candy Bucket Mimic",
+      pitch: "A trick-or-treat pumpkin pail that turned out to be alive: jagged teeth, a long lolling tongue, stubby legs and candy spilling over the top.",
+      pal: { h: "#1a1024", o: "#ff7a1a", O: "#c4550a", r: "#e0661a", k: "#1a1024", w: "#f3efe6", t: "#ff6fb5", c: "#ffd84a", C: "#c46bff" },
+      animPal: (t) => (Math.floor(t * 4) % 4 === 0 ? { t: "#ff3b8a" } : {}),
+      rows: rows(m),
+    });
+  }
+
+  // 16 --------------------------------------------------------------
+  {
+    const m = M(18, 26);
+    oval(m, 8.5, 3.5, 3.5, 3.5, "w");
+    rect(m, 4, 8, 10, 8, "w");
+    rect(m, 6, 16, 6, 3, "w");
+    rect(m, 5, 18, 3, 6, "w"); rect(m, 10, 18, 3, 6, "w");
+    rect(m, 4, 24, 4, 2, "w"); rect(m, 10, 24, 4, 2, "w");
+    // arms out straight in front (sideways in this view)
+    rect(m, 0, 9, 4, 2, "w"); rect(m, 14, 9, 4, 2, "w");
+    for (let y = 0; y < 26; y++) for (let x = 0; x < 18; x++) if (m[y][x] === "w" && (x + y * 2) % 4 === 0) m[y][x] = "W";
+    put(m, 7, 3, "k"); put(m, 10, 3, "e");
+    // loose wraps hanging
+    line(m, 14, 11, 16, 15, "w"); line(m, 3, 16, 1, 20, "W"); line(m, 12, 22, 15, 25, "w");
+    addSkin("epic", {
+      name: "Mummy",
+      pitch: "A stiff, shuffling mummy with arms held straight out, wrapped head to toe, one glowing eye, and long loose strips of bandage dangling everywhere.",
+      pal: { w: "#e0d6bc", W: "#a89c80", k: "#1a1024", e: "#5ee84a" },
+      animPal: (t) => (Math.floor(t * 2) % 5 === 0 ? { e: "#e0d6bc" } : {}),
+      rows: rows(m),
+    });
+  }
+
+  // 17 --------------------------------------------------------------
+  addSkin("epic", {
+    name: "Skeleton",
+    pitch: "A full skeleton with its bony arms flung up in a spooky pose, ribs, spine and hip bones all showing, and a jaw that chatters.",
+    pal: { b: "#ece6d6", s: "#b9b09c", k: "#1a1024", j: "#ece6d6" },
+    animPal: (t) => (Math.floor(t * 6) % 2 ? { j: "#1a1024" } : {}),
+    rows: [
+      "b...............b.",
+      "bb.....bbbb....bb.",
+      ".b....bbbbbb...b..",
+      ".b....bkbbkb...b..",
+      ".b....bkbbkb...b..",
+      "..b...bbbkbb..b...",
+      "..b....bjbj...b...",
+      "...b....bb...b....",
+      "...bbbbbbbbbbb....",
+      "......bbbbbb......",
+      ".......sbbs.......",
+      "......bbbbbb......",
+      ".......sbbs.......",
+      "......bbbbbb......",
+      "........bb........",
+      "......bbbbbb......",
+      ".....bb....bb.....",
+      ".....b......b.....",
+      ".....b......b.....",
+      ".....bb....bb.....",
+      ".....b......b.....",
+      ".....b......b.....",
+      ".....b......b.....",
+      "....bbb....bbb....",
+    ],
+  });
+
+  // 18 --------------------------------------------------------------
+  {
+    const m = M(18, 19);
+    // hat
+    line(m, 7, 0, 9, 5, "h"); line(m, 8, 0, 10, 5, "h"); put(m, 6, 0, "h");
+    rect(m, 6, 5, 7, 1, "h"); rect(m, 4, 6, 11, 1, "h"); rect(m, 7, 5, 5, 1, "g");
+    // face in profile, looking right
+    rect(m, 9, 7, 3, 3, "s"); put(m, 12, 8, "s"); put(m, 11, 8, "k");
+    rect(m, 6, 7, 3, 4, "a");
+    // body and cape streaming back
+    rect(m, 7, 10, 5, 5, "d"); rect(m, 2, 10, 5, 3, "c"); rect(m, 0, 11, 3, 3, "c"); put(m, 0, 14, "c");
+    rect(m, 11, 12, 3, 1, "s");
+    rect(m, 10, 15, 3, 2, "p"); put(m, 13, 16, "b"); put(m, 13, 17, "b");
+    // the broom, across the whole width
+    rect(m, 0, 15, 18, 1, "w");
+    rect(m, 0, 14, 3, 3, "y"); put(m, 0, 17, "y"); put(m, 2, 17, "y");
+    addSkin("epic", {
+      name: "Witch on a Broom",
+      pitch: "A witch riding sideways across the space on a broomstick, pointed hat, hair and cape streaming behind her as she floats.",
+      pal: { h: "#2a1a4a", g: "#5ee84a", s: "#9ad48a", k: "#1a1024", a: "#ff7a1a", d: "#3d2470", c: "#1a1024", p: "#6b3fa8", b: "#14101c", w: "#7a4a24", y: "#d9a441" },
+      float: (t) => (reduced ? 5 : 5 + Math.round((Math.sin(t * 2) + 1) * 1.5)),
+      rows: rows(m),
+    });
+  }
+
+  // 19 --------------------------------------------------------------
+  {
+    const m = M(18, 20);
+    oval(m, 8.5, 5, 4.5, 4, "k");
+    oval(m, 8.5, 10, 3, 2, "k");
+    rect(m, 6, 3, 1, 1, "r"); rect(m, 8, 2, 1, 1, "r"); rect(m, 10, 3, 1, 1, "r"); rect(m, 7, 5, 1, 1, "r"); rect(m, 9, 5, 1, 1, "r");
+    put(m, 8, 4, "m"); put(m, 9, 4, "m"); put(m, 7, 7, "x"); put(m, 8, 7, "x"); put(m, 9, 7, "x"); put(m, 10, 7, "x");
+    put(m, 7, 12, "f"); put(m, 10, 12, "f");
+    // eight legs, each with a knee, spread to the edges
+    [[5, 6, 1, 2, 0, 19], [5, 8, 1, 6, 1, 19], [6, 10, 2, 11, 3, 19], [6, 11, 4, 14, 5, 19]].forEach(([sx, sy, kx, ky, fx, fy]) => {
+      line(m, sx, sy, kx, ky, "k"); line(m, kx, ky, fx, fy, "k");
+      line(m, 17 - sx, sy, 17 - kx, ky, "k"); line(m, 17 - kx, ky, 17 - fx, fy, "k");
+    });
+    addSkin("epic", {
+      name: "Giant Spider",
+      pitch: "A huge hairy spider whose eight bent legs reach the edges of the box, with a cluster of red eyes and dripping fangs.",
+      pal: { k: "#4a4060", r: "#ff3b4d", m: "#ff8fb8", x: "#6b6380", f: "#f3efe6" },
+      animPal: (t) => (blink(t, 2.5) ? { r: "#4a4060" } : {}),
+      rows: rows(m),
+    });
+  }
+
+  // 20 --------------------------------------------------------------
+  {
+    const m = M(18, 26);
+    oval(m, 8.5, 5, 6.5, 5, "s");
+    rect(m, 2, 5, 14, 15, "s");
+    for (let y = 0; y < 20; y++) for (let x = 0; x < 18; x++) if (m[y][x] === "s" && x >= 14) m[y][x] = "S";
+    // RIP
+    [[5, 5], [5, 6], [5, 7], [5, 8], [6, 5], [7, 6], [6, 7], [7, 8], [9, 5], [9, 6], [9, 7], [9, 8], [11, 5], [11, 6], [11, 7], [11, 8], [12, 5], [12, 6]].forEach(([x, y]) => put(m, x, y, "k"));
+    line(m, 9, 11, 7, 14, "k"); line(m, 7, 14, 8, 17, "k");
+    put(m, 4, 12, "m"); put(m, 5, 13, "m"); put(m, 12, 15, "m");
+    rect(m, 0, 20, 18, 1, "d"); rect(m, 1, 19, 2, 1, "d");
+    rect(m, 4, 21, 3, 3, "l"); rect(m, 11, 21, 3, 3, "l"); rect(m, 3, 24, 4, 2, "l"); rect(m, 11, 24, 4, 2, "l");
+    // a zombie hand reaching out of the side
+    rect(m, 16, 10, 2, 1, "z"); put(m, 17, 9, "z"); put(m, 17, 8, "z"); put(m, 16, 8, "z"); put(m, 15, 8, "z");
+    addSkin("epic", {
+      name: "Walking Tombstone",
+      pitch: "A cracked, mossy RIP gravestone stomping around on stubby stone legs, clumps of dirt clinging to its base and a zombie hand reaching out of its side.",
+      pal: { s: "#8a8494", S: "#65606e", k: "#3a3646", m: "#5a8a3a", d: "#4a3018", l: "#65606e", z: "#8a9a72" },
+      animPal: (t) => (Math.floor(t * 2) % 2 ? { z: "#9aaa82" } : {}),
+      rows: rows(m),
+    });
+  }
+})();
+// Epic transformations, second half (XE21-XE40 in the combined gallery).
+(() => {
+// A tiny character-grid builder so shapes stay aligned: letters are palette keys, "." is see-through.
+function B(w, h) {
+  const g = Array.from({ length: h }, () => Array(w).fill("."));
+  const api = {
+    set(x, y, ch) { x = Math.round(x); y = Math.round(y); if (y >= 0 && y < h && x >= 0 && x < w) g[y][x] = ch; return api; },
+    rect(x, y, rw, rh, ch) { for (let j = 0; j < rh; j++) for (let i = 0; i < rw; i++) api.set(x + i, y + j, ch); return api; },
+    ell(cx, cy, rx, ry, ch) {
+      for (let y = Math.ceil(cy - ry); y <= Math.floor(cy + ry); y++) {
+        const d = 1 - ((y - cy) / ry) ** 2;
+        if (d < 0) continue;
+        const half = rx * Math.sqrt(d);
+        for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) api.set(x, y, typeof ch === "function" ? ch(x, y) : ch);
+      }
+      return api;
+    },
+    pts(list, ch) { list.forEach(([x, y]) => api.set(x, y, ch)); return api; },
+    str(x, y, s) { [...s].forEach((ch, i) => { if (ch !== ".") api.set(x + i, y, ch); }); return api; },
+    lines(x, y, arr) { arr.forEach((s, j) => api.str(x, y + j, s)); return api; },
+    // copy every non-empty pixel on the left half onto the right half
+    mirror() { for (let y = 0; y < h; y++) for (let x = 0; x < w / 2; x++) if (g[y][x] !== ".") g[y][w - 1 - x] = g[y][x]; return api; },
+    get(x, y) { return g[y] && g[y][x]; },
+    rows() { return g.map((r) => r.join("")); },
+  };
+  return api;
+}
+const blinkAt = (t, every = 3.4, len = 0.16) => t % every > every - len;
+
+// ---------- 1 Haunted Armor ----------
+{
+  const b = B(18, 28);
+  b.rect(6, 1, 6, 7, "a").pts([[6, 1], [11, 1]], ".").rect(8, 0, 2, 1, "p").pts([[10, 0], [11, 0]], "p");
+  b.rect(6, 2, 1, 6, "H").rect(11, 2, 1, 6, "A").rect(7, 4, 4, 1, "v").pts([[7, 6], [9, 6]], "k");
+  b.rect(7, 8, 4, 1, "A");
+  b.ell(4, 9.5, 2.5, 1.5, "a").ell(13, 9.5, 2.5, 1.5, "a").pts([[2, 9], [15, 9]], "H");
+  b.rect(6, 9, 6, 7, "a").rect(8, 10, 2, 5, "H").rect(11, 9, 1, 7, "A").rect(6, 16, 6, 1, "A");
+  b.rect(3, 11, 2, 5, "a").rect(13, 11, 2, 5, "a").rect(2, 16, 3, 2, "A").rect(13, 16, 3, 2, "A");
+  b.rect(6, 17, 6, 2, "a").rect(8, 17, 2, 2, "k");
+  b.rect(6, 19, 2, 7, "a").rect(10, 19, 2, 7, "a").pts([[6, 21], [7, 21], [10, 21], [11, 21]], "H");
+  b.rect(5, 26, 3, 2, "A").rect(10, 26, 3, 2, "A");
+  addSkin("epic", {
+    name: "Haunted Armor",
+    pitch: "An empty suit of knight's armor with nothing inside but a green light flickering behind the visor.",
+    rows: b.rows(),
+    pal: { a: "#8d84a8", A: "#5a5078", H: "#c9c2d9", v: "#7dff5a", k: "#0b0614", p: "#8f1426" },
+    animPal: (t) => ({ v: Math.sin(t * 7) + Math.sin(t * 3.1) > 0.4 ? "#c8ffb0" : "#5ee84a" }),
+  });
+}
+
+// ---------- 2 Gargoyle ----------
+{
+  const b = B(18, 22);
+  b.lines(0, 2, [".....S", "...SSS", ".SSSSS", "SHSSSS", "SSHSSS", "SSSHSS", "SSSSHS", "S.SS.S", "..S..S"]).mirror();
+  b.ell(8.5, 9, 4, 3.5, "s");
+  b.rect(6, 1, 6, 5, "s").pts([[6, 0], [11, 0]], "H").pts([[6, 1], [11, 1]], "H");
+  b.pts([[7, 3], [10, 3]], "e").rect(7, 4, 4, 2, "S").pts([[8, 5], [9, 5]], "H");
+  b.ell(4.5, 13, 2, 2, "S").ell(12.5, 13, 2, 2, "S");
+  b.rect(6, 12, 2, 3, "s").rect(10, 12, 2, 3, "s").pts([[6, 15], [7, 15], [10, 15], [11, 15]], "H");
+  b.pts([[15, 12], [16, 13], [16, 14], [15, 15], [14, 15]], "S");
+  b.rect(3, 16, 12, 6, "b").rect(3, 16, 12, 1, "B").pts([[6, 18], [7, 19], [6, 20], [12, 18], [11, 19]], "k");
+  addSkin("epic", {
+    name: "Gargoyle",
+    pitch: "A crouched stone gargoyle with spread bat wings and horns, perched on its own chunk of cathedral wall.",
+    rows: b.rows(),
+    pal: { s: "#7d7591", S: "#5a5078", H: "#b8b0c8", e: "#ffd84a", k: "#1a1024", b: "#4b3f70", B: "#6b5f8d" },
+    animPal: (t) => (blinkAt(t, 4) ? { e: "#7d7591" } : {}),
+  });
+}
+
+// ---------- 3 Cyclops Blob ----------
+{
+  const b = B(18, 20);
+  b.ell(8.5, 11, 8.5, 9.5, (x, y) => (x <= 3 && y < 12 ? "H" : x >= 14 ? "G" : "g"));
+  for (let y = 18; y < 20; y++) for (let x = 0; x < 18; x++) if (b.get(x, y) !== "." && x % 4 === 1) b.set(x, y, ".");
+  b.pts([[2, 19], [7, 19], [13, 19]], "G");
+  b.pts([[3, 5], [4, 4], [5, 4]], "H");
+  b.ell(8.5, 9, 4, 3.5, "w").ell(8.5, 9, 2, 2, "i").rect(8, 8, 2, 2, "k").set(10, 8, "w");
+  b.rect(4, 15, 10, 1, "m").pts([[5, 15], [8, 15], [11, 15]], "t").pts([[6, 16], [10, 16]], "m");
+  addSkin("epic", {
+    name: "Cyclops Blob",
+    pitch: "A huge wobbly slime the full width of the space with one giant eye and a toothy grin, dripping where it touches the floor.",
+    rows: b.rows(),
+    pal: { g: "#5ee84a", G: "#3fb02f", H: "#b7ff9e", w: "#ffffff", i: "#6b3fa8", k: "#1a1024", m: "#1f4a28", t: "#f3efe6" },
+    animPal: (t) => (blinkAt(t, 3.2, 0.2) ? { w: "#5ee84a", i: "#5ee84a", k: "#3fb02f" } : {}),
+  });
+}
+
+// ---------- 4 Great Horned Owl ----------
+{
+  const b = B(18, 24);
+  b.ell(8.5, 12, 6, 9.5, "o");
+  b.pts([[4, 1], [4, 2], [5, 2], [5, 3]], "O").pts([[13, 1], [13, 2], [12, 2], [12, 3]], "O");
+  b.rect(3, 9, 1, 11, "O").rect(14, 9, 1, 11, "O").rect(4, 12, 1, 7, "O").rect(13, 12, 1, 7, "O");
+  b.ell(6, 7, 2.5, 2.5, "l").ell(11, 7, 2.5, 2.5, "l");
+  b.ell(6, 7, 1.5, 1.5, "e").ell(11, 7, 1.5, 1.5, "e").pts([[6, 7], [11, 7]], "k");
+  b.pts([[8, 9], [9, 9], [8, 10], [9, 10], [8, 11]], "b");
+  b.ell(8.5, 15.5, 3.5, 4.5, "l");
+  for (let y = 13; y <= 19; y += 2) for (let x = 6; x <= 11; x += 2) b.set(x + (y % 4 === 1 ? 1 : 0), y, "L");
+  b.pts([[6, 21], [7, 21], [10, 21], [11, 21]], "b");
+  b.rect(0, 22, 18, 2, "w").pts([[3, 22], [14, 23], [9, 23]], "W");
+  addSkin("epic", {
+    name: "Great Horned Owl",
+    pitch: "A giant horned owl perched on a branch, with ear tufts, a striped chest and huge orange eyes that slowly blink.",
+    rows: b.rows(),
+    pal: { o: "#6b4a28", O: "#4a3018", l: "#c9a96e", L: "#8a6a3e", e: "#ff9a1a", k: "#1a1024", b: "#d9a441", w: "#3a2614", W: "#5a3a20" },
+    animPal: (t) => (blinkAt(t, 3.6, 0.3) ? { e: "#4a3018", k: "#4a3018" } : {}),
+  });
+}
+
+// ---------- 5 Haunted Doll ----------
+{
+  const b = B(18, 27);
+  b.ell(8.5, 5, 6, 5, "h").rect(2, 5, 2, 9, "h").rect(14, 5, 2, 9, "h").pts([[2, 14], [15, 14], [3, 14], [14, 14]], "H");
+  b.ell(8.5, 6.5, 4.5, 5, "p").rect(5, 2, 8, 2, "h");
+  b.pts([[13, 0], [14, 0], [12, 1], [13, 1], [14, 1], [15, 1], [14, 2]], "d");
+  b.rect(6, 6, 2, 2, "e").rect(10, 6, 2, 2, "e").pts([[6, 6], [10, 6]], "w");
+  b.pts([[5, 9], [12, 9]], "r").pts([[8, 10], [9, 10]], "D");
+  b.pts([[11, 3], [10, 4], [11, 5], [12, 6], [12, 7], [11, 8]], "c");
+  b.rect(8, 12, 2, 1, "p");
+  for (let y = 13; y <= 23; y++) { const half = 2.5 + (y - 13) * 0.5; b.rect(Math.round(8.5 - half), y, Math.round(half * 2), 1, y === 13 || y === 23 ? "f" : (y % 3 === 0 ? "D" : "d")); }
+  b.ell(4.5, 14, 1.5, 1, "f").ell(12.5, 14, 1.5, 1, "f").pts([[3, 16], [14, 16]], "p");
+  b.pts([[7, 24], [10, 24]], "P").rect(6, 25, 2, 2, "s").rect(10, 25, 2, 2, "s");
+  addSkin("epic", {
+    name: "Haunted Doll",
+    pitch: "A cracked porcelain doll in a frilly red dress with black ringlets, glassy eyes and a little bow. One eye blinks. The other never does.",
+    rows: b.rows(),
+    pal: { p: "#f3e9e0", P: "#d9cfc8", c: "#5a4a4a", h: "#231d33", H: "#3a3150", e: "#1a1024", w: "#ffffff", r: "#ff8fb8", D: "#5c0c18", d: "#8f1426", f: "#f3efe6", s: "#1a1024" },
+    animPal: (t) => (blinkAt(t, 3, 0.25) ? { w: "#f3e9e0" } : {}),
+    over(c, left, top, t) { if (blinkAt(t, 3, 0.25)) { R(c, left + 6, top + 6, 2, 1, "#f3e9e0"); } },
+  });
+}
+
+// ---------- 6 Imp ----------
+{
+  const b = B(18, 24);
+  b.lines(0, 3, ["......", ".....W", "...WWW", ".WWwWW", "WWwWWW", "wWWWWW", "WwWWw.", "W.W..."]).mirror();
+  b.ell(8.5, 9, 3, 2.5, "r").pts([[6, 6], [5, 5], [11, 6], [12, 5]], "h");
+  b.pts([[7, 8], [10, 8]], "e").rect(7, 10, 4, 1, "k").set(8, 11, "h");
+  b.ell(8.5, 14, 2.5, 3, "r").rect(8, 13, 2, 3, "R");
+  b.rect(7, 17, 1, 2, "r").rect(10, 17, 1, 2, "r").pts([[6, 19], [7, 19], [10, 19], [11, 19]], "R");
+  b.pts([[11, 16], [12, 17], [13, 18], [14, 18], [15, 17], [15, 16], [16, 17], [14, 16]], "R");
+  b.pts([[5, 12], [4, 13], [3, 13]], "r").pts([[12, 12], [13, 13]], "r");
+  b.rect(15, 2, 1, 22, "F").pts([[14, 0], [14, 1], [15, 0], [15, 1], [16, 0], [16, 1], [14, 2], [16, 2]], "f").set(14, 13, "r");
+  addSkin("epic", {
+    name: "Imp",
+    pitch: "A little red devil hovering on wide leathery wings, with horns, a pointed tail and a pitchfork twice its size.",
+    rows: b.rows(),
+    pal: { r: "#c42a3e", R: "#8f1426", W: "#5c0c18", w: "#8f1426", e: "#ffd84a", k: "#1a1024", h: "#f3e9d2", f: "#c9c2d9", F: "#5a3a20" },
+    float: (t) => (reduced ? 2 : 2 + Math.round((Math.sin(t * 2.5) + 1) * 1.2)),
+  });
+}
+
+// ---------- 7 Banshee ----------
+{
+  const b = B(18, 27);
+  b.ell(8.5, 6, 6, 5.5, "h").rect(2, 6, 3, 10, "h").rect(13, 6, 3, 10, "h").pts([[1, 10], [1, 12], [16, 10], [16, 13], [2, 16], [15, 16], [1, 14], [16, 15]], "H");
+  b.ell(8.5, 5.5, 2.5, 3, "s").pts([[7, 4], [10, 4]], "e").ell(8.5, 7, 1, 1.5, "k");
+  for (let y = 9; y <= 26; y++) {
+    const half = 2.5 + (y - 9) * 0.32;
+    for (let x = Math.round(8.5 - half); x <= Math.round(8.5 + half); x++) {
+      if (y >= 23 && (x + y) % 3 === 0) continue;
+      b.set(x, y, x >= 8.5 + half - 1 ? "G" : "g");
+    }
+  }
+  b.rect(3, 11, 3, 1, "G").rect(12, 11, 3, 1, "G").pts([[2, 10], [15, 10]], "s");
+  b.rect(6, 9, 6, 1, "H");
+  addSkin("epic", {
+    name: "Banshee",
+    pitch: "A wailing spirit with a mouth frozen in a scream, a cloud of white hair and a tattered gown that fades into nothing, floating over the floor.",
+    rows: b.rows(),
+    pal: { g: "#b9c8e8", G: "#8a9ac0", h: "#e8eef8", H: "#c0cce0", s: "#d8e0f0", k: "#1a1024", e: "#3ac6d6" },
+    float: (t) => (reduced ? 1 : 1 + Math.round((Math.sin(t * 1.6) + 1) * 1.5)),
+  });
+}
+
+// ---------- 8 Living Candle ----------
+{
+  const b = B(18, 26);
+  b.rect(5, 7, 8, 16, "w").rect(11, 7, 2, 16, "W").pts([[5, 6], [6, 6], [9, 6], [10, 6], [12, 6]], "w");
+  b.rect(5, 8, 1, 5, "d").rect(12, 9, 1, 7, "d").pts([[5, 13], [12, 16]], "d").pts([[7, 7], [8, 8]], "d");
+  b.pts([[7, 11], [10, 11]], "k").pts([[6, 10], [11, 10]], "k").pts([[8, 14], [9, 14]], "k");
+  b.pts([[4, 15], [3, 14], [13, 15], [14, 14]], "W");
+  b.rect(8, 4, 1, 2, "i");
+  b.pts([[8, 0], [7, 1], [8, 1], [9, 1], [7, 2], [8, 2], [9, 2], [8, 3]], "f").pts([[8, 2], [8, 1]], "y");
+  b.rect(2, 23, 14, 2, "b").rect(3, 25, 12, 1, "B").pts([[15, 22], [16, 23], [15, 24], [16, 22]], "b");
+  addSkin("epic", {
+    name: "Living Candle",
+    pitch: "A tall, gloomy candle with a worried face and stubby wax arms, melting down its own sides in a brass dish while its flame flickers.",
+    rows: b.rows(),
+    pal: { w: "#f3e9d2", W: "#d9cfb2", d: "#fffaf0", k: "#1a1024", f: "#ff7a1a", y: "#fff3a0", i: "#3a2a1a", b: "#c9a24a", B: "#8a6a2a" },
+    animPal: (t) => (Math.sin(t * 11) + Math.sin(t * 6.3) > 0 ? { f: "#ffd84a", y: "#ffffff" } : { f: "#ff7a1a", y: "#fff3a0" }),
+  });
+}
+
+// ---------- 9 Jack-in-the-Box ----------
+{
+  const b = B(18, 28);
+  b.rect(0, 9, 2, 9, "L").rect(2, 18, 14, 10, "x").rect(2, 18, 14, 1, "L").rect(15, 18, 1, 10, "X");
+  b.pts([[5, 21], [11, 23], [7, 25], [13, 20]], "y").pts([[4, 21], [6, 21], [5, 20], [5, 22]], "y");
+  b.pts([[16, 22], [17, 22], [17, 21]], "k");
+  for (let y = 11; y <= 17; y++) b.set(y % 2 ? 7 : 10, y, "s").set(y % 2 ? 8 : 9, y, "S");
+  addSkin("epic", {
+    name: "Jack-in-the-Box",
+    pitch: "A creepy clown on a spring bursting out of a starry toy box, with a jester hat, a ruffled collar and a grin far too wide. It bobs on its spring.",
+    rows: b.rows(),
+    pal: { x: "#52308a", X: "#3d2470", L: "#6b3fa8", y: "#ffd84a", k: "#1a1024", s: "#c9c2d9", S: "#8d84a8" },
+    over(c, left, top, t) {
+      const dy = reduced ? 0 : Math.round(Math.sin(t * 4) * 1.4);
+      spr(c, [
+        "..pp........gg..",
+        ".yppp......gggy.",
+        "...ppppppgggg...",
+        "....ppppgggg....",
+        "....wwwwwwww....",
+        "...wwkwwwwkwww..",
+        "...wkkkwwkkkww..",
+        "...wwwwrrwwwww..",
+        "...rwwwrrwwwwr..",
+        "....rtrtrtrtr...",
+        ".....rrrrrrr....",
+        ".fffffffffffffff",
+        "..ffffffffffff..",
+      ], { p: "#6b3fa8", g: "#3fb02f", y: "#ffd84a", w: "#f3efe6", k: "#1a1024", r: "#c42a3e", t: "#ffffff", f: "#e8e0f0" }, left + 1, top - 1 + dy);
+    },
+  });
+}
+
+// ---------- 10 Raven Flock ----------
+{
+  const b = B(18, 28);
+  b.ell(8.5, 3.5, 3, 3, "k").ell(8.5, 13, 5.5, 8, "k").ell(8.5, 22.5, 4, 5, "k");
+  for (let y = 0; y < 28; y++) for (let x = 0; x < 18; x++) if (b.get(x, y) === "k" && (x * 2 + y) % 5 === 0) b.set(x, y, "K");
+  // raven heads sticking out of the flock: [x, y, facing]
+  [[6, 1, -1], [11, 2, 1], [3, 8, -1], [14, 9, 1], [2, 14, -1], [15, 15, 1], [4, 19, -1], [13, 20, 1], [5, 25, -1], [12, 26, 1], [8, 11, 1], [9, 17, -1]].forEach(([x, y, d]) => {
+    b.set(x, y, "k").set(x + d, y, "k").set(x + d * 2, y, "b").set(x + d, y - 1, "k").set(x, y - 1, "e");
+  });
+  addSkin("epic", {
+    name: "Raven Flock",
+    pitch: "No body at all: a tall huddle of black ravens stacked into the shape of a player, red eyes everywhere. One keeps fluttering.",
+    rows: b.rows(),
+    pal: { k: "#231d33", K: "#4a4060", b: "#a49db0", e: "#ff3b4d" },
+    over(c, left, top, t) {
+      if (reduced) return;
+      const up = Math.floor(t * 8) % 2;
+      // a raven on top of the flock keeps flapping
+      R(c, left + 8, top - 1, 2, 1, "#231d33");
+      R(c, left + (up ? 6 : 7), top - 2 - up, 1, 1, "#4a4060"); R(c, left + (up ? 11 : 10), top - 2 - up, 1, 1, "#4a4060");
+      R(c, left + 7, top - 1 - up, 1, 1, "#231d33"); R(c, left + 10, top - 1 - up, 1, 1, "#231d33");
+    },
+  });
+}
+
+// ---------- 11 Goblin ----------
+{
+  const b = B(18, 22);
+  b.ell(8.5, 6, 4, 3.5, "g");
+  b.pts([[0, 3], [1, 3], [1, 4], [2, 4], [3, 4], [2, 5], [3, 5], [4, 5], [3, 6], [4, 6]], "g").pts([[1, 4], [2, 5], [3, 6]], "G");
+  b.pts([[17, 3], [16, 3], [16, 4], [15, 4], [14, 4], [15, 5], [14, 5], [13, 5], [14, 6], [13, 6]], "g").pts([[16, 4], [15, 5], [14, 6]], "G");
+  b.pts([[6, 5], [11, 5]], "e").pts([[7, 5], [10, 5]], "k").rect(6, 4, 2, 1, "G").rect(10, 4, 2, 1, "G");
+  b.rect(8, 6, 2, 3, "G").rect(6, 9, 6, 1, "k").pts([[6, 9], [9, 9], [11, 9]], "t");
+  b.ell(8.5, 14, 4, 4.5, "c").rect(5, 14, 8, 1, "C").pts([[7, 16], [10, 12]], "C");
+  b.rect(3, 11, 2, 7, "g").rect(13, 11, 2, 7, "g").pts([[2, 18], [3, 18], [4, 18], [13, 18], [14, 18], [15, 18]], "G");
+  b.rect(6, 19, 2, 1, "g").rect(10, 19, 2, 1, "g").rect(4, 20, 4, 2, "G").rect(10, 20, 4, 2, "G");
+  b.pts([[15, 15], [16, 16], [16, 17], [15, 18]], "l");
+  addSkin("epic", {
+    name: "Goblin",
+    pitch: "A short, hunched goblin with enormous ears that stretch the full width of the space, a big nose, a crooked grin and a burlap sack for clothes.",
+    rows: b.rows(),
+    pal: { g: "#7aa04a", G: "#557a32", e: "#ffd84a", k: "#1a1024", t: "#f3e9d2", c: "#8a6a3e", C: "#5a3a20", l: "#c9a24a" },
+    animPal: (t) => (blinkAt(t, 2.8) ? { e: "#557a32", k: "#557a32" } : {}),
+  });
+}
+
+// ---------- 12 Flytrap Monster ----------
+{
+  const b = B(18, 28);
+  b.rect(3, 20, 12, 2, "p").rect(4, 22, 10, 6, "p").rect(13, 20, 1, 8, "P").rect(3, 20, 12, 1, "s");
+  b.rect(8, 11, 2, 9, "g").set(9, 13, "G").set(8, 16, "G");
+  b.lines(1, 12, ["..gg....", ".gggg...", "ggGgg...", ".gggg..."]).lines(11, 14, ["...gg...", "..gggg..", ".ggGgg..", "..gggg.."]);
+  b.pts([[7, 15], [6, 14], [10, 17], [11, 16]], "g");
+  addSkin("epic", {
+    name: "Flytrap Monster",
+    pitch: "A giant carnivorous plant in a clay pot, its spiky jaws snapping open and shut above a pair of leaves.",
+    rows: b.rows(),
+    pal: { p: "#c4550a", P: "#8f3c06", s: "#3a2614", g: "#4a9a52", G: "#2f6b3a" },
+    over(c, left, top, t) {
+      const shut = !reduced && Math.floor(t * 1.5) % 3 === 2;
+      const pal = { g: "#4a9a52", G: "#2f6b3a", r: "#c42a3e", t: "#e8f5d0" };
+      const open = [
+        ".t.t.t.t.t.t.",
+        "ggggggggggggg",
+        ".gggggggggggg",
+        "..rrrrrrrrrr.",
+        "..r........r.",
+        "..rrrrrrrrrr.",
+        ".gggggggggggg",
+        "ggggggggggggg",
+        ".t.t.t.t.t.t.",
+      ];
+      const closed = [
+        ".............",
+        ".............",
+        ".gggggggggggg",
+        "ggggggggggggg",
+        "t.t.t.t.t.t.t",
+        "ggggggggggggg",
+        ".gggggggggggg",
+        ".............",
+        ".............",
+      ];
+      spr(c, shut ? closed : open, pal, left + 2, top + 2);
+    },
+  });
+}
+
+// ---------- 13 Haunted Grandfather Clock ----------
+{
+  const b = B(18, 28);
+  b.ell(8.5, 3, 5, 3, "w").rect(3, 3, 12, 22, "w").rect(13, 3, 2, 22, "W").rect(3, 3, 1, 22, "H");
+  b.ell(8.5, 7, 3.5, 3.5, "f").pts([[8, 4], [9, 4], [5, 7], [12, 7], [8, 10], [9, 10]], "k");
+  b.pts([[7, 7], [10, 7]], "e").rect(7, 9, 4, 1, "k");
+  b.rect(5, 12, 8, 11, "g").rect(5, 12, 8, 1, "W").rect(5, 22, 8, 1, "W");
+  b.rect(2, 25, 14, 1, "W").pts([[3, 26], [4, 27], [5, 26], [12, 26], [13, 27], [14, 26]], "W");
+  b.pts([[8, 0], [9, 0]], "H");
+  addSkin("epic", {
+    name: "Haunted Grandfather Clock",
+    pitch: "A tall old grandfather clock whose face is an actual face, red eyes and a grimace, with clawed wooden feet and a pendulum swinging behind the glass.",
+    rows: b.rows(),
+    pal: { w: "#6b3a24", W: "#4a2414", H: "#8a5236", f: "#f3e9d2", k: "#1a1024", e: "#ff3b4d", g: "#1a1530" },
+    over(c, left, top, t) {
+      const sw = reduced ? 0 : Math.sin(t * 2.6) * 2.2;
+      for (let k = 0; k < 7; k++) R(c, left + 8.5 + sw * (k / 7), top + 13 + k, 1, 1, "#c9a24a");
+      R(c, left + 7.5 + sw, top + 19, 3, 3, "#ffc53a");
+      R(c, left + 8 + sw, top + 20, 1, 1, "#fff1b0");
+    },
+  });
+}
+
+// ---------- 14 Creature in a Jar ----------
+{
+  const b = B(18, 28);
+  b.rect(4, 0, 10, 3, "m").rect(4, 2, 10, 1, "M").rect(3, 3, 12, 1, "g");
+  b.ell(8.5, 15, 7, 11.5, "l").rect(2, 4, 1, 22, "g").rect(15, 4, 1, 22, "G").rect(3, 27, 12, 1, "G");
+  b.rect(3, 4, 12, 2, "L");
+  b.ell(8.5, 12, 3.5, 3, "c").ell(8.5, 12, 1.5, 1.5, "w").set(8, 12, "k").set(9, 11, "e");
+  b.pts([[6, 10], [7, 9], [10, 9], [11, 10]], "C");
+  for (const [x, dir] of [[6, -1], [8, 0], [10, 1], [11, 1], [7, 0]]) for (let k = 0; k < 9; k++) b.set(x + Math.round(Math.sin(k * 0.8 + x) * 1.2) + (dir * k) / 4, 15 + k, k % 3 === 2 ? "C" : "c");
+  b.pts([[3, 8], [3, 9], [3, 10]], "w");
+  addSkin("epic", {
+    name: "Creature in a Jar",
+    pitch: "A specimen jar of murky green brine with a pickled one-eyed thing floating inside, tentacles drifting. Bubbles rise past it.",
+    rows: b.rows(),
+    pal: { m: "#8d84a8", M: "#5a5078", g: "#b8feff", G: "#7ab8c8", l: "#2f6b3a", L: "#4a9a52", c: "#c9a0b0", C: "#9a7080", w: "#ffffff", e: "#ffd84a", k: "#1a1024" },
+    over(c, left, top, t) {
+      for (const [x, sp] of [[5, 0], [12, 0.4], [10, 0.75]]) {
+        const ph = (t * 0.5 + sp) % 1;
+        R(c, left + x, top + 25 - Math.round(ph * 20), 1, 1, "#b7ff9e");
+      }
+    },
+  });
+}
+
+// ---------- 15 Wendigo ----------
+{
+  const b = B(18, 28);
+  b.pts([[7, 6], [6, 5], [5, 4], [4, 3], [3, 2], [2, 1], [1, 0], [4, 1], [5, 0], [3, 4], [2, 4], [1, 3], [0, 3]], "a").pts([[2, 2], [5, 2], [6, 3]], "A").mirror();
+  b.rect(6, 6, 6, 4, "s").rect(7, 10, 4, 2, "s").rect(11, 6, 1, 4, "S").pts([[7, 7], [10, 7]], "e").pts([[8, 11], [9, 11]], "S").pts([[8, 9], [9, 9]], "k");
+  b.rect(6, 12, 6, 8, "b").rect(11, 12, 1, 8, "B");
+  for (let y = 13; y <= 17; y += 2) b.rect(7, y, 4, 1, "r");
+  b.rect(4, 12, 2, 1, "b").rect(12, 12, 2, 1, "b").rect(3, 13, 1, 10, "b").rect(14, 13, 1, 10, "b").pts([[2, 23], [3, 23], [4, 23], [13, 23], [14, 23], [15, 23]], "s");
+  b.pts([[7, 20], [7, 21], [6, 22], [6, 23], [7, 24], [7, 25], [10, 20], [10, 21], [11, 22], [11, 23], [10, 24], [10, 25]], "b").rect(5, 26, 3, 2, "B").rect(10, 26, 3, 2, "B");
+  addSkin("epic", {
+    name: "Wendigo",
+    pitch: "A gaunt, too-tall creature with a deer skull for a head, antlers spanning the whole width, ribs showing and arms hanging past its knees.",
+    rows: b.rows(),
+    pal: { s: "#e8e0c8", S: "#b9ae94", a: "#8a7a5a", A: "#6b5e44", b: "#2a2433", B: "#1a1622", e: "#ff3b4d", k: "#1a1024", r: "#4a4060" },
+    animPal: (t) => ({ e: Math.sin(t * 5) > 0.3 ? "#ff6b7a" : "#c42a3e" }),
+  });
+}
+
+// ---------- 16 Mothman ----------
+{
+  const b = B(18, 28);
+  b.lines(0, 3, ["...www", "wwwwww", "wpwwww", "wwRrww", "wwrrww", "wwwwpw", ".wwwww", "..wwww", "....ww", "..WWWW", ".WWWWW", ".WpWWW", "..WWWW", "...WWW", "....WW"]).mirror();
+  b.rect(7, 4, 4, 20, "b").rect(6, 9, 6, 3, "f");
+  b.pts([[7, 0], [6, 1], [7, 2], [10, 0], [11, 1], [10, 2]], "f").pts([[7, 3], [10, 3]], "b");
+  b.rect(7, 5, 2, 2, "r").rect(9, 5, 2, 2, "r");
+  b.pts([[7, 24], [7, 25], [6, 26], [6, 27], [10, 24], [10, 25], [11, 26], [11, 27]], "b");
+  addSkin("epic", {
+    name: "Mothman",
+    pitch: "A dark, lanky moth creature with feathery antennae, huge patterned wings that fill the whole space, and two big glowing red eyes.",
+    rows: b.rows(),
+    pal: { w: "#5a4a6a", W: "#3a2d4a", p: "#a49db0", R: "#8f1426", r: "#ff3b4d", b: "#1a1622", f: "#8a7a9a" },
+    animPal: (t) => ({ r: Math.sin(t * 3) > 0 ? "#ff6b7a" : "#e0283c" }),
+  });
+}
+
+// ---------- 17 Candy Corn Monster ----------
+{
+  const b = B(18, 25);
+  for (let y = 0; y <= 19; y++) {
+    const half = 1 + y * 0.36;
+    const col = y < 5 ? "w" : y < 13 ? "o" : "y";
+    for (let x = Math.round(8.5 - half); x <= Math.round(8.5 + half); x++) b.set(x, y, x >= 8.5 + half - 1 ? col.toUpperCase() : col);
+  }
+  b.ell(6.5, 9, 1.2, 1.5, "e").ell(10.5, 9, 1.2, 1.5, "e").pts([[6, 9], [11, 9]], "p");
+  b.rect(6, 12, 6, 1, "k").pts([[7, 12], [10, 12]], "e").pts([[7, 13], [8, 13], [9, 13], [10, 13]], "k");
+  b.pts([[3, 14], [2, 15], [1, 14], [14, 14], [15, 15], [16, 14]], "o");
+  b.rect(6, 20, 1, 3, "Y").rect(11, 20, 1, 3, "Y").rect(4, 23, 3, 2, "O").rect(11, 23, 3, 2, "O");
+  addSkin("epic", {
+    name: "Candy Corn Monster",
+    pitch: "A giant walking piece of candy corn, white tip, orange middle, yellow bottom, with googly eyes and a sugary grin on skinny legs.",
+    rows: b.rows(),
+    pal: { w: "#fff6e0", W: "#d9cfb8", o: "#ff7a1a", O: "#c4550a", y: "#ffd84a", Y: "#d9a800", e: "#ffffff", p: "#1a1024", k: "#1a1024" },
+    animPal: (t) => (blinkAt(t, 3) ? { e: "#ff7a1a", p: "#ff7a1a" } : {}),
+  });
+}
+
+// ---------- 18 Ghost Pirate ----------
+{
+  const b = B(18, 28);
+  b.rect(2, 3, 14, 2, "h").ell(8.5, 2, 5, 2.5, "h").pts([[1, 2], [16, 2], [1, 3], [16, 3]], "h").rect(2, 4, 14, 1, "H");
+  b.pts([[8, 1], [9, 1], [8, 2], [9, 2]], "s").pts([[8, 2]], "k");
+  b.ell(8.5, 7.5, 3.5, 2.5, "g").rect(6, 6, 2, 2, "k").pts([[5, 6], [12, 5], [11, 5], [10, 5]], "k").set(10, 7, "e");
+  b.ell(8.5, 10.5, 3, 1.5, "G").pts([[7, 11], [9, 12], [8, 11]], "q");
+  for (let y = 12; y <= 21; y++) { const half = 3.5 + (y - 12) * 0.2; b.rect(Math.round(8.5 - half), y, Math.round(half * 2) + 1, 1, "c"); }
+  b.rect(8, 12, 2, 9, "C").pts([[7, 14], [7, 17], [10, 14], [10, 17]], "y");
+  b.rect(3, 13, 2, 5, "c").rect(13, 13, 2, 5, "c").pts([[3, 18], [4, 18]], "g").pts([[14, 18], [15, 19], [14, 20], [13, 19]], "s");
+  for (let y = 22; y <= 27; y++) { const half = 4 - (y - 22) * 0.75; b.rect(Math.round(8.5 - half + (y - 22) * 0.5), y, Math.max(1, Math.round(half * 2)), 1, y % 2 ? "w" : "g"); }
+  addSkin("epic", {
+    name: "Ghost Pirate",
+    pitch: "The spectral captain of a sunken ship: a skull-and-crossbones tricorn, an eyepatch, a seaweed beard, a hook, and a ghostly tail instead of legs.",
+    rows: b.rows(),
+    pal: { h: "#1a2a3a", H: "#2a3a4a", s: "#f3efe6", k: "#0a1a2a", g: "#7ab8c8", G: "#4a8a9a", q: "#3f6b3a", e: "#b8feff", c: "#2a4a5a", C: "#1a3a4a", y: "#ffd84a", w: "#b8feff" },
+    float: (t) => (reduced ? 1 : 1 + Math.round((Math.sin(t * 1.8) + 1) * 1.2)),
+  });
+}
+
+// ---------- 19 Alien in a Saucer ----------
+{
+  const b = B(18, 26);
+  b.ell(8.5, 9, 4.5, 6, "d").rect(4, 9, 10, 6, "d").set(5, 6, "D").set(5, 7, "D");
+  b.ell(8.5, 8, 2.5, 3, "a").pts([[7, 8], [10, 8]], "k").pts([[7, 7], [10, 7]], "k").rect(7, 11, 4, 3, "A").pts([[6, 12], [11, 12]], "a");
+  b.pts([[7, 4], [6, 3], [10, 4], [11, 3]], "A");
+  b.ell(8.5, 16, 8.5, 2.5, "s").rect(0, 16, 18, 1, "H").rect(2, 18, 14, 1, "S").rect(5, 19, 8, 1, "S");
+  b.pts([[2, 17], [6, 17], [11, 17], [15, 17]], "l").pts([[4, 17], [13, 17]], "m").pts([[8, 17], [9, 17]], "n");
+  addSkin("epic", {
+    name: "Alien in a Saucer",
+    pitch: "A little green alien waving from inside the glass dome of a flying saucer as wide as the space, its rim lights chasing round and round.",
+    rows: b.rows(),
+    pal: { s: "#a49db0", S: "#6b6380", H: "#d8d0ec", d: "#9fd4ff", D: "#e0f4ff", a: "#7dff5a", A: "#4a9a32", k: "#1a1024", l: "#ffd84a", m: "#ff3b4d", n: "#4fb2ff" },
+    float: () => 4,
+    animPal: (t) => {
+      const k = reduced ? 0 : Math.floor(t * 5) % 3;
+      const C = ["#ffd84a", "#ff3b4d", "#4fb2ff"];
+      return { l: C[k], m: C[(k + 1) % 3], n: C[(k + 2) % 3] };
+    },
+    under(c, left, top) { fade(c, 0.45, () => R(c, left + 4, top + 29, 10, 1, "#0b0614")); },
+  });
+}
+
+// ---------- 20 Haunted Volleyball ----------
+{
+  const b = B(18, 18);
+  b.ell(8.5, 8.5, 8.5, 8.5, (x, y) => (x + y > 22 ? "W" : "w"));
+  b.pts([[3, 3], [4, 2], [5, 2], [2, 4], [2, 5]], "H");
+  for (let y = 0; y < 18; y++) for (let x = 0; x < 18; x++) {
+    if (b.get(x, y) === ".") continue;
+    const d1 = Math.hypot(x - 8.5, y + 7) - 12, d2 = Math.hypot(x + 7, y - 15) - 13, d3 = Math.hypot(x - 24, y - 15) - 13;
+    if (Math.abs(d1) < 0.7) b.set(x, y, "b");
+    if (Math.abs(d2) < 0.7) b.set(x, y, "y");
+    if (Math.abs(d3) < 0.7) b.set(x, y, "g");
+  }
+  b.lines(4, 6, ["kk....kk", ".kkk.kk.", ".rr..rr.", ".rr..rr.", "........", "kkkkkkkk", "kwkwkwkk", ".kkkkkk."]);
+  addSkin("epic", {
+    name: "Haunted Volleyball",
+    pitch: "A giant possessed volleyball with angry red eyes and a jagged grin, bouncing in place. The club's ball finally fights back.",
+    rows: b.rows(),
+    pal: { w: "#f3efe6", W: "#d9d2e6", H: "#ffffff", b: "#3d6fd1", y: "#ffcf3a", g: "#8d84a8", k: "#1a1024", r: "#ff3b4d" },
+    float: (t) => (reduced ? 2 : Math.round(Math.abs(Math.sin(t * 3)) * 6)),
+    under(c, left, top, t) {
+      const f = reduced ? 2 : Math.round(Math.abs(Math.sin(t * 3)) * 6);
+      const ground = top + 18 + f;
+      fade(c, 0.5, () => R(c, left + 4 + f / 2, ground - 1, 10 - f, 1, "#0b0614"));
+    },
+  });
+}
+})();
+// Legendary transformations, batch A (XL1-XL20).
+(() => {
+// ---------- helpers ----------
+// char-grid builder for the 18x28 box; .rows() gives the pixel map
+function cg(w = 18, h = 28) {
+  const a = [...Array(h)].map(() => Array(w).fill("."));
+  return {
+    set(x, y, ch) { x = Math.round(x); y = Math.round(y); if (y >= 0 && y < h && x >= 0 && x < w) a[y][x] = ch; },
+    get(x, y) { return y >= 0 && y < h && x >= 0 && x < w ? a[y][x] : "."; },
+    rect(x, y, w2, h2, ch) { for (let j = 0; j < h2; j++) for (let i = 0; i < w2; i++) this.set(x + i, y + j, ch); },
+    ell(cx, cy, rx, ry, ch) {
+      for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+        const d = 1 - ((y - cy) / ry) ** 2;
+        if (d < 0) continue;
+        const hw = Math.sqrt(d) * rx;
+        for (let x = Math.round(cx - hw); x <= Math.round(cx + hw); x++) this.set(x, y, typeof ch === "function" ? ch(x, y) : ch);
+      }
+    },
+    line(x0, y0, x1, y1, ch, thick = 1) {
+      const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) || 1;
+      for (let k = 0; k <= n; k++) for (let d = 0; d < thick; d++) this.set(x0 + ((x1 - x0) * k) / n + d, y0 + ((y1 - y0) * k) / n, ch);
+    },
+    rows() { return a.map((r) => r.join("")); },
+  };
+}
+const FIRE = ["#ffffff", "#fff3a0", "#ffd84a", "#ff7a1a", "#c4300a"];
+const GFIRE = ["#ffffff", "#c8ffb0", "#5ee84a", "#2f8a3a"];
+const BFIRE = ["#ffffff", "#b8feff", "#4fb2ff", "#2a4a8f"];
+const PFIRE = ["#ffffff", "#f0d8ff", "#c46bff", "#6b3fa8"];
+// a little flame column: w pixels wide starting at x, rising h from y
+function flames(c, x, y, w, h, t, cols, speed = 2.4) {
+  for (let s = 0; s < w; s++) for (let k = 0; k < 3; k++) {
+    const ph = (t * speed + k / 3 + s * 0.23) % 1;
+    fade(c, 1 - ph * 0.6, () => R(c, x + s + Math.round(Math.sin(t * 9 + s + k) * ph), y - ph * h * (0.6 + 0.4 * hash(s, k)), 1, 1, cols[Math.min(cols.length - 1, Math.floor(ph * cols.length))]));
+  }
+}
+// n particles rising from a band x0..x0+w at y, fading over h
+function rise(c, x0, w, y, h, n, t, speed, col, sway = 1) {
+  for (let k = 0; k < n; k++) {
+    const ph = (t * speed + k / n) % 1;
+    fade(c, 1 - ph, () => R(c, x0 + Math.round(hash(k, 7) * w + Math.sin(t * 2 + k) * sway), y - ph * h, 1, 1, typeof col === "function" ? col(k, ph) : col));
+  }
+}
+function orbit(cx, cy, rx, ry, n, t, speed, fn) {
+  for (let k = 0; k < n; k++) { const a = t * speed + (k * TAU) / n; fn(Math.round(cx + Math.cos(a) * rx), Math.round(cy + Math.sin(a) * ry), k, Math.sin(a)); }
+}
+const flick = (t, a, b, f = 9) => (Math.sin(t * f) + Math.sin(t * f * 0.57) > -0.5 ? a : b);
+const bobf = (amp, speed = 2) => (t) => (reduced ? amp : amp + Math.round((Math.sin(t * speed) + 1) / 2));
+
+// ---------- 1. Spectral Horseman ----------
+{
+  const g = cg();
+  g.ell(9, 17, 6.5, 3.3, "h");
+  for (let x = 4; x <= 14; x++) g.set(x, 20, "H");
+  g.line(13, 15, 15, 10, "h", 2);
+  g.rect(14, 8, 4, 3, "h"); g.set(17, 10, "H"); g.set(16, 9, "r");
+  g.set(14, 7, "h"); g.set(15, 7, "h");
+  for (const x of [4, 6, 12, 14]) { g.rect(x, 21, 1, 5, x % 4 === 0 ? "H" : "h"); g.set(x, 26, "k"); }
+  // rider
+  g.rect(7, 8, 4, 7, "c"); g.rect(6, 9, 1, 4, "c"); g.rect(11, 9, 1, 4, "c"); g.set(8, 8, "x"); g.set(9, 8, "x");
+  g.rect(6, 15, 2, 4, "C"); g.rect(10, 15, 2, 3, "C"); g.rect(6, 18, 2, 2, "b"); g.set(5, 13, "g"); g.set(12, 13, "g");
+  g.rect(7, 7, 4, 1, "k");
+  addSkin("legendary", {
+    name: "Spectral Horseman",
+    pitch: "The headless rider on a ghost horse the full width of the space: blue spirit-fire mane, burning hooves, flames where his head should be, and a blazing pumpkin in his hand.",
+    rows: g.rows(),
+    pal: { h: "#8fa8c8", H: "#5f7898", r: "#ff3b4d", k: "#1a1024", c: "#2a2240", C: "#1a1530", x: "#8f1426", b: "#3a2a1a", g: "#4a4060" },
+    animPal: (t) => ({ h: Math.sin(t * 3) > 0 ? "#8fa8c8" : "#9fb8d8" }),
+    under(c, l, tp, t) { glow(c, l + 9, tp + 17, 14, "#4fb2ff", 0.3 + 0.08 * Math.sin(t * 4)); },
+    over(c, l, tp, t) {
+      flames(c, l + 7, tp + 7, 4, 7, t, FIRE);
+      for (let k = 0; k < 5; k++) flames(c, l + 13 + Math.round(k * 0.5), tp + 15 - k, 1, 4, t + k * 0.3, BFIRE, 3);
+      flames(c, l + 1, tp + 16, 2, 5, t, BFIRE, 2);
+      for (const x of [4, 6, 12, 14]) flames(c, l + x, tp + 27, 1, 2, t + x, FIRE, 3);
+      glow(c, l + 3, tp + 12, 6, "#ff7a1a", 0.45);
+      spr(c, [".ooo.", "oyoyo", "ooooo", "oyyyo", ".ooo."], { o: "#ff7a1a", y: flick(t, "#fff3a0", "#ffd84a") }, l + 1, tp + 10);
+    },
+  });
+}
+
+// ---------- 2. Lich King ----------
+{
+  const g = cg();
+  for (let y = 9; y <= 25; y++) { const hw = 3 + (y - 9) * 0.32; g.rect(Math.round(8.5 - hw), y, Math.round(hw * 2), 1, y > 23 && y % 2 ? "R" : "r"); }
+  for (let x = 2; x <= 15; x += 2) g.set(x, 26, "R");
+  g.rect(6, 3, 6, 5, "s"); g.set(7, 5, "e"); g.set(10, 5, "e"); g.rect(7, 7, 4, 1, "S"); g.set(8, 8, "s"); g.set(9, 8, "s");
+  g.rect(5, 2, 8, 1, "y"); for (const x of [5, 7, 9, 11]) { g.set(x, 1, "y"); } g.set(6, 0, "y"); g.set(9, 0, "y"); g.set(12, 0, "y"); g.set(8, 1, "j");
+  g.rect(5, 9, 8, 2, "m"); g.rect(4, 9, 1, 3, "y"); g.rect(13, 9, 1, 3, "y");
+  g.set(3, 15, "s"); g.set(14, 15, "s");
+  for (let y = 1; y <= 26; y++) g.set(16, y, "w");
+  g.set(15, 0, "y"); g.set(17, 0, "y"); g.set(16, 0, "j");
+  g.rect(8, 12, 2, 6, "y");
+  addSkin("legendary", {
+    name: "Lich King",
+    pitch: "An undead sorcerer-king floating in tattered robes, a golden crown on his skull, a glowing staff, and lost souls orbiting him.",
+    float: bobf(2),
+    rows: g.rows(),
+    pal: { r: "#2a1a4a", R: "#1a0f30", s: "#ece6d6", S: "#b9ae94", e: "#7dfcff", y: "#e8c45a", j: "#4fb2ff", m: "#3a2a5c", w: "#5a3a20" },
+    animPal: (t) => ({ e: flick(t, "#7dfcff", "#ffffff", 6), j: Math.sin(t * 4) > 0 ? "#4fb2ff" : "#b8feff" }),
+    under(c, l, tp, t) {
+      glow(c, l + 9, tp + 14, 16, "#7a4ad9", 0.35 + 0.1 * Math.sin(t * 2));
+      orbit(l + 9, tp + 14, 10, 4, 4, t, 1.2, (x, y, k, s) => { if (s < 0) { glow(c, x, y, 3, "#7dfcff", 0.4); R(c, x, y, 1, 1, "#9fd4ff"); } });
+    },
+    over(c, l, tp, t) {
+      glow(c, l + 16, tp, 5, "#4fb2ff", 0.55);
+      glow(c, l + 8, tp + 5, 4, "#7dfcff", 0.3);
+      orbit(l + 9, tp + 14, 10, 4, 4, t, 1.2, (x, y, k, s) => { if (s >= 0) { glow(c, x, y, 3, "#7dfcff", 0.6); R(c, x, y, 2, 2, "#e0ffff"); R(c, x - Math.round(Math.cos(t * 1.2 + (k * TAU) / 4) * 2), y, 1, 1, "#4fb2ff"); } });
+      rise(c, l + 2, 14, tp + 27, 6, 5, t, 0.6, "#c46bff");
+    },
+  });
+}
+
+// ---------- 3. Dracula's Bat Form ----------
+{
+  const g = cg(18, 22);
+  g.ell(8.5, 10, 2.5, 4, "b"); g.rect(7, 14, 4, 2, "b");
+  g.rect(7, 4, 4, 3, "b"); g.set(7, 3, "b"); g.set(10, 3, "b"); g.set(7, 2, "b"); g.set(10, 2, "b");
+  g.set(8, 5, "e"); g.set(9, 5, "e"); g.set(8, 7, "f"); g.set(9, 7, "f");
+  g.rect(7, 16, 1, 2, "B"); g.rect(10, 16, 1, 2, "B");
+  addSkin("legendary", {
+    name: "Dracula's Bat Form",
+    pitch: "The Count as a giant bat with wings spanning the whole space. The wings beat slowly, the red eyes burn, and a crimson mist swirls underneath.",
+    float: bobf(5, 3),
+    rows: g.rows(),
+    pal: { b: "#3a2d4a", B: "#231d33", e: "#ff3b4d", f: "#ffffff" },
+    under(c, l, tp, t) {
+      glow(c, l + 9, tp + 8, 12, "#8f1426", 0.4);
+      const flap = reduced ? 0 : Math.sin(t * 4);
+      for (const dir of [-1, 1]) {
+        for (let k = 0; k < 9; k++) {
+          const x = l + 9 + dir * (2 + k);
+          const lift = Math.round(flap * k * 0.5);
+          const topY = tp + 6 - Math.round(Math.sin((k / 8) * Math.PI) * 3) - lift;
+          const bottom = tp + 11 + (k % 3 === 2 ? -1 : 1) - Math.round(lift * 0.6);
+          for (let y = topY; y <= bottom; y++) R(c, x, y, 1, 1, y === topY ? "#8a6aaa" : k % 3 === 0 ? "#5a4486" : "#3d2c5c");
+        }
+      }
+    },
+    over(c, l, tp, t) {
+      glow(c, l + 9, tp + 5, 4, "#ff3b4d", 0.5);
+      for (let k = 0; k < 8; k++) {
+        const ph = (t * 0.4 + k / 8) % 1;
+        fade(c, 0.45 * Math.sin(ph * Math.PI), () => R(c, l + Math.round(hash(k, 3) * 18 + Math.sin(t + k) * 2), tp + 22 + Math.round(hash(k) * 6) - Math.round(ph * 4), 3, 1, k % 2 ? "#c42a3e" : "#8f1426"));
+      }
+    },
+  });
+}
+
+// ---------- 4. Great Pumpkin King ----------
+{
+  const g = cg();
+  g.ell(8.5, 18.5, 8.5, 8.5, (x, y) => (x === 4 || x === 13 || x === 8 ? "r" : x <= 2 ? "h" : x >= 15 ? "O" : "o"));
+  g.rect(3, 8, 12, 2, "y"); for (const x of [3, 6, 9, 11, 14]) { g.set(x, 7, "y"); g.set(x, 6, x % 2 ? "Y" : "y"); }
+  g.set(6, 8, "j"); g.set(9, 8, "J"); g.set(12, 8, "j");
+  for (const [x, y] of [[5, 15], [4, 16], [5, 16], [6, 16], [12, 15], [11, 16], [12, 16], [13, 16], [8, 18], [9, 18], [4, 21], [5, 22], [6, 22], [7, 21], [8, 22], [9, 22], [10, 21], [11, 22], [12, 22], [13, 21]]) g.set(x, y, "f");
+  g.set(0, 15, "v"); g.set(0, 14, "v"); g.set(1, 13, "l"); g.set(17, 16, "v"); g.set(17, 15, "v"); g.set(16, 14, "l");
+  addSkin("legendary", {
+    name: "Great Pumpkin King",
+    pitch: "A giant pumpkin wearing a jeweled crown, its carved face blazing, curling vines at its sides, and fireflies drifting all around it.",
+    rows: g.rows(),
+    pal: { o: "#ff7a1a", O: "#c4550a", h: "#ffa45a", r: "#e0661a", y: "#ffc53a", Y: "#fff1b0", j: "#ff3b4d", J: "#4fb2ff", f: "#fff3a0", v: "#3f6b3a", l: "#5a8a3a" },
+    animPal: (t) => ({ f: flick(t, "#fff3a0", "#ffd84a"), Y: Math.floor(t * 6) % 3 ? "#fff1b0" : "#ffffff" }),
+    under(c, l, tp, t) { glow(c, l + 9, tp + 18, 16, "#ff9a3a", 0.35 + 0.1 * Math.sin(t * 9)); },
+    over(c, l, tp, t) {
+      for (let k = 0; k < 7; k++) {
+        const x = l + 9 + Math.round(Math.sin(t * 0.7 + k * 1.9) * 11), y = tp + 12 + Math.round(Math.sin(t * 0.9 + k * 2.7) * 10);
+        if (Math.sin(t * 3 + k * 1.3) > -0.2) { glow(c, x, y, 3, "#ffff9a", 0.5); R(c, x, y, 1, 1, "#ffffcc"); }
+      }
+      const tw = Math.floor(t * 4) % 5;
+      sparkle(c, l + [3, 6, 9, 11, 14][tw], tp + 5, "#ffffff", true);
+    },
+  });
+}
+
+// ---------- 5. Swamp Kraken ----------
+{
+  const g = cg();
+  g.ell(9, 13, 6, 7, (x, y) => (x <= 4 ? "M" : x >= 13 ? "N" : "m"));
+  g.set(6, 13, "e"); g.set(7, 13, "e"); g.set(11, 13, "e"); g.set(12, 13, "e"); g.set(7, 13, "k"); g.set(11, 13, "k");
+  g.rect(7, 16, 5, 1, "N");
+  for (let y = 21; y <= 27; y++) for (let x = 0; x < 18; x++) g.set(x, y, y === 21 ? "W" : "w");
+  addSkin("legendary", {
+    name: "Swamp Kraken",
+    pitch: "A huge squid-beast rising out of a dark swamp, with tentacles that curl and wave around it, glowing eyes, and bubbles and splashes everywhere.",
+    rows: g.rows(),
+    pal: { m: "#5a3a7a", M: "#7a5a9a", N: "#3a2458", e: "#ffd84a", k: "#1a1024", w: "#1f3a33", W: "#3f7a6a" },
+    animPal: (t) => ({ e: flick(t, "#ffd84a", "#fff3a0", 4), W: Math.floor(t * 3) % 2 ? "#3f7a6a" : "#5a9a8a" }),
+    under(c, l, tp, t) {
+      glow(c, l + 9, tp + 14, 14, "#5ee8b0", 0.25);
+      for (const [bx, dir, sp] of [[2, -1, 0], [16, 1, 1.3], [5, -1, 2.1], [13, 1, 3.1]]) {
+        for (let k = 0; k < 12; k++) {
+          const y = tp + 21 - k;
+          const x = l + bx + Math.round(Math.sin(t * 1.6 + sp + k * 0.45) * (1 + k * 0.25)) + dir * Math.round(k * 0.15);
+          const thick = k < 6 ? 2 : 1;
+          R(c, x, y, thick, 1, k % 3 === 0 ? "#c4a0e0" : "#6b4a8a");
+        }
+      }
+    },
+    over(c, l, tp, t) {
+      glow(c, l + 6, tp + 13, 3, "#ffd84a", 0.4); glow(c, l + 12, tp + 13, 3, "#ffd84a", 0.4);
+      rise(c, l + 1, 16, tp + 21, 8, 6, t, 0.8, "#9fd4ff");
+      for (let k = 0; k < 4; k++) { const ph = (t * 1.5 + k / 4) % 1; fade(c, 1 - ph, () => R(c, l + [1, 6, 11, 16][k] + Math.round(Math.sin(k) * ph * 3), tp + 21 - Math.sin(ph * Math.PI) * 4, 1, 1, "#b8feff")); }
+    },
+  });
+}
+
+// ---------- 6. Ash Phoenix ----------
+{
+  const g = cg();
+  g.ell(9, 13, 2.5, 4, "b"); g.rect(8, 6, 3, 3, "b"); g.set(11, 7, "k"); g.set(9, 7, "e"); g.set(10, 5, "c"); g.set(9, 4, "c"); g.set(8, 5, "c");
+  for (let k = 0; k <= 7; k++) {
+    for (const dir of [-1, 1]) {
+      const x = 9 + dir * (2 + k);
+      const top = 10 - Math.round(k * 0.9), bot = 13 - Math.round(k * 0.3);
+      for (let y = top; y <= bot; y++) g.set(x, y, y === top ? "y" : y === bot ? "r" : "o");
+    }
+  }
+  for (let k = 0; k < 8; k++) { g.set(9 + Math.round(Math.sin(k) * 2), 17 + k, k % 2 ? "r" : "o"); g.set(8 - Math.round(k * 0.4), 17 + k, "y"); g.set(10 + Math.round(k * 0.4), 17 + k, "o"); }
+  for (let x = 4; x <= 14; x++) g.set(x, 27, x % 2 ? "a" : "A");
+  g.rect(6, 26, 7, 1, "A");
+  addSkin("legendary", {
+    name: "Ash Phoenix",
+    pitch: "A firebird rising out of a pile of glowing ash, wings spread wide and burning, its tail feathers trailing flame and embers drifting up.",
+    rows: g.rows(),
+    pal: { b: "#ff7a1a", o: "#ff9a3a", r: "#c4300a", y: "#ffd84a", e: "#ffffff", k: "#1a1024", c: "#fff3a0", a: "#5a4a40", A: "#ff7a1a" },
+    animPal: (t) => ({ o: flick(t, "#ff9a3a", "#ffb35a"), y: flick(t, "#ffd84a", "#fff3a0", 11), A: flick(t, "#ff7a1a", "#c4300a", 5) }),
+    under(c, l, tp, t) { glow(c, l + 9, tp + 12, 17, "#ff7a1a", 0.4 + 0.12 * Math.sin(t * 7)); },
+    over(c, l, tp, t) {
+      for (let k = 0; k <= 7; k++) for (const dir of [-1, 1]) flames(c, l + 9 + dir * (2 + k), tp + 10 - Math.round(k * 0.9), 1, 4, t + k * 0.2, FIRE, 2.6);
+      flames(c, l + 8, tp + 4, 3, 5, t, FIRE, 3);
+      rise(c, l + 3, 12, tp + 27, 26, 10, t, 0.5, (k) => (k % 3 ? "#ffd84a" : "#ff7a1a"), 2);
+    },
+  });
+}
+
+// ---------- 7. Shadow Wraith ----------
+{
+  const g = cg();
+  g.ell(9, 6, 4, 4, "v"); for (let y = 9; y <= 24; y++) { const hw = 5 + Math.sin(y * 0.6) * 1.5 - Math.max(0, y - 19) * 0.8; g.rect(Math.round(9 - hw), y, Math.round(hw * 2), 1, "v"); }
+  g.rect(1, 12, 3, 1, "v"); g.rect(0, 13, 2, 3, "v"); g.rect(14, 12, 3, 1, "v"); g.rect(16, 13, 2, 3, "v");
+  g.set(7, 6, "e"); g.set(11, 6, "e"); g.set(8, 6, "E"); g.set(10, 6, "E");
+  addSkin("legendary", {
+    name: "Shadow Wraith",
+    pitch: "A tall living shadow with a starry void inside it, two piercing violet eyes, clawed arms, and wisps of darkness streaming off its edges.",
+    float: bobf(3, 1.5),
+    rows: g.rows(),
+    pal: { v: "#07040f", e: "#f0d8ff", E: "#c46bff" },
+    under(c, l, tp, t) {
+      glow(c, l + 9, tp + 12, 16, "#6b3fa8", 0.45 + 0.1 * Math.sin(t * 2));
+      for (let k = 0; k < 6; k++) { const ph = (t * 0.7 + k / 6) % 1; fade(c, 0.8 * (1 - ph), () => R(c, l + 3 + Math.round(hash(k) * 12) + Math.round(Math.sin(t * 2 + k) * 2), tp + 24 + ph * 6, 2, 1, "#2a1a4a")); }
+    },
+    over(c, l, tp, t) {
+      for (let k = 0; k < 14; k++) {
+        const x = 5 + Math.round(hash(k, 1) * 8), y = 9 + Math.round(hash(k, 2) * 13);
+        if (Math.sin(t * 2 + k * 1.7) > 0.2) R(c, l + x, tp + y, 1, 1, k % 3 ? "#5a4486" : "#ffffff");
+      }
+      glow(c, l + 9, tp + 6, 5, "#c46bff", 0.45);
+      for (const [x, y] of [[0, 9], [17, 9], [3, 3], [15, 3], [1, 18], [17, 19]]) {
+        const ph = (t * 0.9 + x * 0.1) % 1;
+        fade(c, 0.7 * (1 - ph), () => R(c, l + x + Math.round(Math.sin(t * 3 + y) * 1), tp + y - ph * 6, 1, 2, "#3a2a5c"));
+      }
+    },
+  });
+}
+
+// ---------- 8. Ghost Ship ----------
+{
+  const g = cg();
+  for (let y = 18; y <= 23; y++) { const inset = Math.max(0, y - 20); g.rect(inset, y, 18 - inset * 2, 1, y === 18 ? "D" : "h"); }
+  g.rect(0, 16, 3, 2, "h"); g.rect(15, 15, 3, 3, "h"); g.set(4, 20, "w"); g.set(8, 20, "w"); g.set(12, 20, "w");
+  g.rect(6, 2, 1, 16, "m"); g.rect(12, 5, 1, 13, "m");
+  for (let y = 3; y <= 12; y++) { const w = 4 - Math.abs(y - 8) * 0.3; g.rect(Math.round(6 - w), y, Math.round(w * 2 + 1), 1, (y + 1) % 4 ? "s" : "S"); }
+  for (let y = 6; y <= 14; y++) { const w = 3 - Math.abs(y - 10) * 0.3; g.rect(Math.round(12 - w), y, Math.round(w * 2 + 1), 1, y % 3 ? "s" : "S"); }
+  g.rect(6, 0, 3, 2, "k"); g.set(7, 0, "x");
+  g.set(3, 6, "."); g.set(9, 9, "."); g.set(13, 11, ".");
+  addSkin("legendary", {
+    name: "Ghost Ship",
+    pitch: "A tiny spectral galleon sailing through the air on ghostly waves, its torn sails glowing, a skull flag flying and a lantern swinging off the stern.",
+    float: bobf(3, 1.6),
+    rows: g.rows(),
+    pal: { h: "#2f5a5a", D: "#4f8a80", w: "#b8feff", m: "#3a2a1a", s: "#b8f0e0", S: "#7fc8b8", k: "#14101c", x: "#ece6d6" },
+    animPal: (t) => ({ s: Math.sin(t * 2) > 0 ? "#b8f0e0" : "#d8fff0" }),
+    under(c, l, tp, t) { glow(c, l + 9, tp + 12, 16, "#5ee8b0", 0.3 + 0.08 * Math.sin(t * 2)); },
+    over(c, l, tp, t) {
+      const sw = Math.round(Math.sin(t * 2.5));
+      R(c, l + 16, tp + 13, 1, 1, "#3a2a1a");
+      glow(c, l + 16 + sw, tp + 15, 5, "#ffd84a", 0.6);
+      R(c, l + 16 + sw, tp + 14, 1, 2, flick(t, "#fff3a0", "#ffd84a"));
+      for (let x = -1; x < 19; x++) {
+        const y = tp + 25 + Math.round(Math.sin(t * 3 + x * 0.7) * 1.2);
+        fade(c, 0.6, () => R(c, l + x, y, 1, 1, (x + Math.floor(t * 4)) % 4 ? "#7fc8b8" : "#e0fff8"));
+      }
+      rise(c, l + 1, 16, tp + 24, 10, 5, t, 0.4, "#b8feff");
+    },
+  });
+}
+
+// ---------- 9. Haunted Mansion ----------
+{
+  const g = cg();
+  g.rect(1, 12, 16, 16, "b"); for (let y = 12; y < 28; y += 2) g.rect(1, y, 16, 1, "B");
+  for (let k = 0; k <= 6; k++) g.rect(9 - k - 2, 6 + k, (k + 2) * 2 + 1, 1, "r");
+  g.rect(1, 3, 4, 9, "b"); for (let k = 0; k < 3; k++) g.rect(1 + k, 2 - k, 4 - k * 2, 1, "r"); g.set(2, -1, "r");
+  g.rect(13, 4, 2, 4, "b");
+  for (const [x, y, n] of [[2, 6, "1"], [3, 15, "2"], [7, 15, "3"], [12, 15, "4"], [3, 20, "5"], [12, 20, "6"], [8, 10, "7"]]) { g.rect(x, y, 2, 2, n); }
+  g.rect(7, 22, 3, 6, "d"); g.set(9, 25, "y");
+  addSkin("legendary", {
+    name: "Haunted Mansion",
+    pitch: "You become a tiny haunted house: a crooked tower, windows that flicker on and off, a creaking door, and ghosts and bats pouring out of it.",
+    rows: g.rows(),
+    pal: { b: "#3a2d4a", B: "#2a2038", r: "#6b3a5a", d: "#14101c", y: "#ffd84a", 1: "#ffd84a", 2: "#ffd84a", 3: "#ffd84a", 4: "#ffd84a", 5: "#ffd84a", 6: "#ffd84a", 7: "#ffd84a" },
+    animPal: (t) => {
+      const p = {};
+      for (let k = 1; k <= 7; k++) p[k] = Math.sin(t * (1.3 + k * 0.37) + k * 2) > -0.3 ? (k === 7 ? "#c46bff" : "#ffd84a") : "#2a1d45";
+      return p;
+    },
+    under(c, l, tp, t) {
+      glow(c, l + 9, tp + 16, 16, "#c46bff", 0.25);
+      glow(c, l + 15, tp + 1, 6, "#e9e0c6", 0.35);
+    },
+    over(c, l, tp, t) {
+      for (let k = 0; k < 3; k++) {
+        const ph = (t * 0.35 + k / 3) % 1;
+        const x = l + [14, 3, 9][k] + Math.round(Math.sin(t * 3 + k) * 3) + Math.round(ph * (k % 2 ? -4 : 4));
+        const y = tp + [4, 6, 10][k] - Math.round(ph * 12);
+        fade(c, 1 - ph, () => spr(c, [".ww.", "wkkw", "wwww", "w.w."], { w: "#f3efe6", k: "#1a1024" }, x, y));
+      }
+      orbit(l + 9, tp + 4, 9, 3, 3, t, 1.5, (x, y, k) => { const f = Math.floor(t * 10 + k) % 2; R(c, x, y, 1, 1, "#0b0614"); R(c, x - 1, y - f, 1, 1, "#0b0614"); R(c, x + 1, y - f, 1, 1, "#0b0614"); });
+    },
+  });
+}
+
+// ---------- 10. Witch Queen on a Broom ----------
+{
+  const g = cg(18, 26);
+  g.rect(0, 20, 18, 1, "w"); for (let y = 18; y <= 23; y++) { const hw = Math.abs(y - 20.5) < 3 ? 3 - Math.abs(y - 20.5) * 0.6 : 0; g.rect(0, y, Math.round(4 - Math.abs(y - 20.5) * 0.7), 1, y % 2 ? "s" : "S"); }
+  g.ell(9, 16, 4, 3, "p"); g.rect(6, 17, 7, 3, "p"); g.rect(10, 19, 3, 3, "P"); g.set(12, 22, "k"); g.set(13, 22, "k"); g.set(14, 21, "k");
+  g.rect(8, 9, 4, 4, "f"); g.set(9, 10, "e"); g.set(11, 10, "e"); g.set(10, 12, "m");
+  g.rect(7, 9, 1, 6, "h"); g.rect(6, 11, 1, 5, "h"); g.rect(12, 9, 1, 3, "h");
+  g.rect(5, 8, 10, 1, "k"); g.rect(7, 7, 6, 1, "k"); g.rect(8, 6, 4, 1, "g"); for (let k = 0; k < 6; k++) g.rect(9 + Math.round(k * 0.4), 5 - k, Math.max(1, 3 - Math.floor(k / 2)), 1, "k"); g.set(11, 6, "y");
+  g.rect(12, 14, 2, 2, "p"); g.set(14, 15, "f");
+  addSkin("legendary", {
+    name: "Witch Queen on a Broom",
+    pitch: "A witch queen riding her broom across a giant full moon, cape flying, leaving a trail of purple and gold sparkles behind her.",
+    float: bobf(2, 1.8),
+    rows: g.rows(),
+    pal: { w: "#7a4a24", s: "#d9a441", S: "#a8792a", p: "#6b3fa8", P: "#52308a", f: "#9ae07a", e: "#1a1024", m: "#8f1426", h: "#ff7a1a", k: "#14101c", g: "#5ee84a", y: "#ffd84a" },
+    under(c, l, tp, t) {
+      glow(c, l + 10, tp + 9, 16, "#fff6d0", 0.25);
+      fade(c, 0.85, () => { for (let y = -2; y <= 18; y++) { const d = 10 - Math.abs(y - 8); if (d <= 0) continue; const hw = Math.sqrt(100 - (y - 8) ** 2); R(c, l + 10 - hw, tp + y, hw * 2, 1, "#e9e0c6"); } });
+      fade(c, 0.3, () => { R(c, l + 6, tp + 3, 3, 2, "#c9bfa0"); R(c, l + 14, tp + 9, 2, 2, "#c9bfa0"); });
+    },
+    over(c, l, tp, t) {
+      for (let k = 0; k < 10; k++) {
+        const ph = (t * 0.9 + k / 10) % 1;
+        const x = l - 1 - Math.round(ph * 10), y = tp + 20 + Math.round(Math.sin(ph * 6 + k) * 2);
+        fade(c, 1 - ph, () => (ph < 0.3 && k % 3 === 0 ? sparkle(c, x, y, "#ffffff", false) : R(c, x, y, 1, 1, k % 2 ? "#ffd84a" : "#c46bff")));
+      }
+      const fl = reduced ? 0 : Math.floor(t * 5) % 2;
+      R(c, l + 4, tp + 15 + fl, 2, 3, "#52308a");
+    },
+  });
+}
+
+// ---------- 11. Cerberus ----------
+{
+  const g = cg();
+  g.ell(9, 18, 7.5, 4, "b"); g.rect(3, 21, 2, 6, "b"); g.rect(13, 21, 2, 6, "b"); g.rect(6, 21, 2, 6, "B"); g.rect(10, 21, 2, 6, "B");
+  for (const x of [3, 6, 10, 13]) g.rect(x, 27, 2, 1, "k");
+  const head = (cx, cy) => { g.rect(cx - 2, cy - 2, 5, 4, "b"); g.set(cx - 2, cy - 3, "b"); g.set(cx + 2, cy - 3, "b"); g.rect(cx - 1, cy + 2, 3, 1, "B"); g.set(cx - 1, cy - 1, "e"); g.set(cx + 1, cy - 1, "e"); g.set(cx, cy + 1, "k"); g.set(cx - 1, cy + 2, "f"); g.set(cx + 1, cy + 2, "f"); };
+  g.rect(3, 11, 3, 5, "b"); g.rect(12, 11, 3, 5, "b"); g.rect(8, 9, 3, 6, "b");
+  head(3, 10); head(9, 6); head(15, 10);
+  g.rect(5, 15, 9, 1, "c"); g.set(7, 15, "s"); g.set(11, 15, "s");
+  addSkin("legendary", {
+    name: "Cerberus",
+    pitch: "The three-headed hound of the underworld, wider than a person, with burning red eyes and a spiked collar. The middle head breathes fire while the others snarl smoke.",
+    rows: g.rows(),
+    pal: { b: "#3a3046", B: "#262033", e: "#ff3b4d", k: "#0b0614", f: "#ffffff", c: "#8f1426", s: "#c9c2d9" },
+    animPal: (t) => ({ e: flick(t, "#ff3b4d", "#ffd84a", 7) }),
+    under(c, l, tp, t) { glow(c, l + 9, tp + 14, 16, "#c4300a", 0.35 + 0.1 * Math.sin(t * 6)); },
+    over(c, l, tp, t) {
+      const ph = (t % 3) / 3;
+      if (ph < 0.45) {
+        const len = Math.sin((ph / 0.45) * Math.PI);
+        for (let k = 0; k < 14; k++) {
+          const d = (k / 14) * 9 * len;
+          R(c, l + 9 + Math.round(Math.sin(t * 20 + k) * d * 0.25), tp + 9 + d, 1, 1, FIRE[Math.min(4, Math.floor((k / 14) * 5))]);
+        }
+        glow(c, l + 9, tp + 13, 7 * len + 1, "#ff7a1a", 0.5);
+      }
+      for (const hx of [3, 15]) rise(c, l + hx - 1, 2, tp + 11, 6, 3, t + hx, 0.7, "#6b6380");
+      for (const [x, y] of [[2, 9], [4, 9], [8, 5], [10, 5], [14, 9], [16, 9]]) glow(c, l + x, tp + y, 2, "#ff3b4d", 0.4);
+    },
+  });
+}
+
+// ---------- 12. Bone Dragon ----------
+{
+  const g = cg();
+  // skull
+  g.rect(11, 2, 5, 3, "b"); g.rect(15, 3, 3, 2, "b"); g.set(12, 3, "e"); g.set(16, 5, "b"); g.set(14, 5, "b"); g.set(12, 1, "b"); g.set(11, 0, "b");
+  // neck vertebrae curving down-left
+  for (const [x, y] of [[11, 6], [10, 7], [10, 8], [9, 9], [9, 10], [9, 11]]) { g.set(x, y, "b"); g.set(x + 1, y, "B"); }
+  // ribcage
+  g.ell(9, 15, 4, 3.5, "r"); for (let y = 12; y <= 18; y += 2) g.rect(6, y, 7, 1, "b"); g.rect(9, 12, 1, 8, "b");
+  // wings: bone arms + tattered membrane
+  g.line(6, 12, 0, 4, "b"); g.line(12, 12, 17, 6, "b");
+  for (let k = 0; k <= 6; k++) { g.line(6 - k, 12 - Math.round(k * 1.3), 4 - Math.round(k * 0.5), 18, k % 2 ? "m" : "M"); }
+  for (let k = 0; k <= 5; k++) { g.line(12 + k, 12 - k, 15, 17, k % 2 ? "m" : "M"); }
+  g.line(6, 12, 0, 4, "b"); g.line(12, 12, 17, 6, "b");
+  // legs + tail
+  g.rect(6, 19, 1, 6, "b"); g.rect(11, 19, 1, 6, "b"); g.rect(5, 25, 3, 1, "b"); g.rect(10, 25, 3, 1, "b");
+  for (let k = 0; k < 9; k++) g.set(9 - Math.round(Math.sin(k * 0.5) * 3) - Math.floor(k / 3), 20 + k * 0.85, "b");
+  addSkin("legendary", {
+    name: "Bone Dragon",
+    pitch: "A dragon skeleton with tattered wings spread wide, green soulfire burning in its eye sockets and ribcage, and ghostly flames curling from its jaws.",
+    rows: g.rows(),
+    pal: { b: "#ece6d6", B: "#b9ae94", e: "#5ee84a", r: "#1f3a2a", m: "#3a4a3a", M: "#2a362a" },
+    animPal: (t) => ({ e: flick(t, "#7dff5a", "#e0ffd8", 8), r: flick(t, "#1f3a2a", "#2f5a3a", 5) }),
+    under(c, l, tp, t) { glow(c, l + 9, tp + 14, 16, "#5ee84a", 0.25 + 0.08 * Math.sin(t * 3)); },
+    over(c, l, tp, t) {
+      flames(c, l + 7, tp + 15, 4, 3, t, GFIRE, 2.6);
+      glow(c, l + 12, tp + 3, 3, "#5ee84a", 0.6);
+      const ph = (t % 2.6) / 2.6;
+      if (ph < 0.4) for (let k = 0; k < 8; k++) { const d = k * (ph / 0.4); R(c, l + 17 + Math.round(d * 0.6), tp + 5 + Math.round(Math.sin(t * 15 + k) * 1.2), 1, 1, GFIRE[Math.min(3, Math.floor(k / 2))]); }
+      rise(c, l + 4, 10, tp + 18, 14, 6, t, 0.5, "#7dff5a");
+    },
+  });
+}
+
+// ---------- 13. Demon Lord ----------
+{
+  const g = cg();
+  g.rect(6, 5, 6, 6, "r"); g.set(7, 7, "e"); g.set(10, 7, "e"); g.rect(7, 9, 4, 1, "k"); g.set(7, 10, "f"); g.set(10, 10, "f");
+  g.line(6, 5, 4, 1, "h"); g.line(5, 5, 3, 2, "h"); g.set(4, 0, "H"); g.line(11, 5, 13, 1, "h"); g.line(12, 5, 14, 2, "h"); g.set(13, 0, "H");
+  g.rect(5, 11, 8, 8, "r"); g.rect(7, 12, 4, 3, "R"); g.rect(5, 19, 8, 2, "k"); g.rect(5, 21, 3, 6, "r"); g.rect(10, 21, 3, 6, "r"); g.rect(4, 27, 4, 1, "k"); g.rect(10, 27, 4, 1, "k");
+  g.rect(3, 12, 2, 6, "r"); g.rect(13, 12, 2, 6, "r"); g.set(3, 18, "c"); g.set(4, 18, "c"); g.set(13, 18, "c"); g.set(14, 18, "c");
+  for (const dir of [-1, 1]) for (let k = 0; k < 4; k++) { const x0 = dir < 0 ? 4 : 13; g.line(x0, 10, x0 + dir * (3 + k), 4 + k * 3, "w"); }
+  for (const dir of [-1, 1]) { const x0 = dir < 0 ? 4 : 13; g.line(x0, 10, x0 + dir * 4, 3, "W"); }
+  g.rect(4, 11, 10, 1, "r");
+  addSkin("legendary", {
+    name: "Demon Lord",
+    pitch: "A towering red demon with curled horns, burning eyes and huge leathery wings, standing in a ring of hellfire that roars up around his legs.",
+    rows: g.rows(),
+    pal: { r: "#a81e30", R: "#c42a3e", e: "#ffd84a", k: "#14101c", f: "#ffffff", h: "#3a3646", H: "#c9c2d9", c: "#ece6d6", w: "#3a1420", W: "#5c1c2c" },
+    animPal: (t) => ({ e: flick(t, "#ffd84a", "#ffffff", 8) }),
+    under(c, l, tp, t) { glow(c, l + 9, tp + 20, 16, "#ff3b1a", 0.4 + 0.12 * Math.sin(t * 9)); },
+    over(c, l, tp, t) {
+      flames(c, l - 1, tp + 28, 20, 9, t, FIRE, 2.2);
+      glow(c, l + 8, tp + 7, 4, "#ffd84a", 0.4);
+      rise(c, l, 18, tp + 26, 26, 8, t, 0.5, (k) => (k % 2 ? "#ffd84a" : "#ff7a1a"), 2);
+    },
+  });
+}
+
+// ---------- 14. Mothman Supreme ----------
+{
+  const g = cg();
+  for (const dir of [-1, 1]) {
+    for (let k = 0; k <= 8; k++) {
+      const x = 9 + dir * (1 + k) - (dir < 0 ? 0 : 1);
+      const top = 4 + Math.round(Math.abs(k - 5) * 0.6), bot = 21 - Math.round(k * 0.9);
+      for (let y = top; y <= bot; y++) g.set(x, y, y < 12 ? "w" : "W");
+    }
+    g.ell(9 + dir * 5 - (dir < 0 ? 0 : 1), 9, 1.6, 1.6, "s"); g.set(9 + dir * 5 - (dir < 0 ? 0 : 1), 9, "S");
+    g.ell(9 + dir * 4 - (dir < 0 ? 0 : 1), 16, 1.2, 1.2, "s");
+  }
+  g.rect(8, 3, 2, 22, "b"); g.rect(7, 4, 4, 4, "b"); g.set(7, 5, "e"); g.set(10, 5, "e"); g.set(7, 2, "a"); g.set(6, 1, "a"); g.set(10, 2, "a"); g.set(11, 1, "a");
+  g.rect(7, 24, 1, 4, "b"); g.rect(10, 24, 1, 4, "b");
+  addSkin("legendary", {
+    name: "Mothman Supreme",
+    pitch: "A dark, towering moth-creature whose huge patterned wings fill the space, with blazing red eyes, flickering lights around it and glowing dust falling off its wings.",
+    rows: g.rows(),
+    pal: { b: "#14101c", w: "#4a3a3a", W: "#3a2a2a", s: "#8a7a5a", S: "#ff3b4d", e: "#ff3b4d", a: "#3a3646" },
+    animPal: (t) => ({ e: Math.floor(t * 11) % 9 === 0 ? "#3a1420" : "#ff3b4d", w: Math.sin(t * 2) > 0 ? "#4a3a3a" : "#5a4a44", S: flick(t, "#ff3b4d", "#ffd84a", 4) }),
+    under(c, l, tp, t) {
+      const on = Math.floor(t * 7) % 11 !== 0;
+      glow(c, l + 9, tp + 5, 12, "#ff3b4d", on ? 0.45 : 0.1);
+      glow(c, l + 9, tp + 14, 18, "#6b3fa8", 0.25);
+    },
+    over(c, l, tp, t) {
+      rise(c, l, 18, tp + 21, -6, 10, t, 0.4, (k) => (k % 2 ? "#e8d8a0" : "#c9b48a"), 1);
+      orbit(l + 9, tp + 12, 11, 8, 3, t, 0.8, (x, y, k) => { if (Math.floor(t * 9 + k * 3) % 7) { glow(c, x, y, 3, "#ffffcc", 0.5); R(c, x, y, 1, 1, "#ffffff"); } });
+    },
+  });
+}
+
+// ---------- 15. Wisp Swarm ----------
+{
+  const g = cg();
+  g.ell(9, 5, 2.5, 2.5, "d"); g.rect(7, 8, 5, 9, "d"); g.rect(5, 9, 2, 7, "d"); g.rect(12, 9, 2, 7, "d"); g.rect(7, 17, 2, 10, "d"); g.rect(10, 17, 2, 10, "d");
+  const ANCHORS = [[9, 4], [7, 6], [11, 6], [6, 10], [12, 10], [9, 11], [5, 15], [13, 15], [8, 14], [10, 14], [8, 19], [11, 19], [8, 24], [11, 24], [7, 27], [12, 27], [9, 8], [9, 17]];
+  addSkin("legendary", {
+    name: "Wisp Swarm",
+    pitch: "No body at all: a swarm of glowing will-o'-the-wisps circling in the shape of a person, drifting and swapping places, with a faint ghostly outline holding them together.",
+    rows: g.rows(),
+    pal: { d: "#1c2a40" },
+    under(c, l, tp, t) { glow(c, l + 9, tp + 14, 16, "#4fb2ff", 0.25 + 0.08 * Math.sin(t * 2)); },
+    over(c, l, tp, t) {
+      ANCHORS.forEach(([ax, ay], k) => {
+        const a = t * (1.2 + hash(k) * 1.5) + k;
+        const x = l + ax + Math.round(Math.cos(a) * 1.5), y = tp + ay + Math.round(Math.sin(a * 1.3) * 1.5);
+        const col = k % 3 === 0 ? "#b8feff" : k % 3 === 1 ? "#7dfcff" : "#c8ffb0";
+        glow(c, x, y, 3, col, 0.55);
+        R(c, x, y, 1, 1, "#ffffff");
+        fade(c, 0.5, () => R(c, x - Math.round(Math.cos(a) * 2), y - Math.round(Math.sin(a * 1.3) * 2), 1, 1, col));
+      });
+    },
+  });
+}
+
+// ---------- 16. Storm Golem ----------
+{
+  const g = cg();
+  for (const [x, y, r] of [[9, 5, 4], [6, 6, 3], [12, 6, 3], [9, 12, 5.5], [4, 11, 3.5], [14, 11, 3.5], [9, 17, 4.5], [2, 15, 2.5], [16, 15, 2.5]]) g.ell(x, y, r, r * 0.85, (xx, yy) => (yy < y - r * 0.3 ? "c" : yy > y + r * 0.4 ? "C" : "m"));
+  g.set(7, 5, "e"); g.set(11, 5, "e"); g.rect(8, 7, 3, 1, "k");
+  g.rect(6, 20, 3, 6, "C"); g.rect(10, 20, 3, 6, "C"); g.rect(5, 26, 4, 2, "m"); g.rect(10, 26, 4, 2, "m");
+  addSkin("legendary", {
+    name: "Storm Golem",
+    pitch: "A giant made of thunderclouds, rumbling and shifting, with glowing eyes, rain pouring off its arms, and lightning cracking through its body and down to the ground.",
+    rows: g.rows(),
+    pal: { c: "#8a8aa8", m: "#5a5a78", C: "#3a3a54", e: "#ffffff", k: "#1a1a2a" },
+    animPal: (t) => {
+      const flash = Math.floor(t * 6) % 9 === 0;
+      return flash ? { c: "#d8e8ff", m: "#9aa8d0", C: "#5a6a90" } : { e: flick(t, "#ffffff", "#9fd4ff", 6) };
+    },
+    under(c, l, tp, t) { glow(c, l + 9, tp + 12, 16, "#4fb2ff", Math.floor(t * 6) % 9 === 0 ? 0.6 : 0.2); },
+    over(c, l, tp, t) {
+      for (let k = 0; k < 10; k++) { const ph = (t * 1.6 + k / 10) % 1; const x = l + [0, 2, 3, 15, 16, 17, 1, 14, 4, 13][k]; fade(c, 0.7, () => R(c, x, tp + 15 + ph * 12, 1, 2, "#9fd4ff")); }
+      const step = Math.floor(t * 6);
+      if (step % 3 === 0) {
+        let seed = step * 9301 + 49297; const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+        let x = l + 6 + Math.round(rnd() * 6), y = tp + 6;
+        while (y < tp + 28) { R(c, x, y, 1, 1, y % 3 ? "#ffffff" : "#fff3a0"); y++; x += rnd() > 0.6 ? 1 : rnd() > 0.5 ? -1 : 0; }
+        glow(c, x, tp + 27, 5, "#fff3a0", 0.6);
+      }
+    },
+  });
+}
+
+// ---------- 17. Crystal Ball Seer ----------
+{
+  const g = cg();
+  g.ell(9, 10, 8, 8.5, (x, y) => ((x - 6) ** 2 + (y - 5) ** 2 < 5 ? "h" : "g"));
+  g.rect(4, 19, 10, 2, "y"); g.rect(5, 21, 8, 1, "Y"); g.rect(7, 22, 4, 3, "y"); g.rect(5, 25, 8, 1, "Y"); g.rect(3, 26, 12, 2, "y");
+  g.set(6, 19, "j"); g.set(9, 19, "J"); g.set(12, 19, "j"); g.set(8, 26, "J");
+  g.rect(0, 22, 3, 2, "s"); g.rect(15, 22, 3, 2, "s");
+  addSkin("legendary", {
+    name: "Crystal Ball Seer",
+    pitch: "A giant crystal ball on a golden stand, with violet mist swirling inside it and a ghostly face that slowly appears, blinks and fades, while sparkles circle the glass.",
+    rows: g.rows(),
+    pal: { g: "#3a2a6a", h: "#b8a8f0", y: "#e8c45a", Y: "#b38a2a", j: "#ff3b4d", J: "#4fb2ff", s: "#c9b49a" },
+    under(c, l, tp, t) { glow(c, l + 9, tp + 10, 16, "#c46bff", 0.4 + 0.1 * Math.sin(t * 2)); },
+    over(c, l, tp, t) {
+      for (let k = 0; k < 16; k++) {
+        const a = t * 1.2 + k * 0.7, r = 1 + (k % 6);
+        const x = l + 9 + Math.round(Math.cos(a) * r), y = tp + 10 + Math.round(Math.sin(a) * r * 0.9);
+        R(c, x, y, 1, 1, k % 3 === 0 ? "#f0d8ff" : k % 3 === 1 ? "#c46bff" : "#7a4ad9");
+      }
+      const face = (Math.sin(t * 0.8) + 1) / 2;
+      if (face > 0.5) fade(c, (face - 0.5) * 2, () => {
+        const blink = t % 3 > 2.85;
+        R(c, l + 6, tp + 9, 2, blink ? 1 : 2, "#ffffff"); R(c, l + 11, tp + 9, 2, blink ? 1 : 2, "#ffffff");
+        R(c, l + 7, tp + 14, 4, 1, "#ffffff"); R(c, l + 6, tp + 13, 1, 1, "#ffffff"); R(c, l + 11, tp + 13, 1, 1, "#ffffff");
+      });
+      orbit(l + 9, tp + 10, 10, 10, 4, t, 0.9, (x, y, k) => { const tw = Math.sin(t * 6 + k * 2) > 0.3; sparkle(c, x, y, tw ? "#ffffff" : "#c46bff", tw); });
+    },
+  });
+}
+
+// ---------- 18. Jack-o'-Lantern Totem ----------
+{
+  const g = cg();
+  const pk = (cx, cy, rx, ry, faces) => {
+    g.ell(cx, cy, rx, ry, (x) => (x === Math.round(cx - rx * 0.4) || x === Math.round(cx + rx * 0.4) ? "r" : x <= cx - rx + 1 ? "h" : x >= cx + rx - 1 ? "O" : "o"));
+    for (const [x, y] of faces) g.set(x, y, "f");
+  };
+  pk(9, 23, 8.5, 4.5, [[5, 21], [6, 21], [12, 21], [13, 21], [4, 24], [5, 25], [6, 24], [7, 25], [8, 24], [9, 25], [10, 24], [11, 25], [12, 24], [13, 25], [14, 24]]);
+  pk(9, 14.5, 6.5, 4, [[6, 13], [7, 12], [11, 12], [12, 13], [6, 16], [7, 16], [8, 16], [9, 16], [10, 16], [11, 16], [12, 16], [8, 17], [10, 17]]);
+  pk(9, 7, 4.5, 3.3, [[7, 6], [11, 6], [9, 7], [7, 9], [8, 8], [9, 9], [10, 8], [11, 9]]);
+  g.set(9, 3, "v"); g.set(10, 2, "v"); g.set(8, 10.5, "v"); g.set(5, 18.5, "v"); g.set(13, 18.5, "v");
+  addSkin("legendary", {
+    name: "Jack-o'-Lantern Totem",
+    pitch: "Three carved pumpkins stacked into a totem, each face glowing and flickering on its own, with fire roaring out of the top pumpkin and embers floating away.",
+    rows: g.rows(),
+    pal: { o: "#ff7a1a", O: "#c4550a", h: "#ffa45a", r: "#e0661a", f: "#fff3a0", v: "#3f6b3a" },
+    animPal: (t) => ({ f: flick(t, "#fff3a0", "#ffd84a") }),
+    under(c, l, tp, t) { glow(c, l + 9, tp + 14, 17, "#ff9a3a", 0.35 + 0.1 * Math.sin(t * 9)); },
+    over(c, l, tp, t) {
+      flames(c, l + 7, tp + 4, 5, 9, t, FIRE, 2.2);
+      for (const [cx, cy, r] of [[9, 23, 6], [9, 14, 5], [9, 7, 4]]) glow(c, l + cx, tp + cy, r, "#ffd84a", 0.25 + 0.15 * Math.sin(t * 7 + cy));
+      rise(c, l + 2, 14, tp + 8, 14, 7, t, 0.5, (k) => (k % 2 ? "#ffd84a" : "#ff7a1a"), 2);
+    },
+  });
+}
+
+// ---------- 19. Ectoplasm Giant ----------
+{
+  const g = cg();
+  g.ell(9, 6, 4, 4, "g"); g.ell(9, 15, 8.5, 6, "g"); g.rect(2, 13, 2, 9, "g"); g.rect(14, 13, 2, 9, "g"); g.rect(4, 20, 4, 7, "g"); g.rect(10, 20, 4, 7, "g");
+  g.ell(9, 15, 4, 3, "G"); g.ell(9, 6, 2, 2, "G");
+  g.set(7, 6, "e"); g.set(11, 6, "e"); g.rect(8, 8, 3, 1, "m");
+  for (let x = 0; x < 18; x++) g.set(x, 27, x % 3 ? "p" : "g");
+  addSkin("legendary", {
+    name: "Ectoplasm Giant",
+    pitch: "A hulking blob of glowing green ghost-goo shaped like a giant, with bubbles rising through its body, slime dripping off its arms and a spreading puddle under its feet.",
+    rows: g.rows(),
+    pal: { g: "#3fb02f", G: "#7dff5a", e: "#ffffff", m: "#1f5a1a", p: "#2f8a3a" },
+    animPal: (t) => ({ G: flick(t, "#7dff5a", "#b7ff9e", 3), g: Math.sin(t * 2) > 0 ? "#3fb02f" : "#46c034" }),
+    under(c, l, tp, t) { glow(c, l + 9, tp + 14, 17, "#5ee84a", 0.4 + 0.1 * Math.sin(t * 3)); },
+    over(c, l, tp, t) {
+      rise(c, l + 4, 10, tp + 20, 16, 8, t, 0.6, "#e0ffd8", 1);
+      for (const [x, sp] of [[2, 0], [3, 0.3], [14, 0.6], [15, 0.15], [6, 0.8], [12, 0.45]]) {
+        const ph = (t * 0.7 + sp) % 1;
+        const y = ph < 0.5 ? 22 : 22 + Math.round((ph - 0.5) * 2 * 5);
+        fade(c, ph < 0.5 ? 1 : 1 - (ph - 0.5) * 2, () => R(c, l + x, tp + y, 1, 2, "#7dff5a"));
+      }
+      const spread = Math.round((Math.sin(t * 1.5) + 1) * 1.5);
+      R(c, l - spread, tp + 27, 18 + spread * 2, 1, "#2f8a3a");
+    },
+  });
+}
+
+// ---------- 20. Banshee Queen ----------
+{
+  const g = cg();
+  g.rect(7, 3, 4, 5, "s"); g.set(8, 5, "e"); g.set(10, 5, "e"); g.rect(8, 7, 3, 2, "m");
+  g.rect(6, 2, 6, 1, "w"); g.rect(6, 3, 1, 7, "w"); g.rect(11, 3, 1, 7, "w"); g.set(7, 1, "y"); g.set(9, 0, "y"); g.set(11, 1, "y"); g.rect(7, 2, 5, 1, "y");
+  for (let y = 9; y <= 25; y++) { const hw = 2.5 + (y - 9) * 0.35; g.rect(Math.round(9 - hw), y, Math.round(hw * 2), 1, y > 21 ? (y % 2 ? "d" : "D") : "d"); }
+  for (let x = 3; x <= 15; x += 3) g.set(x, 26, "D");
+  g.rect(4, 11, 2, 1, "s"); g.rect(13, 11, 2, 1, "s"); g.set(3, 10, "s"); g.set(15, 10, "s");
+  addSkin("legendary", {
+    name: "Banshee Queen",
+    pitch: "A floating ghost queen in a tattered gown, her long white hair streaming out to both sides as she wails, sending rings of sound pulsing out across the space.",
+    float: bobf(3, 1.6),
+    rows: g.rows(),
+    pal: { s: "#d8e8f0", e: "#1a1024", m: "#1a1024", w: "#f3f8ff", y: "#9fd4ff", d: "#b8c8e8", D: "#8fa0c8" },
+    animPal: (t) => ({ e: Math.sin(t * 3) > 0.7 ? "#7dfcff" : "#1a1024" }),
+    under(c, l, tp, t) {
+      glow(c, l + 9, tp + 12, 17, "#9fd4ff", 0.35);
+      for (const dir of [-1, 1]) for (let k = 0; k < 9; k++) {
+        const x = l + 9 + dir * (3 + k), y = tp + 3 + k + Math.round(Math.sin(t * 3 - k * 0.6) * 1.5);
+        R(c, x, y, 1, 2, k % 3 === 2 ? "#d8e8f8" : "#f3f8ff");
+      }
+    },
+    over(c, l, tp, t) {
+      for (let k = 0; k < 3; k++) {
+        const ph = (t * 0.8 + k / 3) % 1;
+        const r = 2 + ph * 12;
+        fade(c, 0.8 * (1 - ph), () => {
+          for (let a = 0; a < TAU; a += 0.35) R(c, l + 9 + Math.cos(a) * r, tp + 8 + Math.sin(a) * r * 0.6, 1, 1, "#b8feff");
+        });
+      }
+      for (let k = 0; k < 4; k++) { const ph = (t * 0.6 + k / 4) % 1; fade(c, 0.6 * (1 - ph), () => R(c, l + 3 + k * 4 + Math.round(Math.sin(t * 2 + k) * 2), tp + 26 + ph * 4, 2, 1, "#b8c8e8")); }
+    },
+  });
+}
+})();
+// ---------- Legendary transformations, batch B (XL21-XL40 in the full gallery) ----------
+(() => {
+const M = (t) => (reduced ? 0 : t);
+const FIRE = ["#ffffff", "#fff3a0", "#ffd84a", "#ff7a1a", "#c4300a"];
+const BLUEFIRE = ["#ffffff", "#d8f0ff", "#9fd4ff", "#4fb2ff", "#2a4a8f"];
+const GREENFIRE = ["#ffffff", "#c8ffb0", "#7dff5a", "#3fb02f", "#1f5a26"];
+const pick = (cols, ph) => cols[Math.min(cols.length - 1, Math.max(0, Math.floor(ph * cols.length)))];
+// rising particles (flames, embers, smoke) inside a box, stateless
+function rise(c, x0, y0, w, h, t, cols, n, speed = 2, seed = 0, alpha = 1) {
+  for (let k = 0; k < n; k++) {
+    const ph = (t * speed + k / n + hash(k, seed) * 0.5) % 1;
+    const x = x0 + Math.floor(hash(k, seed, 7) * w) + Math.round(Math.sin(t * 6 + k) * ph);
+    fade(c, alpha * (1 - ph * 0.7), () => R(c, x, y0 - ph * h, 1, 1, pick(cols, ph)));
+  }
+}
+function line(c, x0, y0, x1, y1, col) {
+  const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) || 1;
+  for (let i = 0; i <= n; i++) R(c, x0 + ((x1 - x0) * i) / n, y0 + ((y1 - y0) * i) / n, 1, 1, col);
+}
+// jagged lightning between two points, re-rolled every step
+function bolt(c, x0, y0, x1, y1, seed, col, jag = 1.6) {
+  const n = Math.max(3, Math.round(Math.hypot(x1 - x0, y1 - y0) / 2));
+  let px = x0, py = y0;
+  for (let i = 1; i <= n; i++) {
+    const f = i / n;
+    const nx = x0 + (x1 - x0) * f + (i < n ? (hash(seed, i) - 0.5) * 2 * jag : 0);
+    const ny = y0 + (y1 - y0) * f + (i < n ? (hash(seed, i, 3) - 0.5) * 2 * jag : 0);
+    line(c, Math.round(px), Math.round(py), Math.round(nx), Math.round(ny), col);
+    px = nx; py = ny;
+  }
+}
+const WISP = [".w.", "www", "w.w"];
+function wisp(c, x, y, col) { spr(c, WISP, { w: col }, Math.round(x) - 1, Math.round(y) - 1); }
+
+// ---------- 1 Grim Reaper Supreme ----------
+addSkin("legendary", {
+  name: "Grim Reaper Supreme",
+  pitch: "Death itself: a floating black robe with burning red eyes, a scythe whose blade glows with ghost-light, and lost souls circling the hood.",
+  pal: { r: "#231d33", R: "#14101c", k: "#07040f", h: "#ece6d6" },
+  float: (t) => (reduced ? 2 : 2 + Math.round((Math.sin(t * 2) + 1) / 2)),
+  rows: [
+    "........rrr.......",
+    ".......rrrrr......",
+    "......rrrrrrr.....",
+    "......rRkkkRr.....",
+    "......rkkkkkr.....",
+    "......rkkkkkr.....",
+    ".....rrRkkkRrr....",
+    "....rrrrrrrrrrr...",
+    "...rrrrrrrrrrrrr..",
+    "...rrrrrrrrrrrRr..",
+    "..hrrrrrrrrrrrRr..",
+    "...rrrrrrrrrrrRr..",
+    "...rrrrrrrrrrrRr..",
+    "...rrrrrrrrrrrRr..",
+    "....rrrrrrrrrrR...",
+    "....rrrrrrrrrrR...",
+    "....rrrrrrrrrrRr..",
+    "...rrrrrrrrrrrRr..",
+    "...rrrrrrrrrrrRr..",
+    "...rrrrrrrrrrrrRr.",
+    "..rrrrrrrrrrrrrRr.",
+    "..rrrrrrrrrrrrrRr.",
+    ".rrrrrrrrrrrrrrRr.",
+    ".r.rr.rrr.rr.rr.r.",
+  ],
+  under(c, l, tp, t) {
+    glow(c, l + 9, tp + 10, 16, "#5ee84a", 0.12 + 0.05 * Math.sin(t * 3));
+    for (let y = -4; y <= 22; y++) R(c, l + 2, tp + y, 1, 1, "#5a3a20");
+    const blade = [[2, -5], [3, -6], [4, -6], [5, -6], [6, -5], [7, -4], [8, -3], [3, -5], [4, -5], [5, -5], [6, -4]];
+    const pulse = Math.sin(t * 4) > 0;
+    glow(c, l + 5, tp - 5, 7, "#7dff5a", 0.45 + 0.15 * Math.sin(t * 4));
+    blade.forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, x >= 7 ? "#ffffff" : pulse ? "#c8ffb0" : "#7dff5a"));
+  },
+  over(c, l, tp, t) {
+    const blink = t % 4 > 3.85;
+    spr(c, [".sss.", blink ? "sssss" : "skssk", ".sss.", ".s.s."], { s: "#d8d0c0", k: "#ff3b4d" }, l + 7, tp + 3);
+    glow(c, l + 9, tp + 5, 6, "#ff3b4d", 0.3);
+    // souls circling the hood, fading as they pass behind
+    for (let k = 0; k < 4; k++) {
+      const a = M(t) * 1.3 + (k * TAU) / 4;
+      const front = Math.sin(a) > 0;
+      fade(c, front ? 0.95 : 0.35, () => wisp(c, l + 9 + Math.cos(a) * 9, tp + 9 + Math.sin(a) * 4, front ? "#e0ffd8" : "#7dff5a"));
+    }
+    rise(c, l + 1, tp + 24, 16, 6, t, ["#a99bc9", "#6b5f8d"], 6, 0.6, 11, 0.5);
+  },
+});
+
+// ---------- 2 Alpha Werewolf ----------
+addSkin("legendary", {
+  name: "Alpha Werewolf",
+  pitch: "A huge wolf throwing its head back to howl at a blazing full moon, eyes burning gold, as the howl ripples out across the sky.",
+  pal: { F: "#3a2614", f: "#6b4a28", l: "#a8844e", y: "#ffd84a", n: "#8a6a3e", k: "#1a1024", c: "#ece6d6", p: "#3a4a78", w: "#ffffff" },
+  rows: [
+    "...........ff.....",
+    "..........fnf.....",
+    ".........fnnf.....",
+    "....F...ffnf......",
+    "....FF.fffff......",
+    ".....Ffffyff......",
+    ".....fffffff......",
+    "....ffffffff......",
+    "...fffffffffff....",
+    "..ffffllllffff....",
+    ".fffflllllfffff...",
+    ".ffffllllllfffff..",
+    "ff.ffllllllff.ff..",
+    "ff.ffffffffff.ff..",
+    "cc..ffffffff..cc..",
+    "....pppppppp......",
+    "....pp.pppppp.....",
+    "....pp....pp......",
+    "....ff....ff......",
+    "...fff....fff.....",
+    "...ff......ff.....",
+    "....ff....ff......",
+    "....ff....ff......",
+    "...fff....fff.....",
+    "..ffff....ffff....",
+    "..cfcf....fcfc....",
+  ],
+  under(c, l, tp, t) {
+    glow(c, l + 13, tp + 3, 16, "#fff3a0", 0.35 + 0.05 * Math.sin(t * 1.5));
+    for (let y = -6; y <= 6; y++) {
+      const half = Math.floor(Math.sqrt(Math.max(0, 36 - y * y)));
+      R(c, l + 13 - half, tp + 2 + y, half * 2 + 1, 1, "#f3e9c0");
+    }
+    [[11, 0], [15, 4], [12, 5], [14, -2]].forEach(([x, y]) => R(c, l + x, tp + y, 2, 1, "#d9cf9e"));
+  },
+  over(c, l, tp, t) {
+    const howling = (t % 4) < 2.6;
+    glow(c, l + 9, tp + 5, 4, "#ffd84a", 0.45);
+    if (howling) {
+      for (let k = 0; k < 3; k++) {
+        const ph = (t * 1.2 + k / 3) % 1;
+        const r = 2 + ph * 9;
+        fade(c, 1 - ph, () => {
+          for (let a = -0.9; a <= 0.3; a += 0.18) R(c, l + 12 + Math.cos(a - 1.2) * r, tp - 1 + Math.sin(a - 1.2) * r, 1, 1, "#fff3a0");
+        });
+      }
+    }
+    rise(c, l, tp + 26, 18, 3, t, ["#a99bc9", "#6b5f8d"], 5, 0.4, 21, 0.5);
+  },
+});
+
+// ---------- 3 It's Alive! ----------
+addSkin("legendary", {
+  name: "It's Alive!",
+  pitch: "The monster at the moment of creation: lightning leaps from its neck bolts to the ground, the air flashes white, and sparks spray off its fists.",
+  pal: { h: "#14101c", g: "#6b9a52", G: "#4a7038", b: "#a49db0", k: "#1a1024", w: "#f3efe6", m: "#2f3a2a", j: "#2a2433", J: "#1a1622", p: "#3a3646", B: "#14101c" },
+  animPal: (t) => (Math.floor(t * 9) % 6 === 0 ? { w: "#9fd4ff", k: "#ffffff", g: "#9ad47a" } : {}),
+  rows: [
+    "....hhhhhhhhhh....",
+    "....hhhhhhhhhh....",
+    "....gkgkgkgggg....",
+    "...bGGGGGGGGGGb...",
+    "....gwkgggwkgg....",
+    "....gggggggggG....",
+    "....ggmmmmmmgG....",
+    ".....ggggggggG....",
+    ".......gggg.......",
+    "...jjjjjjjjjjjJ...",
+    "..jjjjjjjjjjjjJj..",
+    "..jj.jjjjjjjjJ.jj.",
+    "..jj.jjjjjjjjJ.jj.",
+    "..jj.jjjjjjjjJ.jj.",
+    "..gg.jjjjjjjjJ.gg.",
+    "..gg.pppppppp..gg.",
+    "..GG.pppp.pppp.GG.",
+    ".....ppp...ppp....",
+    ".....ppp...ppp....",
+    ".....ggp...pgg....",
+    ".....ppp...ppp....",
+    "....BBBB...BBBB...",
+    "....BBBB...BBBB...",
+    "...BBBBB...BBBBB..",
+    "...BBBBB...BBBBB..",
+  ],
+  under(c, l, tp, t) {
+    const step = Math.floor(t * 9);
+    glow(c, l + 9, tp + 10, 18, "#4fb2ff", step % 6 === 0 ? 0.55 : 0.18);
+  },
+  over(c, l, tp, t) {
+    const step = Math.floor(t * 9);
+    if (step % 3 !== 2) {
+      bolt(c, l + 3, tp + 3, l - 1, tp + 24, step, "#d8f0ff");
+      bolt(c, l + 14, tp + 3, l + 19, tp + 22, step + 50, "#d8f0ff");
+      if (step % 2) bolt(c, l + 3, tp + 3, l + 8, tp - 5, step + 9, "#ffffff", 1);
+      else bolt(c, l + 14, tp + 3, l + 10, tp - 5, step + 13, "#ffffff", 1);
+    }
+    R(c, l + 3, tp + 3, 1, 1, "#ffffff"); R(c, l + 14, tp + 3, 1, 1, "#ffffff");
+    for (const [hx, seed] of [[3, 1], [15, 2]]) {
+      for (let k = 0; k < 3; k++) {
+        const ph = (t * 2.5 + k / 3 + seed * 0.3) % 1;
+        fade(c, 1 - ph, () => R(c, l + hx + (k - 1) * ph * 4, tp + 15 + ph * 3 - Math.sin(ph * Math.PI) * 3, 1, 1, k === 1 ? "#ffffff" : "#9fd4ff"));
+      }
+    }
+  },
+});
+
+// ---------- 4 Pharaoh Rising ----------
+addSkin("legendary", {
+  name: "Pharaoh Rising",
+  pitch: "A golden sarcophagus stands open and a mummified pharaoh steps out with glowing eyes, while scarab beetles swarm and gold dust sparkles in the air.",
+  pal: { g: "#ffc53a", G: "#b37a10", b: "#2a4a8f", s: "#d9cfb2", S: "#b9ae94", e: "#5ee84a", m: "#3a3044", y: "#ffc53a", c: "#4fb2ff", w: "#e8e0c8", W: "#b9ae94" },
+  rows: [
+    "......gggggg......",
+    ".....gbgbgbgg.....",
+    "....gbgggggbgg....",
+    "....gbsssssbg.....",
+    "....gbseseSbg.....",
+    "....gbsssssbg.....",
+    "....gbbsmssbbg....",
+    ".....ggsssssgg....",
+    ".....yyyyyyyy.....",
+    "....ycycycycyc....",
+    "....wwwwwwwww.....",
+    "...wwWwwwwWwww....",
+    "...w.wwWwwww.w....",
+    "...w.wwwWwww.w....",
+    "...ww.wwwwWw.ww...",
+    ".....wwWwwww......",
+    ".....wwwwWww......",
+    ".....www.www......",
+    ".....wWw.wwW......",
+    ".....www.www......",
+    ".....wwW.wWw......",
+    ".....www.www......",
+    "....wwww.wwww.....",
+  ],
+  under(c, l, tp, t) {
+    // the open coffin behind him: dark interior, gold rim, two lids swung open
+    glow(c, l + 9, tp + 10, 18, "#ffc53a", 0.25 + 0.06 * Math.sin(t * 2));
+    for (let y = -3; y <= 22; y++) {
+      const w = y < 0 ? 10 + y * 2 : y > 18 ? 12 : 14;
+      R(c, l + 9 - w / 2 - 1, tp + y, w + 2, 1, "#b37a10");
+      R(c, l + 9 - w / 2, tp + y, w, 1, "#1a1024");
+    }
+    for (const lx of [0, 16]) {
+      for (let y = -2; y <= 22; y++) R(c, l + lx, tp + y, 2, 1, y % 5 === 0 ? "#2a4a8f" : "#ffc53a");
+    }
+  },
+  over(c, l, tp, t) {
+    glow(c, l + 8, tp + 4, 4, "#5ee84a", 0.5);
+    for (let k = 0; k < 5; k++) {
+      const a = M(t) * (k % 2 ? 1.1 : -0.8) + (k * TAU) / 5;
+      const x = l + 9 + Math.cos(a) * (8 + (k % 2)), y = tp + 12 + Math.sin(a) * 9;
+      spr(c, ["k.k", "kgk", ".k."], { k: "#1f4a3a", g: "#3fb0a0" }, Math.round(x) - 1, Math.round(y) - 1);
+    }
+    for (let k = 0; k < 6; k++) {
+      const ph = (t * 0.8 + k / 6) % 1;
+      if (Math.sin(t * 7 + k * 3) > 0.4) sparkle(c, l + 1 + Math.floor(hash(k, 4) * 16), tp + 22 - ph * 26, "#fff1b0", false);
+    }
+  },
+});
+
+// ---------- 5 Haunted Music Box ----------
+const BALLERINA = [
+  [".....sss....", "b...skks...b", ".b..ssss..b.", "..b..tt..b..", "...bbbbbb...", ".....bb.....", "....bbbb....", ".....bb.....", "...pppppp...", "..pPppppPp..", ".pppppppppp.", ".....bb.....", ".....b.b....", ".....b..b...", ".....b...b..", "....bb...bb."],
+  [".....sss....", "....skks....", "...bssssb...", "..b..tt..b..", "..bbbbbbbb..", ".....bb.....", "....bbbb....", ".....bb.....", "...pppppp...", "..pPppppPp..", ".pppppppppp.", ".....bb.....", ".....bb.....", ".....bb.....", ".....bb.....", "....bbbb...."],
+];
+addSkin("legendary", {
+  name: "Haunted Music Box",
+  pitch: "An old music box with a mirrored lid where a tiny skeleton ballerina spins on her toes, ghostly notes drift up, and a pink glow pulses with the tune.",
+  pal: { L: "#6b4a28", m: "#7a6aa0", M: "#c9c2d9", b: "#3a1f4a", B: "#2a1636", g: "#ffc53a", p: "#ff8fb8", f: "#3a2614" },
+  rows: [
+    "..LLLLLLLLLLLLLL..",
+    "..LmmmmmmmmmmmmL..",
+    "..LmMmmmmmmmmmmL..",
+    "..LmmMmmmmmmmmmL..",
+    "..LmmmmmmmmmmmmL..",
+    "..LmmmmmmmmmmmmL..",
+    "..LmmmmmmmmmmmmL..",
+    "..LmmmmmmmmmmmmL..",
+    "..LmmmmmmmmmmmmL..",
+    "..LLLLLLLLLLLLLL..",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "bbbbbbbbbbbbbbbbbb",
+    "bggggggggggggggggb",
+    "bgBBBBBBBBBBBBBBgb",
+    "bgBpBBBBpBBBBpBBgb",
+    "bgBBBBBBBBBBBBBBgb",
+    "bggggggggggggggggb",
+    ".ff............ff.",
+  ],
+  under(c, l, tp, t) { glow(c, l + 9, tp + 14, 15, "#ff8fb8", 0.25 + 0.1 * Math.sin(t * 3)); },
+  over(c, l, tp, t) {
+    // spinning: front pose, then turned (mirrored), switching quickly
+    const ph = Math.floor(M(t) * 6) % 4;
+    const frame = BALLERINA[ph % 2 ? 1 : 0];
+    const pal = { s: "#ece6d6", k: "#1a1024", t: "#ece6d6", b: "#ece6d6", p: "#ff8fb8", P: "#ffc0dc" };
+    if (ph === 2) {
+      c.save(); c.translate(l * 2 + 18, 0); c.scale(-1, 1); spr(c, frame, pal, l + 3, tp + 5); c.restore();
+    } else spr(c, frame, pal, l + 3, tp + 5);
+    R(c, l + 8, tp + 21, 2, 1, "#fff1b0");
+    // music notes
+    for (let k = 0; k < 3; k++) {
+      const q = (t * 0.5 + k / 3) % 1;
+      fade(c, 1 - q, () => spr(c, [".n", ".n", "nn"], { n: k % 2 ? "#ff8fb8" : "#d8d0ec" }, l + 14 - k * 5 + Math.round(Math.sin(t * 2 + k) * 2), tp + 18 - q * 22));
+    }
+    if (Math.sin(t * 5) > 0.6) sparkle(c, l + 5, tp + 3, "#ffffff", false);
+  },
+});
+
+// ---------- 6 Spider Queen ----------
+addSkin("legendary", {
+  name: "Spider Queen",
+  pitch: "A giant crowned spider with a glowing red hourglass, eight long legs filling the space, webs spreading behind her, and spiderlings dropping on silk threads.",
+  pal: { y: "#ffc53a", h: "#231d33", r: "#ff3b4d", a: "#2a2238", A: "#1a1528", R: "#ff3b4d" },
+  rows: [
+    "......y.y.y.......",
+    "......yyyyy.......",
+    ".......hhh........",
+    "......hrhrh.......",
+    "......hhhhh.......",
+    ".......hhh........",
+    "......aaaaa.......",
+    ".....aaaaaaa......",
+    "....aaaaaaaaa.....",
+    "....aaaaRaaaa.....",
+    "....aaaRRRaaa.....",
+    "....aaaaRaaaa.....",
+    "....aaaRRRaaa.....",
+    "....aaaaaaaaa.....",
+    ".....aaaaaaa......",
+    "......aaaaa.......",
+    ".......aaa........",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+  ],
+  under(c, l, tp, t) {
+    // web spreading from the corners, pulsing
+    const a = 0.35 + 0.15 * Math.sin(t * 2);
+    fade(c, a, () => {
+      for (const [cx, cy] of [[-1, -1], [18, -1]]) {
+        for (let k = 0; k < 5; k++) line(c, l + cx, tp + cy, l + cx + (cx < 0 ? 1 : -1) * (3 + k * 3), tp + cy + 15 - k * 3, "#d8d0ec");
+        for (let r = 4; r <= 12; r += 4) for (let k = 0; k <= 8; k++) {
+          const ang = (k / 8) * (Math.PI / 2);
+          R(c, l + cx + (cx < 0 ? 1 : -1) * Math.cos(ang) * r, tp + cy + Math.sin(ang) * r, 1, 1, "#d8d0ec");
+        }
+      }
+    });
+    glow(c, l + 8, tp + 10, 12, "#ff3b4d", 0.2 + 0.1 * Math.sin(t * 4));
+    // eight legs from the body down to the ground
+    const step = M(t) * 3;
+    const legs = [[-1, 7, -7, 27], [-1, 9, -5, 27], [-1, 11, -3, 27], [-1, 13, -1, 27], [1, 7, 7, 27], [1, 9, 5, 27], [1, 11, 3, 27], [1, 13, 1, 27]];
+    legs.forEach(([side, y0, dx, y1], i) => {
+      const x0 = 8 + side * 4, lift = Math.round(Math.max(0, Math.sin(step + i * 1.7)) * 1.5);
+      const kx = x0 + side * 6, ky = y0 - 4 + (i % 4);
+      line(c, l + x0, tp + y0, l + kx, tp + ky, "#2a2238");
+      line(c, l + kx, tp + ky, l + x0 + dx + side * 6, tp + y1 - lift, "#2a2238");
+      R(c, l + kx, tp + ky, 1, 1, "#4a3a6a");
+    });
+  },
+  over(c, l, tp, t) {
+    const glowR = Math.sin(t * 4) > 0 ? "#ff6b7a" : "#ff3b4d";
+    [[8, 9], [7, 10], [8, 10], [9, 10], [8, 11], [7, 12], [8, 12], [9, 12]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, glowR));
+    for (let k = 0; k < 3; k++) {
+      const ph = ((M(t) * 0.35 + k / 3) % 1);
+      const x = l + [1, 15, 12][k], y = tp - 2 + Math.sin(ph * Math.PI) * [10, 14, 7][k];
+      line(c, x, tp - 3, x, y, "#a99bc9");
+      spr(c, ["k.k", ".k.", "k.k"], { k: "#d8d0ec" }, x - 1, y);
+    }
+  },
+});
+
+// ---------- 7 Swamp Hydra ----------
+addSkin("legendary", {
+  name: "Swamp Hydra",
+  pitch: "Three serpent heads on long swaying necks rise from a bubbling green pool, eyes glowing, tongues flicking, one of them hissing out poison mist.",
+  pal: { w: "#2f8a5a", W: "#5ec88a", d: "#1f5a3a" },
+  rows: [
+    "..................", "..................", "..................", "..................", "..................", "..................",
+    "..................", "..................", "..................", "..................", "..................", "..................",
+    "..................", "..................", "..................", "..................", "..................", "..................",
+    "..................", "..................", "..................", "..................", "..................", "..................",
+    "..wwwwwwwwwwwwww..",
+    ".wwWwwwwwwwwWwwww.",
+    "wwwwwwwWwwwwwwwwww",
+    ".dwwwwwwwwwwwwwwd.",
+  ],
+  under(c, l, tp, t) { glow(c, l + 9, tp + 20, 18, "#5ee84a", 0.22 + 0.06 * Math.sin(t * 2)); },
+  over(c, l, tp, t) {
+    const heads = [[4, 7, 0], [9, 2, 1], [14, 8, 2]];
+    for (const [bx, hy, i] of heads) {
+      let hx = bx;
+      for (let y = 25; y >= hy + 3; y--) {
+        const x = Math.round(bx + Math.sin(y * 0.45 + M(t) * 1.6 + i * 2) * 1.6);
+        R(c, l + x, tp + y, 2, 1, "#3f7a5a"); R(c, l + x + 1, tp + y, 1, 1, "#7ab88a");
+        if (y % 3 === 0) R(c, l + x, tp + y, 1, 1, "#2a5a40");
+        hx = x;
+      }
+      const dir = i === 0 ? -1 : 1;
+      const hxl = hx + (dir < 0 ? -2 : 0);
+      spr(c, dir < 0 ? ["..ggg", ".ggeg", "gggggg", ".gggg."] : ["ggg..", "gegg.", "gggggg", ".gggg."], { g: "#3f7a5a", e: Math.sin(t * 5 + i) > -0.6 ? "#ffd84a" : "#3f7a5a" }, l + hxl, tp + hy);
+      if (Math.floor(t * 4 + i) % 3 === 0) { R(c, l + hxl + (dir < 0 ? -1 : 6), tp + hy + 2, 1, 1, "#ff3b4d"); R(c, l + hxl + (dir < 0 ? -2 : 7), tp + hy + 1, 1, 1, "#ff3b4d"); }
+      glow(c, l + hxl + 3, tp + hy + 1, 3, "#ffd84a", 0.35);
+    }
+    // poison mist from the middle head
+    rise(c, l + 10, tp + 4, 6, 7, t, ["#c8ffb0", "#7dff5a", "#3fb02f"], 6, 0.9, 77, 0.7);
+    // bubbles in the pool
+    for (let k = 0; k < 4; k++) {
+      const ph = (t * 1.1 + k / 4) % 1;
+      if (ph < 0.8) R(c, l + 2 + k * 4, tp + 24 - ph * 3, 1, 1, "#b7ff9e");
+    }
+  },
+});
+
+// ---------- 8 Candy Golem ----------
+addSkin("legendary", {
+  name: "Candy Golem",
+  pitch: "A hulking golem built from Halloween candy: a gumdrop head with lollipop eyes, a chocolate-bar body and candy-cane arms, with sweets orbiting it and sugar sparkling in the air.",
+  pal: { p: "#ff6fb5", P: "#c44a8a", w: "#ffffff", k: "#c42a3e", m: "#7a1a4a", c: "#6b3a1a", C: "#4a2410", r: "#e0384e", W: "#f3efe6", y: "#ffd84a", o: "#ff7a1a", g: "#5ee84a", G: "#3fb02f" },
+  rows: [
+    "......pppppp......",
+    ".....pppppppp.....",
+    "....pppppppppP....",
+    "....pwkpppwkpP....",
+    "....pkwpppkwpP....",
+    "....pppppppppP....",
+    "....ppmmmmmmpP....",
+    ".....ppppppppP....",
+    "..cccccccccccccc..",
+    ".rcCcccCcccCcccCW.",
+    ".WccccccccccccccrW",
+    ".rcCcccCcccCcccCW.",
+    ".WccccccccccccccrW",
+    ".rcCcccCcccCcccCW.",
+    "..ccccccccccccccr.",
+    "..cCcccCcccCcccC..",
+    "..cccccccccccccc..",
+    "....gggg..gggg....",
+    "....gggg..gggg....",
+    "....GggG..GggG....",
+    "...yyyyy..yyyyy...",
+    "...ooooo..ooooo...",
+    "...WWWWW..WWWWW...",
+  ],
+  under(c, l, tp, t) { glow(c, l + 9, tp + 10, 17, "#ff8fb8", 0.2 + 0.06 * Math.sin(t * 2)); },
+  over(c, l, tp, t) {
+    // lollipop-swirl eyes
+    const sw = Math.floor(M(t) * 4) % 2;
+    R(c, l + 5 + sw, tp + 3 + sw, 1, 1, "#ffffff"); R(c, l + 11 - sw, tp + 4 - sw, 1, 1, "#ffffff");
+    const SWEETS = [
+      [".y.", "yoy", "WWW"],
+      ["r.r", "rWr", "r.r"],
+      [".pp.", "pWWp", ".pp.", "..k."],
+      ["g.g", "ggg", "g.g"],
+    ];
+    const PAL = { y: "#ffd84a", o: "#ff7a1a", W: "#ffffff", r: "#e0384e", p: "#c46bff", k: "#e8dff5", g: "#5ee84a" };
+    SWEETS.forEach((s, k) => {
+      const a = M(t) * 1.2 + (k * TAU) / 4;
+      fade(c, Math.sin(a) > -0.3 ? 1 : 0.4, () => spr(c, s, PAL, Math.round(l + 9 + Math.cos(a) * 11) - 1, Math.round(tp + 11 + Math.sin(a) * 5) - 1));
+    });
+    for (let k = 0; k < 6; k++) {
+      const ph = (t * 0.7 + k / 6) % 1;
+      fade(c, 1 - ph, () => R(c, l + Math.floor(hash(k, 8) * 18), tp + ph * 26 - 2, 1, 1, ["#ff6fb5", "#ffd84a", "#4fb2ff", "#5ee84a", "#ffffff", "#c46bff"][k]));
+      if (Math.sin(t * 6 + k * 2) > 0.85) sparkle(c, l + Math.floor(hash(k, 9) * 18), tp + Math.floor(hash(k, 10) * 22), "#ffffff", false);
+    }
+  },
+});
+
+// ---------- 9 Disco Skeleton ----------
+const DANCE = [
+  ["b...sssss..b", ".b..skssk.b.", "..b.sssss.b.", "...b.sts.b..", "....b.s.b...", "....bbbbb...", ".....bbb....", "......b.....", ".....bbb....", "......b.....", ".....bbb....", "......b.....", "....bbbbb...", "....b...b...", "...b.....b..", "...b.....b..", "..b.......b.", "..b.......b.", ".bb.......bb"],
+  ["..........b.", "....sssss.b.", "....skssk.b.", "....sssssb..", ".....sts.b..", "......s.b...", "...bbbbbb...", "..b...b.....", "..b..bbb....", "...b..b.....", "....bbbb....", "......b.....", "....bbbbb...", "....b...b...", "....b....b..", "....b.....b.", "....b......b", "....b.......", "...bb......."],
+];
+addSkin("legendary", {
+  name: "Disco Skeleton",
+  pitch: "A skeleton busting moves under a spinning disco ball, colored spotlights sweeping the floor, the dance-floor tiles lighting up with every step.",
+  pal: { L: "#a99bc9", D: "#e8e0f0", d: "#7a6aa0" },
+  rows: [
+    "........L.........",
+    "........L.........",
+    ".......DdD........",
+    "......DdDdD.......",
+    ".......DdD........",
+  ].concat(Array(23).fill("..................")),
+  under(c, l, tp, t) {
+    const hue = Math.round((t * 90) % 360);
+    // sweeping spotlight beams from the ball
+    for (let k = 0; k < 3; k++) {
+      const a = Math.PI / 2 + Math.sin(M(t) * 1.5 + k * 2.1) * 0.7;
+      fade(c, 0.22, () => { c.fillStyle = `hsl(${(hue + k * 120) % 360} 100% 60%)`; c.beginPath(); c.moveTo(l + 9, tp + 4); c.lineTo(l + 9 + Math.cos(a - 0.12) * 30, tp + 4 + Math.sin(a - 0.12) * 30); c.lineTo(l + 9 + Math.cos(a + 0.12) * 30, tp + 4 + Math.sin(a + 0.12) * 30); c.fill(); });
+    }
+    // floor tiles
+    for (let x = 0; x < 18; x += 3) {
+      const on = (Math.floor(t * 4) + x / 3) % 3 === 0;
+      R(c, l + x, tp + 27, 3, 1, on ? `hsl(${(hue + x * 20) % 360} 100% 65%)` : "#2a1d48");
+    }
+  },
+  over(c, l, tp, t) {
+    const beat = Math.floor(M(t) * 2.5) % 2;
+    const hue = Math.round((t * 90) % 360);
+    const frame = DANCE[beat];
+    spr(c, frame, { b: "#ece6d6", s: "#ece6d6", k: `hsl(${hue} 100% 60%)`, t: "#1a1024" }, l + 3, tp + 8);
+    // disco ball facets twinkle
+    for (let k = 0; k < 2; k++) if (Math.sin(t * 8 + k * 3) > 0.4) R(c, l + 7 + k * 3, tp + 3 - (k % 2), 1, 1, "#ffffff");
+    for (let k = 0; k < 3; k++) {
+      const ph = (t * 1.2 + k / 3) % 1;
+      if (ph < 0.25) sparkle(c, l + [1, 16, 14][k], tp + [6, 12, 3][k], `hsl(${(hue + k * 100) % 360} 100% 75%)`, ph < 0.12);
+    }
+  },
+});
+
+// ---------- 10 Black Cat Familiar ----------
+addSkin("legendary", {
+  name: "Black Cat Familiar",
+  pitch: "A giant witch's cat sitting tall on a glowing magic circle, green eyes blazing, tail swishing, and a crescent-moon charm shining on its collar.",
+  pal: { k: "#1f1a2e", K: "#3a2d5c", p: "#ff8fb8", e: "#7dff5a", E: "#0b0614", n: "#ff8fb8", y: "#c46bff" },
+  rows: [
+    "...k........k.....",
+    "...kk......kk.....",
+    "...kkk....kkk.....",
+    "...kpkkkkkkpk.....",
+    "...kkkkkkkkkk.....",
+    "..Kkkkkkkkkkkk....",
+    "..KkeekkkkeekK....",
+    "..KkeEkkkkeEkK....",
+    "..Kkkkkknkkkkk....",
+    "...Kkkkkkkkkk.....",
+    "....kkyyyykk......",
+    "...Kkkkkkkkkk.....",
+    "..Kkkkkkkkkkkk....",
+    ".Kkkkkkkkkkkkkk...",
+    ".Kkkkkkkkkkkkkk...",
+    ".Kkkkkkkkkkkkkk...",
+    "Kkkkkkkkkkkkkkkk..",
+    "Kkkkkkkkkkkkkkkk..",
+    "Kkkkkkkkkkkkkkkk..",
+    "Kkkkkkkkkkkkkkkk..",
+    ".Kkkkkkkkkkkkkk...",
+    ".Kkkkkkkkkkkkkk...",
+    ".Kkk.kkkkkk.kkk...",
+    "Kkkk.kkkkkk.kkkk..",
+  ],
+  animPal: (t) => (t % 4.5 > 4.35 ? { e: "#1f1a2e", E: "#1f1a2e" } : { e: Math.sin(t * 3) > 0 ? "#b7ff9e" : "#7dff5a" }),
+  under(c, l, tp, t) {
+    // magic circle on the floor
+    glow(c, l + 8, tp + 23, 14, "#c46bff", 0.35 + 0.1 * Math.sin(t * 2.5));
+    for (let k = 0; k < 24; k++) {
+      const a = (k / 24) * TAU + M(t) * 0.6;
+      R(c, l + 8 + Math.cos(a) * 10, tp + 23 + Math.sin(a) * 2.5, 1, 1, k % 3 === 0 ? "#f0d8ff" : "#c46bff");
+    }
+    // tail swishing up the right side
+    const sw = Math.sin(M(t) * 2) * 2;
+    for (let y = 22; y >= 9; y--) {
+      const f = (22 - y) / 13;
+      R(c, l + 15 + Math.round(Math.sin(f * 3 + sw * 0.5) * 1.5 + f * sw), tp + y, 2, 1, "#1f1a2e");
+    }
+  },
+  over(c, l, tp, t) {
+    glow(c, l + 5, tp + 6, 3, "#7dff5a", 0.4); glow(c, l + 11, tp + 6, 3, "#7dff5a", 0.4);
+    spr(c, [".y", "y.", ".y"], { y: Math.sin(t * 4) > 0 ? "#fff1b0" : "#ffd84a" }, l + 7, tp + 11);
+    // whiskers
+    [[1, 8], [0, 9], [14, 8], [15, 9]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, "#a99bc9"));
+    for (let k = 0; k < 4; k++) {
+      const ph = (t * 0.7 + k / 4) % 1;
+      if (ph < 0.3) sparkle(c, l + [0, 16, 3, 13][k], tp + 20 - ph * 12, "#f0d8ff", ph < 0.15);
+    }
+  },
+});
+
+// ---------- 11 Cosmic Ghost ----------
+const BOO = [
+  "......wwwwww......",
+  "....wwwwwwwwww....",
+  "...wwwwwwwwwwww...",
+  "..wwwwwwwwwwwwww..",
+  "..wwwwwwwwwwwwww..",
+  ".wwwwkkwwwwkkwwww.",
+  ".wwwwkkwwwwkkwwww.",
+  ".wwwwwwwwwwwwwwww.",
+  ".wwwwwwwkkwwwwwww.",
+  ".wwwwwwwkkwwwwwww.",
+  ".wwwwwwwwwwwwwwww.",
+  "wwwwwwwwwwwwwwwwww",
+  "wwwwwwwwwwwwwwwwww",
+  "ww.wwwwwwwwwwww.ww",
+  "...wwwwwwwwwwww...",
+  "...wwwwwwwwwwww...",
+  "...wwwwwwwwwwww...",
+  "..wwwwwwwwwwwwww..",
+  "..wwwwwwwwwwwwww..",
+  "..wwwwwwwwwwwwww..",
+  ".wwwwwwwwwwwwwwww.",
+];
+addSkin("legendary", {
+  name: "Cosmic Ghost",
+  pitch: "A giant bedsheet ghost made of outer space: stars and nebulas drift through its body, tiny planets orbit it, and its edges shimmer with starlight.",
+  pal: { w: "#141c4a", k: "#ffffff" },
+  float: (t) => (reduced ? 3 : 3 + Math.round((Math.sin(t * 1.6) + 1) * 1.2)),
+  rows: BOO,
+  under(c, l, tp, t) { glow(c, l + 9, tp + 10, 18, "#7a4ad9", 0.4 + 0.1 * Math.sin(t * 2)); },
+  over(c, l, tp, t) {
+    // nebula and stars only inside the ghost
+    for (let j = 0; j < BOO.length; j++) for (let i = 0; i < BOO[j].length; i++) {
+      if (BOO[j][i] !== "w") continue;
+      const n = Math.sin(i * 0.6 + j * 0.4 + M(t) * 0.8) + Math.sin(i * 0.3 - j * 0.5 + M(t) * 0.5);
+      if (n > 1.2) R(c, l + i, tp + j, 1, 1, "#4a2a8f");
+      else if (n < -1.3) R(c, l + i, tp + j, 1, 1, "#1c3a7a");
+      const edge = BOO[j][i - 1] !== "w" || BOO[j][i + 1] !== "w" || !BOO[j - 1] || BOO[j - 1][i] !== "w";
+      if (edge) R(c, l + i, tp + j, 1, 1, Math.sin(t * 3 + i + j) > 0 ? "#b9a0ff" : "#7a9ae0");
+    }
+    for (let k = 0; k < 9; k++) {
+      const i = Math.floor(hash(k, 31) * 18), j = Math.floor(((hash(k, 32) * 21 + M(t) * 1.5) % 21));
+      if (BOO[j] && BOO[j][i] === "w") R(c, l + i, tp + j, 1, 1, (k + Math.floor(t * 3)) % 3 ? "#ffffff" : "#ffd84a");
+    }
+    // eyes glow, hem waves
+    glow(c, l + 6, tp + 6, 3, "#9fd4ff", 0.5); glow(c, l + 12, tp + 6, 3, "#9fd4ff", 0.5);
+    const wv = reduced ? 0 : Math.floor(t * 3) % 2;
+    for (let x = 1; x < 17; x++) if ((x + wv) % 3) R(c, l + x, tp + 21, 1, 1, "#141c4a");
+    // planets
+    const a = M(t) * 1.1;
+    fade(c, Math.sin(a) > 0 ? 1 : 0.5, () => spr(c, [".o.", "ooo", ".o."], { o: "#ff7a1a" }, Math.round(l + 9 + Math.cos(a) * 12) - 1, Math.round(tp + 10 + Math.sin(a) * 4) - 1));
+    const b = M(t) * 0.8 + 2.5;
+    fade(c, Math.sin(b) > 0 ? 1 : 0.5, () => { spr(c, [".pp.", "pppp", ".pp."], { p: "#4fb2ff" }, Math.round(l + 9 + Math.cos(b) * 10) - 2, Math.round(tp + 14 + Math.sin(b) * 3) - 1); });
+    if (Math.sin(t * 5) > 0.6) sparkle(c, l + 2, tp + 1, "#ffffff", true);
+  },
+});
+
+// ---------- 12 Gargoyle Awakened ----------
+addSkin("legendary", {
+  name: "Gargoyle Awakened",
+  pitch: "A stone gargoyle cracking to life with its wings spread wide, molten light pouring through glowing runes, its eyes igniting and chips of stone breaking away.",
+  pal: { W: "#4a4558", w: "#6b6380", g: "#8a8494", G: "#6b6578", h: "#5a5468", e: "#ff7a1a", c: "#ff7a1a", t: "#ece6d6", k: "#3a3546" },
+  rows: [
+    "W.......h..h.....W",
+    "WW......hhhh....WW",
+    "WWW....gggggg..WWW",
+    "WwWW..ggeggegg.WWwW",
+    "WwwWW.gggggggg.WWwwW",
+    "WwwwWW.gtgtgtg.WWwwwW",
+    "WwwwwWWkggggggkWWwwwW",
+    ".WwwwwWggggggggWwwwW.",
+    "..WwwwWggcggcggWwwW..",
+    "...WwwWgggggggGWwW...",
+    "....WWWggccggGGWW....",
+    ".....WWgggggggGW.....",
+    "......gggggggGG......",
+    ".....ggg.ggg.GGG.....",
+    ".....gg..ggg..GG.....",
+    "....ggg..ggg..GGG....",
+    "....ggg.......GGG....",
+    "...gggg.......GGGG...",
+    "...kkkkkkkkkkkkkkk...",
+    "..kkkkkkkkkkkkkkkkk..",
+  ].map((r) => r.slice(1, 19)),
+  animPal: (t) => {
+    const p = Math.sin(t * 3) > 0;
+    return { c: p ? "#ffd84a" : "#ff7a1a", e: Math.floor(t * 8) % 5 === 0 ? "#ffffff" : "#ff7a1a" };
+  },
+  under(c, l, tp, t) { glow(c, l + 9, tp + 8, 16, "#ff7a1a", 0.25 + 0.1 * Math.sin(t * 3)); },
+  over(c, l, tp, t) {
+    // cracks of light across the chest
+    const crk = Math.sin(t * 3) > 0 ? "#ffd84a" : "#ff7a1a";
+    [[9, 9], [10, 10], [9, 11], [8, 12]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, crk));
+    glow(c, l + 9, tp + 3, 4, "#ff7a1a", 0.5);
+    // stone chips falling
+    for (let k = 0; k < 4; k++) {
+      const ph = (t * 0.6 + k / 4) % 1;
+      fade(c, 1 - ph, () => R(c, l + 3 + k * 4, tp + 6 + ph * 16, 1, 1, "#8a8494"));
+    }
+    rise(c, l + 4, tp + 10, 10, 10, t, FIRE.slice(1), 5, 0.7, 41, 0.8);
+  },
+});
+
+// ---------- 13 Hellhound ----------
+addSkin("legendary", {
+  name: "Hellhound",
+  pitch: "A charcoal-black hound with lava glowing through its cracked hide, a mane and tail of roaring flames, burning eyes and fire puffing from its jaws.",
+  pal: { k: "#3a2626", K: "#1f1414", e: "#ffd84a", l: "#ff7a1a", t: "#ece6d6" },
+  rows: [
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "..................",
+    "............k..k..",
+    "...........kkkkk..",
+    "..........kkkekk..",
+    "..........kkkkkkkk",
+    ".........kkkkkkKKK",
+    "..k......kkkkkt.t.",
+    "...kkkkkkkkkkk....",
+    "..kkklkkkkklkk....",
+    "..kkkkkklkkkkk....",
+    "..kklkkkkkkklk....",
+    "..kkkkkkkkkkkk....",
+    "..kkk......kkk....",
+    "..kk.k....kk.k....",
+    "..kk.k....kk.k....",
+    "..kk.k....kk.k....",
+    "..kk.k....kk.k....",
+    ".kKk.kK..kKk.kK...",
+  ],
+  animPal: (t) => ({ l: Math.sin(t * 5) > 0 ? "#ffd84a" : "#ff7a1a", e: Math.floor(t * 7) % 4 ? "#ffd84a" : "#ffffff" }),
+  under(c, l, tp, t) { glow(c, l + 9, tp + 18, 16, "#ff4a1a", 0.3 + 0.1 * Math.sin(t * 9)); },
+  over(c, l, tp, t) {
+    // flaming mane along the neck and back, flaming tail
+    rise(c, l + 7, tp + 16, 8, 11, t, FIRE, 22, 2.2, 51);
+    rise(c, l + 3, tp + 17, 6, 6, t, FIRE, 12, 2.4, 52);
+    rise(c, l + 1, tp + 16, 2, 9, t, FIRE, 10, 2.6, 53);
+    glow(c, l + 13, tp + 12, 3, "#ffd84a", 0.6);
+    // fire breath puffs
+    for (let k = 0; k < 4; k++) {
+      const ph = (t * 1.4 + k / 4) % 1;
+      if (t % 3 < 1.6) fade(c, 1 - ph, () => R(c, l + 18 + ph * 6, tp + 14 - ph * 2 + Math.sin(k * 2) * ph * 2, ph > 0.5 ? 2 : 1, 1, pick(FIRE, ph)));
+    }
+    // burning paw prints
+    for (const x of [1, 6, 9, 14]) R(c, l + x, tp + 27, 2, 1, Math.sin(t * 7 + x) > 0 ? "#ff7a1a" : "#c4300a");
+  },
+});
+
+// ---------- 14 Plague Alchemist ----------
+addSkin("legendary", {
+  name: "Plague Alchemist",
+  pitch: "A plague doctor in a long black coat and wide hat, goggles glowing green, holding a bubbling flask while potion bottles orbit and toxic smoke curls around.",
+  pal: { h: "#1a1622", H: "#2a2433", b: "#e8e0c8", B: "#b9ae94", g: "#5ee84a", c: "#231d33", C: "#14101c", y: "#c9a24a", l: "#6b4a28", f: "#3a3646" },
+  rows: [
+    "......hhhhhh......",
+    ".....hhhhhhhh.....",
+    "..HHHHHHHHHHHHHH..",
+    "......bbbbbb......",
+    ".....bgbbbgbb.....",
+    ".....bbbbbbbbbb...",
+    "......bbbbbbbBBB..",
+    ".......bbbb...B...",
+    "....cccccccccc....",
+    "...cccccyccccCc...",
+    "..cc.cccccccC.cc..",
+    "..cc.cyccccyC.cc..",
+    "..cc.lllllllC.cc..",
+    "..bb.cccccccC.bb..",
+    ".....cccccccC.....",
+    ".....cccccccCC....",
+    "....cccc.cccCC....",
+    "....ccc...ccCC....",
+    "....ccc...cccC....",
+    "....ccc...cccC....",
+    ".....ff...ff......",
+    ".....ff...ff......",
+    "....fff...fff.....",
+  ],
+  animPal: (t) => ({ g: Math.sin(t * 4) > 0 ? "#b7ff9e" : "#5ee84a" }),
+  under(c, l, tp, t) { glow(c, l + 9, tp + 12, 16, "#5ee84a", 0.18 + 0.06 * Math.sin(t * 3)); },
+  over(c, l, tp, t) {
+    glow(c, l + 7, tp + 4, 3, "#7dff5a", 0.5); glow(c, l + 11, tp + 4, 3, "#7dff5a", 0.5);
+    // flask in the right hand
+    spr(c, [".W.", ".W.", "WgW", "ggg", ".g."], { W: "#d8d0ec", g: "#7dff5a" }, l + 14, tp + 11);
+    rise(c, l + 14, tp + 11, 3, 6, t, ["#c8ffb0", "#7dff5a"], 4, 1.2, 61);
+    // potions orbiting
+    const POT = [[".k.", "ppp", "ppp"], [".k.", "rrr", ".r."], [".k.", "bbb", "bbb"]];
+    POT.forEach((p, k) => {
+      const a = M(t) * 1.1 + (k * TAU) / 3;
+      fade(c, Math.sin(a) > -0.2 ? 1 : 0.35, () => spr(c, p, { k: "#d8d0ec", p: "#c46bff", r: "#ff3b4d", b: "#4fb2ff" }, Math.round(l + 9 + Math.cos(a) * 11) - 1, Math.round(tp + 13 + Math.sin(a) * 4) - 1));
+    });
+    // smoke at the feet
+    rise(c, l + 1, tp + 22, 16, 6, t, ["#7dff5a", "#3fb02f", "#a99bc9"], 8, 0.5, 62, 0.55);
+  },
+});
+
+// ---------- 15 Phantom Knight ----------
+addSkin("legendary", {
+  name: "Phantom Knight",
+  pitch: "An empty suit of ghostly armor with a burning blue visor, raising a sword wreathed in blue flame, its tattered cape drifting on a wind that isn't there.",
+  pal: { a: "#8aa8d8", A: "#5a78b0", d: "#3a4a78", v: "#07040f", c: "#2a3a6a", C: "#1c2a50" },
+  float: (t) => (reduced ? 1 : 1 + Math.round((Math.sin(t * 2) + 1) / 2)),
+  rows: [
+    ".......aaaa.......",
+    "......aaaaaA......",
+    "......avvvvA......",
+    "......aaaaaA......",
+    "......aaadaA......",
+    ".......aaaA.......",
+    "...AAaaaaaaaAAA...",
+    "..AaaadaaaadaaAA..",
+    "..Aa.aaaaaaaA.aA..",
+    "..Aa.aadddaaA.aA..",
+    "..Aa.aaaaaaaA.aA..",
+    "..aa.aaaaaaaA.aa..",
+    ".....dddddddd.....",
+    ".....aaaaaaaA.....",
+    ".....aaa..aaA.....",
+    ".....aa....aA.....",
+    ".....aa....aA.....",
+    ".....aa....aA.....",
+    "....aaa....aAA....",
+    "....AAA....AAA....",
+  ],
+  under(c, l, tp, t) {
+    glow(c, l + 9, tp + 10, 17, "#4fb2ff", 0.3 + 0.08 * Math.sin(t * 2));
+    // tattered cape behind
+    const sw = Math.sin(M(t) * 2);
+    for (let y = 6; y <= 22; y++) {
+      const f = (y - 6) / 16, x0 = 3 - Math.round(f * (2 + sw)), x1 = 14 + Math.round(f * (2 - sw));
+      for (let x = x0; x <= x1; x++) if (!(y > 18 && (x + y) % 3 === 0)) R(c, l + x, tp + y, 1, 1, x > 9 ? "#1c2a50" : "#2a3a6a");
+    }
+  },
+  over(c, l, tp, t) {
+    const vis = Math.sin(t * 5) > 0 ? "#9fd4ff" : "#4fb2ff";
+    R(c, l + 7, tp + 2, 4, 1, vis);
+    glow(c, l + 9, tp + 2, 4, "#4fb2ff", 0.6);
+    // sword raised in the right hand, blade on fire
+    for (let y = -5; y <= 10; y++) R(c, l + 16, tp + y, 1, 1, y > 7 ? "#5a3a20" : "#d8f0ff");
+    R(c, l + 15, tp + 8, 3, 1, "#8aa8d8");
+    glow(c, l + 16, tp + 2, 6, "#4fb2ff", 0.5);
+    rise(c, l + 15, tp + 8, 3, 13, t, BLUEFIRE, 10, 2, 71);
+    // wisps leaking from the joints
+    rise(c, l + 4, tp + 12, 10, 8, t, ["#d8f0ff", "#9fd4ff", "#4fb2ff"], 5, 0.6, 72, 0.6);
+  },
+});
+
+// ---------- 16 Eldritch Eye ----------
+addSkin("legendary", {
+  name: "Eldritch Eye",
+  pitch: "A giant floating eyeball with bloodshot veins that follows whoever is across the net, while tentacles writhe beneath it and a purple aura throbs.",
+  pal: { w: "#f3efe6", W: "#d9d2e6", v: "#c42a3e" },
+  float: (t) => (reduced ? 0 : Math.round((Math.sin(t * 1.5) + 1))),
+  rows: [
+    "......wwwwww......",
+    "....wwwwwwwwWW....",
+    "...wwwvwwwwwwWW...",
+    "..wwwwwvwwwwwwWW..",
+    "..wvwwwwwwwwwvwW..",
+    ".wwwvwwwwwwwwvwWW.",
+    ".wwwwwwwwwwwwwwWW.",
+    ".wwwwwwwwwwwwwwWW.",
+    ".wwwwwwwwwwwwwwWW.",
+    ".wwvwwwwwwwwwwwWW.",
+    "..wwvwwwwwwwvwWW..",
+    "..wwwwwwwwwwvwWW..",
+    "...wwwwwwwwwwWW...",
+    "....wwwwwwwwWW....",
+    "......wwwwww......",
+  ].concat(Array(13).fill("..................")),
+  under(c, l, tp, t) {
+    glow(c, l + 9, tp + 8, 18, "#7a4ad9", 0.35 + 0.15 * Math.sin(t * 3));
+    // tentacles writhing below
+    for (let k = 0; k < 5; k++) {
+      const bx = 3 + k * 3;
+      for (let y = 12; y <= 27; y++) {
+        const f = (y - 12) / 15;
+        const x = bx + Math.sin(f * 4 + M(t) * 2 + k * 1.3) * (1 + f * 2);
+        R(c, l + x, tp + y, f > 0.8 ? 1 : 2, 1, y % 3 ? "#4a2a66" : "#6b3fa8");
+        if (y % 4 === 0 && f < 0.8) R(c, l + x + 1, tp + y, 1, 1, "#c46bff");
+      }
+    }
+  },
+  over(c, l, tp, t) {
+    // iris looks around, then the eye blinks
+    const lx = Math.round(Math.sin(t * 0.9) * 3), ly = Math.round(Math.sin(t * 0.6) * 1.5);
+    const cx = l + 8 + lx, cy = tp + 7 + ly;
+    spr(c, [".ggg.", "ggggg", "ggkgg", "ggggg", ".ggg."], { g: Math.sin(t * 2) > 0 ? "#5ee84a" : "#3fb02f", k: "#07040f" }, cx - 2, cy - 2);
+    R(c, cx - 1, cy - 1, 1, 1, "#ffffff");
+    if (t % 5 > 4.75) for (let y = 0; y < 15; y++) R(c, l + 1, tp + y, 16, 1, "#4a2a66");
+    for (let k = 0; k < 3; k++) {
+      const ph = (t * 0.8 + k / 3) % 1;
+      if (ph < 0.3) sparkle(c, l + [0, 17, 2][k], tp + [3, 6, 16][k], "#e0b0ff", ph < 0.15);
+    }
+  },
+});
+
+// ---------- 17 Graveyard Rising ----------
+addSkin("legendary", {
+  name: "Graveyard Rising",
+  pitch: "A cracked tombstone glowing from within, zombie hands bursting up out of the dirt on both sides and grabbing at the air, with fog rolling across the ground.",
+  pal: { s: "#8a8494", S: "#5a5468", k: "#3a3546", d: "#4a3018", D: "#2e1e10", g: "#5ee84a" },
+  rows: [
+    "..................",
+    "..................",
+    "..................",
+    ".......ssss.......",
+    ".....ssssssSS.....",
+    "....sssssssssS....",
+    "....sskskssksS....",
+    "....sskskksksS....",
+    "....ssksksskSS....",
+    "....sssssssssS....",
+    "....sssssgsssS....",
+    "....ssssgssssS....",
+    "....sssssgsssS....",
+    "....sssssgsssS....",
+    "....ssssgssssS....",
+    "....sssssssssS....",
+    "....sssssssssS....",
+    "....sssssssssS....",
+    "....sssssssssS....",
+    "....sssssssssS....",
+    "....sssssssssS....",
+    "...dddddddddddd...",
+    "..dddDddddddDddd..",
+    ".ddddddddDddddddd.",
+    "ddDdddddddddDdddd.",
+    "dddddddDdddddddddd",
+    "ddddDdddddddddDddd",
+    "dddddddddddddddddd",
+  ],
+  animPal: (t) => ({ g: Math.sin(t * 3) > 0 ? "#b7ff9e" : "#5ee84a" }),
+  under(c, l, tp, t) { glow(c, l + 9, tp + 12, 16, "#5ee84a", 0.2 + 0.08 * Math.sin(t * 3)); },
+  over(c, l, tp, t) {
+    glow(c, l + 9, tp + 12, 5, "#7dff5a", 0.3);
+    // hands rising and sinking
+    const HAND = ["z.z.z", "zzzzz", ".zzz.", ".zzz.", ".zz..", ".zz..", ".zz.."];
+    [[0, 0], [13, 1.7]].forEach(([hx, off]) => {
+      const up = reduced ? 4 : Math.round((Math.sin(t * 1.4 + off) + 1) * 2.5);
+      c.save(); c.beginPath(); c.rect(l - 2, tp, 22, 22); c.clip();
+      spr(c, HAND, { z: "#8a9a72" }, l + hx, tp + 21 - up);
+      c.restore();
+      if (up > 3) for (let k = 0; k < 2; k++) R(c, l + hx + 1 + k * 3, tp + 20 - up / 2 - k, 1, 1, "#4a3018");
+    });
+    // fog
+    for (let k = 0; k < 5; k++) fade(c, 0.35, () => R(c, l - 2 + ((k * 7 + M(t) * 3) % 22), tp + 20 + (k % 2), 5, 1, "#b9b0d9"));
+    rise(c, l + 5, tp + 20, 8, 10, t, ["#c8ffb0", "#7dff5a"], 4, 0.7, 81, 0.7);
+  },
+});
+
+// ---------- 18 Haunted Volleyball Comet ----------
+const BALL = [
+  ".....wwwwwww.....",
+  "...wwwwwwwwwww...",
+  "..wwwwwwwwwwwwW..",
+  ".wwwwwwwwwwwwwWW.",
+  ".wwkkwwwwwkkwwWW.",
+  "wwwkkkwwwkkkwwWWW",
+  "wwwwwwwwwwwwwwWWW",
+  "wwwwwwwwwwwwwwWWW",
+  "wwwkwkwkwkwkwwWWW",
+  "wwwwkwkwkwkwwwWWW",
+  ".wwwwwwwwwwwwWWW.",
+  ".wwwwwwwwwwwwWWW.",
+  "..wwwwwwwwwwWWW..",
+  "...wwwwwwwwWWW...",
+  ".....wwwwwww.....",
+];
+addSkin("legendary", {
+  name: "Haunted Volleyball Comet",
+  pitch: "A possessed volleyball with an angry jack-o'-lantern grin, spinning as it rockets along on a blazing comet tail. The club's own monster.",
+  pal: { w: "#f3efe6", W: "#d9d2e6", k: "#c4300a" },
+  float: (t) => (reduced ? 8 : 8 + Math.round(Math.sin(t * 2) * 1.5)),
+  rows: BALL,
+  animPal: (t) => ({ k: Math.floor(t * 10) % 3 ? "#ff7a1a" : "#ffd84a" }),
+  under(c, l, tp, t) {
+    glow(c, l + 8, tp + 7, 16, "#ff7a1a", 0.4 + 0.12 * Math.sin(t * 10));
+    // the comet tail streams down and to the left
+    for (let k = 0; k < 26; k++) {
+      const ph = (t * 2.4 + k / 26) % 1;
+      const x = l + 6 - ph * 10 + Math.sin(k * 1.7) * 3 * ph;
+      const y = tp + 9 + ph * 14 + Math.cos(k * 2.3) * 2;
+      fade(c, 1 - ph * 0.8, () => R(c, x, y, ph < 0.4 ? 2 : 1, ph < 0.4 ? 2 : 1, pick(FIRE, ph)));
+    }
+  },
+  over(c, l, tp, t) {
+    // spinning panel seams
+    const a = M(t) * 3;
+    c.save(); c.beginPath(); c.arc(l + 8.5, tp + 7.5, 7.5, 0, TAU); c.clip();
+    c.lineWidth = 1;
+    for (let k = 0; k < 3; k++) {
+      const b = a + (k * TAU) / 3;
+      c.strokeStyle = k === 0 ? "#3d6fd1" : k === 1 ? "#ffcf3a" : "#7d7591";
+      c.beginPath(); c.arc(l + 8.5 + Math.cos(b) * 9, tp + 7.5 + Math.sin(b) * 9, 8, 0, TAU); c.stroke();
+    }
+    c.restore();
+    // face on top of the seams
+    [[3, 4], [4, 4], [10, 4], [11, 4], [3, 5], [4, 5], [5, 5], [9, 5], [10, 5], [11, 5], [3, 8], [5, 8], [7, 8], [9, 8], [11, 8], [4, 9], [6, 9], [8, 9], [10, 9]].forEach(([x, y]) => R(c, l + x, tp + y, 1, 1, Math.floor(t * 10) % 3 ? "#ff7a1a" : "#ffd84a"));
+    rise(c, l + 2, tp + 1, 13, 6, t, FIRE, 8, 2.5, 91);
+  },
+});
+
+// ---------- 19 Poltergeist Storm ----------
+const JUNK = [
+  [["b.b", "bbb", "b.b", "b.b"], { b: "#8a5a30" }],               // chair
+  [["rrr", "rWr", "rrr"], { r: "#c42a3e", W: "#f3efe6" }],          // book
+  [[".y.", "yyy", ".k.", ".k."], { y: "#ffd84a", k: "#6b6380" }],   // lamp
+  [["gggg", "gpcg", "gggg"], { g: "#c9a24a", p: "#4fb2ff", c: "#5ee84a" }], // picture frame
+  [[".ww.", "wwww", ".ww."], { w: "#e8e0f0" }],                      // plate
+  [["kk", "kk"], { k: "#5a3a20" }],                                  // box
+];
+addSkin("legendary", {
+  name: "Poltergeist Storm",
+  pitch: "An angry little ghost at the eye of a whirlwind, with chairs, books, a lamp, a picture frame and plates spinning around it as the wind howls.",
+  pal: { w: "#f3efe6", W: "#d9d2e6", k: "#1a1024", r: "#ff3b4d" },
+  float: (t) => (reduced ? 6 : 6 + Math.round((Math.sin(t * 2) + 1))),
+  rows: [
+    "......wwwww.......",
+    ".....wwwwwwwW.....",
+    "....wwkrwwkrwW....",
+    "....wwwwwwwwwW....",
+    "....wwwkkkkwwW....",
+    "....wwwwwwwwwW....",
+    ".....wwwwwwwW.....",
+    ".....wwwwwwW......",
+    "......wwwwW.......",
+    ".......wwW........",
+    "........w.........",
+  ],
+  under(c, l, tp, t) {
+    glow(c, l + 9, tp + 5, 14, "#b9b0d9", 0.35);
+    // wind streaks
+    for (let k = 0; k < 6; k++) {
+      const a = M(t) * 2.2 + k;
+      fade(c, 0.4, () => { for (let s = 0; s < 4; s++) R(c, l + 9 + Math.cos(a + s * 0.12) * (8 + (k % 3) * 2), tp + 6 + Math.sin(a + s * 0.12) * (5 + (k % 2) * 4), 1, 1, "#a99bc9"); });
+    }
+  },
+  over(c, l, tp, t) {
+    // junk orbiting: behind items dimmer, in front brighter
+    JUNK.forEach(([rows, pal], k) => {
+      const a = M(t) * 1.8 + (k * TAU) / JUNK.length;
+      const r = 10 + (k % 2) * 2;
+      const x = l + 9 + Math.cos(a) * r, y = tp + 7 + Math.sin(a) * 7 + Math.sin(a * 2) * 2;
+      fade(c, Math.sin(a) > 0 ? 1 : 0.45, () => spr(c, rows, pal, Math.round(x) - 1, Math.round(y) - 1));
+    });
+    // debris on the floor, kicked up
+    for (let k = 0; k < 4; k++) {
+      const ph = (t * 1.3 + k / 4) % 1;
+      fade(c, 1 - ph, () => R(c, l + 2 + k * 4 + ph * 3, tp + 18 - ph * 8, 1, 1, "#8a8494"));
+    }
+  },
+});
+
+// ---------- 20 Scarecrow King ----------
+addSkin("legendary", {
+  name: "Scarecrow King",
+  pitch: "The lord of the cornfield: a crowned scarecrow in a ragged cape with burning jack-o'-lantern eyes, crows wheeling around him, and the field at his feet on fire.",
+  pal: { y: "#d9a441", Y: "#a8792a", b: "#a8844e", B: "#8a6a3e", k: "#1a1024", o: "#ff7a1a", c: "#8f1426", C: "#5c0c18", x: "#3a2a1a", s: "#f3d27a", w: "#5a3a20", W: "#3a2614", g: "#ffc53a", r: "#c4402a", R: "#8f2a1a" },
+  rows: [
+    "......g.g.g.......",
+    "......ggggg.......",
+    ".....yyyyyyy......",
+    "..yyyyyyyyyyyyy...",
+    "....bbbbbbbbb.....",
+    "....bkobbbkobB....",
+    "....bbbbbbbbbB....",
+    "....bkxkxkxkbB....",
+    ".....bbbbbbbB.....",
+    "..CcRRRrRRRrRcC...",
+    ".CcRRrRRRrRRRRcC..",
+    "sCc.RrRRRrRRR.cCs.",
+    "sCc.RRRrRRRrR.cCs.",
+    "sscc.RrRRRrRR.ccss",
+    ".Ccc.RRRrRRRr.ccC.",
+    ".Ccc.xxxxxxxx.ccC.",
+    "..Cc...sswss..cC..",
+    "..Cc....ww....cC..",
+    "..Cc....wW....cC..",
+    "...C....wW....C...",
+    "...c....wW....c...",
+    "........wW........",
+    "........wW........",
+    "......wwwWWW......",
+  ],
+  animPal: (t) => ({ o: Math.sin(t * 9) + Math.sin(t * 5.1) > -0.6 ? "#ffd84a" : "#ff7a1a" }),
+  under(c, l, tp, t) { glow(c, l + 9, tp + 18, 18, "#ff5a1a", 0.3 + 0.08 * Math.sin(t * 7)); },
+  over(c, l, tp, t) {
+    glow(c, l + 6, tp + 5, 3, "#ff7a1a", 0.5); glow(c, l + 11, tp + 5, 3, "#ff7a1a", 0.5);
+    if (Math.sin(t * 5) > 0.7) sparkle(c, l + 8, tp - 1, "#fff1b0", false);
+    // the burning field
+    for (let x = 0; x < 18; x++) R(c, l + x, tp + 23, 1, 1, x % 3 ? "#a8792a" : "#d9a441");
+    rise(c, l, tp + 23, 18, 7, t, FIRE, 18, 2.2, 101);
+    // crows wheeling around
+    for (let k = 0; k < 4; k++) {
+      const a = M(t) * (k % 2 ? 1.3 : -1.1) + (k * TAU) / 4;
+      const x = l + 9 + Math.cos(a) * (10 + k % 2), y = tp + 6 + Math.sin(a) * 5;
+      const flap = Math.floor(t * 8 + k) % 2;
+      spr(c, flap ? ["k...k", ".kkk.", "..k.."] : [".....", "kkkkk", "..k.."], { k: "#2a2238" }, Math.round(x) - 2, Math.round(y) - 1);
+    }
+    rise(c, l + 2, tp + 18, 14, 18, t, ["#ffd84a", "#ff7a1a"], 5, 0.5, 102, 0.8);
+  },
+});
+})();
+const SECTIONS = [
+  { tier: "legendary", prefix: "XL", title: "Legendary", cls: "t3", blurb: "The showpieces: glow, particles and motion." },
+  { tier: "epic", prefix: "XE", title: "Epic", cls: "t2", blurb: "Strong silhouettes with one small animation each." },
+];
+const xtiles = [];
+const xvisible = new Set();
+const xio = new IntersectionObserver((es) => { for (const e of es) e.isIntersecting ? xvisible.add(e.target) : xvisible.delete(e.target); }, { rootMargin: "200px" });
+const xmain = document.getElementById("xslots");
+const xnav = document.getElementById("xnav");
+for (const sec of SECTIONS) {
+  const list = SKINS2[sec.tier];
+  const el = document.createElement("section");
+  el.id = sec.tier;
+  el.className = "slot";
+  el.innerHTML = `<div class="sec-head"><span class="eyebrow ${sec.cls}">${list.length} transformations · codes ${sec.prefix}1–${sec.prefix}${list.length}</span><h2 class="${sec.cls}">${sec.title}</h2><p>${sec.blurb}</p></div><div class="grid xgrid"></div>`;
+  xnav.insertAdjacentHTML("beforeend", `<a class="chip ${sec.cls}" href="#${sec.tier}">${sec.title} <span class="n">${list.length}</span></a>`);
+  const grid = el.querySelector(".xgrid");
+  list.forEach((s, i) => {
+    const code = `${sec.prefix}${i + 1}`;
+    const card = document.createElement("article");
+    card.className = "card xcard";
+    card.id = code.toLowerCase();
+    card.innerHTML = `
+      <div class="card-top"><h3>${s.name}</h3><span class="code ${sec.cls}">${code}</span></div>
+      <canvas class="xbig" width="30" height="38" aria-label="${s.name}"></canvas>
+      <div class="av-small"><canvas width="96" height="36" style="width:96px;height:36px" aria-label="${s.name} at real home-screen size"></canvas><span>Real size in the rally</span></div>
+      <p class="pitch">${s.pitch}</p>`;
+    grid.appendChild(card);
+    const [big, small] = card.querySelectorAll("canvas");
+    xtiles.push({ s, card, big: big.getContext("2d"), small: small.getContext("2d") });
+    xio.observe(card);
+  });
+  xmain.appendChild(el);
+}
+document.getElementById("xtotal").textContent = SKINS2.epic.length + SKINS2.legendary.length;
+
+const xstart = performance.now();
+(function loop(now) {
+  const t = Math.max(0, (now - xstart) / 1000);
+  for (const e of xtiles) {
+    if (!xvisible.has(e.card) || !e.s) continue;
+    try {
+      R(e.big, 0, 0, 30, 38, "#140a26");
+      glow(e.big, 15, 20, 19, "#4b3f70", 0.4);
+      R(e.big, 0, 35, 30, 3, "#1c1030"); R(e.big, 0, 35, 30, 1, "#3a2a5c");
+      drawSkin2(e.big, e.s, 15, 35, t);
+      R(e.small, 0, 0, 96, 36, "#140a26");
+      R(e.small, 0, 33, 96, 3, "#1c1030"); R(e.small, 0, 33, 96, 1, "#3a2a5c");
+      R(e.small, 47, 18, 1, 15, "#6b5f8d"); R(e.small, 44, 18, 7, 1, "#a99bc9");
+      drawSkin2(e.small, e.s, 22, 33, t);
+      e.small.save(); e.small.translate(96, 0); e.small.scale(-1, 1);
+      drawAvatar(e.small, {}, 20, 33, t + 1.3);
+      e.small.restore();
+      const ph = reduced ? 0.3 : (t * 0.8) % 2, f = ph < 1 ? ph : 2 - ph;
+      R(e.small, 32 + 34 * f, 2 + (1 - Math.sin(f * Math.PI)) * 9, 2, 2, "#ffcf3a");
+    } catch (err) { console.error(e.s.name, err); e.s = null; }
+  }
+  requestAnimationFrame(loop);
+})(xstart);
+})();
+</script>

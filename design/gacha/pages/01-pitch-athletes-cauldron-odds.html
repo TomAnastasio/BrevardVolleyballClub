@@ -1,0 +1,959 @@
+<title>BVC Loot Boxes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: one long night-sky column; three stacked sections (boxes, avatars, odds), cards in auto-fit grids. Single dark look that matches the app's Halloween skin. */
+:root {
+  --night-0: #07040f;
+  --night-1: #140a26;
+  --card: #1f1338;
+  --card-2: #2a1a4a;
+  --line: #4b3f70;
+  --fg: #f6f0ff;
+  --muted: #a99bc9;
+  --orange: #ff7a1a;
+  --common: #c9c2d9;
+  --rare: #4fb2ff;
+  --epic: #c46bff;
+  --legendary: #ffc53a;
+  --display: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tag: "Press Start 2P", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: radial-gradient(1200px 600px at 50% -200px, #24123f, transparent 70%), var(--night-1);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+header { display: flex; flex-direction: column; gap: 10px; max-width: 70ch; }
+.eyebrow { font-family: var(--tag); font-size: 10px; letter-spacing: 0.08em; color: var(--orange); text-transform: uppercase; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.1; }
+h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 700; }
+h1 .glow { color: var(--legendary); text-shadow: 0 0 18px rgb(255 197 58 / 0.45); }
+h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; }
+h3 { font-size: 22px; font-weight: 600; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: 17px; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+.sec-head p { color: var(--muted); }
+
+.grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid > * { min-width: 0; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.letter { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.stage {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  image-rendering: pixelated;
+  display: block;
+  border-radius: 4px;
+  background: var(--night-0);
+  cursor: pointer;
+}
+.pitch { color: var(--muted); font-size: 15px; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.n { font-family: var(--body); font-weight: 700; }
+.kinds { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+.kinds div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.kinds dt { font-weight: 700; }
+.kinds dd { margin: 0; min-width: 0; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 600 14px var(--display);
+  color: var(--fg);
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] { border-color: currentColor; background: #33205a; }
+.chip:focus-visible, .open:focus-visible, .stage:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.chip.c0 { color: var(--common); } .chip.c1 { color: var(--rare); } .chip.c2 { color: var(--epic); } .chip.c3 { color: var(--legendary); }
+.open {
+  font: 700 16px var(--display);
+  background: var(--orange);
+  color: var(--night-0);
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.result { min-height: 24px; font: 600 16px var(--display); }
+.result .tier { font-family: var(--tag); font-size: 10px; margin-right: 8px; }
+.t0 { color: var(--common); } .t1 { color: var(--rare); } .t2 { color: var(--epic); } .t3 { color: var(--legendary); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
+.toolbar .label { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.av-stage { width: 100%; aspect-ratio: 1; image-rendering: pixelated; display: block; background: var(--night-0); border-radius: 4px; }
+.av-small { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+.av-small canvas { image-rendering: pixelated; background: var(--night-0); border-radius: 3px; flex: none; }
+.pros { margin: 0; padding-left: 18px; font-size: 14px; display: flex; flex-direction: column; gap: 3px; }
+
+.split { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+.split > * { min-width: 0; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 400 9px var(--tag); color: var(--muted); letter-spacing: 0.05em; }
+td.num, th.num { text-align: right; }
+td.wrap { white-space: normal; min-width: 180px; }
+.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.inputs label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.inputs input {
+  font: 700 16px var(--body);
+  background: var(--card-2);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 8px;
+  width: 100%;
+}
+.inputs input:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+.note { font-size: 14px; color: var(--muted); }
+.agreed { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.bar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; }
+.bar span { display: block; height: 100%; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+.mixer-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+.mixer { display: flex; flex-direction: column; gap: 8px; }
+.mix-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mix-row .label { width: 64px; flex: none; }
+.chip.c0[aria-pressed="true"], .chip.c1[aria-pressed="true"], .chip.c2[aria-pressed="true"], .chip.c3[aria-pressed="true"] { border-color: currentColor; }
+.grid.one { grid-template-columns: minmax(0, 520px); }
+.chip[data-preset] { font-family: var(--body); font-weight: 700; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Brevard Volleyball Club · pitch, round 2, nothing built yet</span>
+    <h1>Win games, earn tokens, brew <span class="glow">loot</span></h1>
+    <p class="lede">You picked the Cauldron and the Retro Athlete. Here are five very different takes on the athlete, all built the same way so any hat, shirt, pants, shoes or held item fits every one of them. Dress them up with the buttons below.</p>
+  </header>
+
+  <section id="athletes">
+    <div class="sec-head">
+      <span class="eyebrow">Part 1</span>
+      <h2>Five Retro Athletes</h2>
+      <p>Each body is drawn as zones: hair, skin, shirt, sleeves, shorts, shins, socks and shoes, plus a spot on top of the head and a spot in the hand. A shirt is just colors and a pattern for the shirt zone, so I draw it once and it fits all five. Hats are drawn to fit the head width, and held items snap to the hand. Long-sleeve shirts and long pants simply fill the arm and shin zones too. Tap "Show gear zones" to see the map.</p>
+    </div>
+    <div class="toolbar mixer-bar">
+      <div id="mixer" class="mixer"></div>
+      <div class="controls">
+        <button class="open" id="mix-random">Random outfit</button>
+        <button class="chip" id="mix-reset">Back to default</button>
+        <button class="chip" id="mix-zones" aria-pressed="false">Show gear zones</button>
+      </div>
+    </div>
+    <div class="grid" id="ath-grid"></div>
+    <p class="note">Gear colors match their tier: grey is the free default, then <span class="t0">Common</span>, <span class="t1">Rare</span>, <span class="t2">Epic</span>, <span class="t3">Legendary</span>. The rival in the small rally wears default gear in a different color here; in the app they'd wear their own gear.</p>
+  </section>
+
+  <section id="boxes">
+    <div class="sec-head">
+      <span class="eyebrow">Part 2 · picked</span>
+      <h2>The Cauldron</h2>
+      <p>Your pick. Drop a token in, the brew climbs through the tier colors while it rumbles, then a geyser carries the prize up.</p>
+    </div>
+    <div class="grid one" id="box-grid"></div>
+  </section>
+
+  <section id="odds">
+    <div class="sec-head">
+      <span class="eyebrow">Part 3 · needs a decision</span>
+      <h2>1 token = 1 pull changes the math</h2>
+      <p>The odds you liked assumed 5 tokens per pull. At 1 token per pull, everyone gets about five times as many pulls. With the 58-item set, a weekly regular would own three quarters of it by the end of November with a 41% chance of a Legendary, and anyone playing twice a week would own everything. To keep the same feel, the set needs to be about three times bigger and Legendaries rarer. Commons can be recolors, so most of the extra items are cheap to make. Try both with the buttons.</p>
+    </div>
+
+    <div class="toolbar">
+      <span class="label">Try</span>
+      <button class="chip" data-preset="small" aria-pressed="false">Original set: 58 items, 70/22/7/1</button>
+      <button class="chip" data-preset="big" aria-pressed="true">Bigger set: 176 items, 76/20/3.8/0.2</button>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h3>Tier odds and item counts</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Tier</th><th class="num">Tier odds</th><th class="num">Items</th><th class="num">Each item</th></tr></thead>
+            <tbody id="tier-body"></tbody>
+          </table>
+        </div>
+        <p class="note">A pull rolls the tier first, then a random item in that tier you don't own yet. When you own a whole tier, its share moves to the tiers you're still missing, so there are never duplicates.</p>
+      </div>
+      <div class="card">
+        <h3>How the bigger set fills out</h3>
+        <dl class="kinds">
+          <div><dt class="t0">Common · 100</dt><dd>Hats, shirts, pants and shoes in 5 to 8 colors each, name colors and plain photo rings. Most are recolors of about 15 drawings.</dd></div>
+          <div><dt class="t1">Rare · 50</dt><dd>New shapes: witch hat, skull tee, track pants, boots, lantern, face items, banners and name fonts.</dd></div>
+          <div><dt class="t2">Epic · 20</dt><dd>Animated pieces: hoodie with glowing moon, slime shorts, broomstick, victory and defeat poses, a home-screen move, bat-orbit border.</dd></div>
+          <div><dt class="t3">Legendary · 6</dt><dd>Gilded Top Hat, Ghostfire kicks, Headless Horseman head, Hellfire name, Reaper Spike move, one more.</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Season simulator</h3>
+      <p class="note">Simulates 3,000 players of each kind through the rest of the Halloween season: 1 token per game, 2 for a win (half of games won), at most 10 a day, 1 token per pull. Change any number and the table updates.</p>
+      <div class="inputs">
+        <label for="in-games">Games per session<input id="in-games" type="number" min="1" max="20" value="6"></label>
+        <label for="in-weeks">Weeks left in season<input id="in-weeks" type="number" min="1" max="12" step="0.5" value="5"></label>
+        <label for="in-o0">Common odds %<input id="in-o0" type="number" min="0" max="100" step="0.1" value="76"></label>
+        <label for="in-o1">Rare odds %<input id="in-o1" type="number" min="0" max="100" step="0.1" value="20"></label>
+        <label for="in-o2">Epic odds %<input id="in-o2" type="number" min="0" max="100" step="0.1" value="3.8"></label>
+        <label for="in-o3">Legendary odds %<input id="in-o3" type="number" min="0" max="100" step="0.1" value="0.2"></label>
+        <label for="in-p0">Common items<input id="in-p0" type="number" min="0" max="400" value="100"></label>
+        <label for="in-p1">Rare items<input id="in-p1" type="number" min="0" max="400" value="50"></label>
+        <label for="in-p2">Epic items<input id="in-p2" type="number" min="0" max="400" value="20"></label>
+        <label for="in-p3">Legendary items<input id="in-p3" type="number" min="0" max="400" value="6"></label>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Player</th><th class="num">Tokens = pulls</th><th class="num">Got a Legendary</th><th class="num">Avg Epics</th><th class="num">Set collected</th><th class="num">Finished set</th></tr></thead>
+          <tbody id="sim-body"></tbody>
+        </table>
+      </div>
+      <p class="note" id="sim-note"></p>
+    </div>
+
+    <div class="card">
+      <h3>Already decided</h3>
+      <ul class="agreed">
+        <li>The Cauldron opens every pull. 1 token per pull.</li>
+        <li>1 token per saved game, 2 for a win, at most 10 a day. Only Google-signed-in players earn tokens. No back pay.</li>
+        <li>Deleting a game never takes tokens back. Merging a placeholder profile into a Google account changes nothing.</li>
+        <li>No duplicates. Someone who owns everything can't pull, and their tokens wait for the next set.</li>
+        <li>Cosmetic only. Nothing touches Elo. No real money, ever. No trading. Pulls are rolled by the database.</li>
+        <li>Four tiers. Until the end of November every item is Halloween; after that the Halloween items are shelved for good and a non-Halloween set we make together takes over.</li>
+        <li>Your home-screen rally plays your rival (the app's existing "toughest opponent"). With no rival yet, you play the #1 ranked player.</li>
+        <li>Victory and defeat poses show on past games: winners celebrate on one side, losers slump on the other.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+const TAU = Math.PI * 2;
+const W = 160, H = 120;
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eo = (t) => 1 - (1 - t) ** 3;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const RAR = [
+  { name: "Common", c: "#c9c2d9", d: "#7d7591" },
+  { name: "Rare", c: "#4fb2ff", d: "#1d5fa8" },
+  { name: "Epic", c: "#c46bff", d: "#6b2aa3" },
+  { name: "Legendary", c: "#ffc53a", d: "#b36a00" },
+];
+const ODDS = [70, 22, 7, 1];
+
+function R(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function spr(c, rows, pal, x, y, s = 1) {
+  for (let j = 0; j < rows.length; j++) {
+    const row = rows[j];
+    for (let i = 0; i < row.length; i++) {
+      const col = pal[row[i]];
+      if (!col) continue;
+      c.fillStyle = col;
+      c.fillRect(Math.round(x + i * s), Math.round(y + j * s), s, s);
+    }
+  }
+}
+function sprC(c, rows, pal, cx, cy, s = 1) {
+  const w = Math.max(...rows.map((r) => r.length));
+  spr(c, rows, pal, Math.round(cx - (w * s) / 2), Math.round(cy - (rows.length * s) / 2), s);
+}
+function disc(c, cx, cy, r, col) {
+  c.fillStyle = col;
+  for (let y = -r; y <= r; y++) {
+    const w = Math.floor(Math.sqrt(r * r - y * y));
+    c.fillRect(Math.round(cx - w), Math.round(cy + y), w * 2 + 1, 1);
+  }
+}
+function glow(c, cx, cy, r, col, a) {
+  const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, col);
+  g.addColorStop(1, "transparent");
+  c.save(); c.globalAlpha = a; c.fillStyle = g; c.fillRect(cx - r, cy - r, r * 2, r * 2); c.restore();
+}
+function rays(c, cx, cy, col, t, n, len, a = 0.22) {
+  c.save(); c.globalAlpha = a; c.fillStyle = col;
+  for (let k = 0; k < n; k++) {
+    const ang = t * 0.6 + (k * TAU) / n;
+    c.beginPath(); c.moveTo(cx, cy);
+    c.lineTo(cx + Math.cos(ang - 0.12) * len, cy + Math.sin(ang - 0.12) * len);
+    c.lineTo(cx + Math.cos(ang + 0.12) * len, cy + Math.sin(ang + 0.12) * len);
+    c.fill();
+  }
+  c.restore();
+}
+function sparkle(c, x, y, col, big) {
+  R(c, x, y - (big ? 2 : 1), 1, big ? 5 : 3, col);
+  R(c, x - (big ? 2 : 1), y, big ? 5 : 3, 1, col);
+}
+
+// ---------- Prize art ----------
+const ITEMS = [
+  {
+    name: "Pumpkin Beanie",
+    rows: ["......ww......", ".....wwww.....", "......ww......", "....oooooo....", "..oooooooooo..", ".oooooooooooo.", ".oooooooooooo.", "oooooooooooooo", "dddddddddddddd", "dodododododod.", "dddddddddddddd"],
+    pal: { o: "#e8742a", d: "#b4521a", w: "#f3e9d2" },
+    small: ["....ww....", "..oooooo..", ".oooooooo.", "oooooooooo", "dddddddddd"],
+  },
+  {
+    name: "Witch's Hat",
+    rows: ["...........kk...", "..........kpk...", ".........kppk...", "........kpppk...", ".......kppppk...", "......kpppppk...", ".....kppppppk...", "....kggggggggk..", "....kgggyygggk..", "....kppppppppk..", "kkkkppppppppppkk", "kppppppppppppppk", ".kkkkkkkkkkkkkk."],
+    pal: { k: "#1a1024", p: "#6b3fa8", g: "#5ee84a", y: "#ffd84a" },
+    small: ["......kk..", ".....kpk..", "....kppk..", "...kpppk..", "..kggyggk.", "kkpppppppk", ".kkkkkkkk."],
+  },
+  {
+    name: "Jack-o'-Lantern Head",
+    rows: [".......vv.......", "......vv........", "...oooooooooo...", "..oooroooorooo..", ".oooroooooorooo.", ".ooyyyooooyyyoo.", "oooyyyooooyyyooo", "oooooooyyooooooo", "ooyyoyyyyyyoyyoo", ".ooyyyoyyoyyyoo.", "..oooooooooooo..", "....oooooooo...."],
+    pal: { o: "#ff7a1a", r: "#c4550a", y: "#ffd84a", v: "#4a7a28" },
+  },
+  {
+    name: "Gilded Phantom Top Hat",
+    rows: ["...kkkkkkkkkk...", "...kGggggggGk...", "...kggggggggk...", "...kggggggggk...", "...kggggggggk...", "...kppppppppk...", "...kggggggggk...", "kkkkggggggggkkkk", "kGGGGGGGGGGGGGGk", ".kkkkkkkkkkkkkk."],
+    pal: { k: "#3a2300", g: "#ffc53a", G: "#fff1b0", p: "#8f1426" },
+    small: [".kkkkkkkk.", ".kGggggGk.", ".kggggggk.", ".kppppppk.", "kkggggggkk", "kGGGGGGGGk", ".kkkkkkkk."],
+  },
+];
+
+function itemPal(r, t) {
+  const it = ITEMS[r];
+  if (r === 2) return { ...it.pal, y: Math.sin(t * 13) + Math.sin(t * 7.3) > 0.6 ? "#fff3a0" : "#ffd84a" };
+  if (r === 3) {
+    const shimmer = (Math.floor(t * 8) % 6);
+    return { ...it.pal, G: shimmer < 3 ? "#fff1b0" : "#ffe27a", g: shimmer === 0 ? "#ffd660" : "#ffc53a" };
+  }
+  return it.pal;
+}
+
+function drawItem(c, r, cx, cy, t, s = 2) {
+  const col = RAR[r].c;
+  glow(c, cx, cy, 34 + r * 6, col, 0.25 + r * 0.08);
+  if (r >= 2) rays(c, cx, cy, col, t, r === 3 ? 12 : 8, r === 3 ? 90 : 60, r === 3 ? 0.2 : 0.14);
+  const bob = Math.round(Math.sin(t * 3) * 1.5);
+  if (r === 2) {
+    for (let k = 0; k < 6; k++) {
+      const ph = (t * 0.7 + k / 6) % 1;
+      c.save(); c.globalAlpha = 1 - ph;
+      R(c, cx - 14 + k * 6 + Math.sin(t * 3 + k) * 2, cy + 10 - ph * 34, 1, 1, k % 2 ? "#ff7a1a" : "#c46bff");
+      c.restore();
+    }
+  }
+  sprC(c, ITEMS[r].rows, itemPal(r, t), cx, cy + bob, s);
+  if (r === 3) {
+    for (let k = 0; k < 7; k++) {
+      const a = t * 1.6 + (k * TAU) / 7;
+      const tw = Math.sin(t * 6 + k * 2) > 0.2;
+      sparkle(c, Math.round(cx + Math.cos(a) * 26), Math.round(cy + bob + Math.sin(a) * 12), tw ? "#fff6d0" : "#ffc53a", tw);
+    }
+  }
+}
+
+// ---------- Small sprites ----------
+const BAT = [["k.....k", "kk.k.kk", ".kkkkk.", "..k.k.."], ["..k.k..", ".kkkkk.", "kk...kk", "k.....k"]];
+const COIN = [".yyyy.", "yYYyyy", "yYyyyy", "yyyyyy", "yyyyyd", ".dddd."];
+const COIN_PAL = { y: "#ffc53a", Y: "#fff1b0", d: "#b36a00" };
+
+// ---------- Stage ----------
+class Stage {
+  constructor(canvas, director, onResult) {
+    this.c = canvas.getContext("2d");
+    this.d = director;
+    this.onResult = onResult;
+    this.running = false;
+    this.t = 0;
+    this.idle = 0;
+    this.r = 0;
+    this.parts = [];
+    this.flags = new Set();
+    this.flash = 0;
+    this.quake = 0;
+    this.shown = false;
+  }
+  open(r) {
+    this.r = r; this.t = 0; this.running = true; this.parts = []; this.flags.clear();
+    this.flash = 0; this.quake = 0; this.shown = false;
+    this.onResult(null);
+  }
+  once(key, fn) { if (!this.flags.has(key)) { this.flags.add(key); fn(); } }
+  emit(x, y, n, o) {
+    for (let i = 0; i < n; i++) {
+      const ang = o.ang !== undefined ? o.ang + (Math.random() - 0.5) * (o.spread ?? 1) : Math.random() * TAU;
+      const sp = (o.sp ?? 40) * (0.4 + Math.random() * 0.9);
+      this.parts.push({
+        x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+        g: o.g ?? 90, life: (o.life ?? 1) * (0.6 + Math.random() * 0.7), age: 0,
+        col: o.cols[(Math.random() * o.cols.length) | 0], s: o.s ?? 1, kind: o.kind,
+        drag: o.drag ?? 0,
+      });
+    }
+  }
+  step(dt) {
+    const c = this.c;
+    if (this.running) this.t += dt; else this.idle += dt;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, W, H);
+    if (this.quake > 0.05) {
+      c.translate(Math.round((Math.random() - 0.5) * this.quake * 2), Math.round((Math.random() - 0.5) * this.quake * 2));
+      this.quake *= Math.pow(0.02, dt);
+    }
+    this.d.draw(c, this, this.running ? this.t : this.idle, this.r, this.running);
+    for (const p of this.parts) {
+      p.age += dt;
+      p.vy += p.g * dt;
+      if (p.drag) { p.vx *= Math.pow(1 - p.drag, dt * 60); p.vy *= Math.pow(1 - p.drag, dt * 60); }
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.age > p.life) continue;
+      const fade = 1 - p.age / p.life;
+      c.save(); c.globalAlpha = Math.min(1, fade * 1.5);
+      if (p.kind === "bat") spr(c, BAT[Math.floor(p.age * 10) % 2], { k: "#0b0612" }, p.x - 3, p.y - 2);
+      else R(c, p.x, p.y, p.s, p.s, p.col);
+      c.restore();
+    }
+    this.parts = this.parts.filter((p) => p.age <= p.life);
+    if (this.flash > 0.01) {
+      c.save(); c.globalAlpha = this.flash; c.fillStyle = "#fff"; c.fillRect(-8, -8, W + 16, H + 16); c.restore();
+      this.flash *= Math.pow(0.004, dt);
+    }
+    if (this.running && !this.shown && this.t >= this.d.revealAt(this.r)) {
+      this.shown = true;
+      this.onResult(this.r);
+    }
+  }
+  burstFx(x, y) {
+    const r = this.r;
+    this.flash = [0.25, 0.45, 0.75, 0.95][r];
+    this.quake = [0, 1, 2.5, 4.5][r];
+    this.emit(x, y, 18 + r * 14, { cols: [RAR[r].c, "#ffffff", RAR[r].d], sp: 70 + r * 20, g: 60, life: 1.1 + r * 0.2 });
+  }
+}
+
+// telegraph helper: the color shown after k reveals (escalates one tier at a time)
+const teleCol = (r, k) => (k < 0 ? "#e8dff5" : RAR[Math.min(r, k)].c);
+
+// ---------- 3. Cauldron ----------
+const cauldron = {
+  name: "Cauldron",
+  pitch: "Drop your token into a bubbling cauldron. The brew changes color one tier at a time while it rumbles, then erupts in a geyser that carries your prize up.",
+  facts: [["Feel", "Bubbly and playful, about 3 seconds"], ["Hint", "Brew color climbs through the tiers"], ["Theme", "Halloween first; reskins well (hot cocoa, punch bowl)"]],
+  tb: (r) => 0.75 + 1.2 + 0.35 * r,
+  revealAt(r) { return this.tb(r) + 0.5; },
+  liquid(t, r) {
+    if (t < 1.0) return "#5ee84a";
+    const step = (this.tb(r) - 1.15) / (r + 1);
+    return RAR[Math.min(r, Math.floor((t - 1.0) / step))].c;
+  },
+  drawPot(c, cx, jx, liq, t, r, bubbleBoost) {
+    for (let k = 0; k < 9; k++) {
+      const fl = Math.sin(t * 17 + k * 2.1) * 2;
+      R(c, cx - 18 + k * 4, 104 - fl - (k % 3) * 2, 3, 8 + fl, k % 2 ? "#ff7a1a" : "#ffd84a");
+    }
+    R(c, cx - 22 + jx, 102, 4, 8, "#1b1625"); R(c, cx + 18 + jx, 102, 4, 8, "#1b1625");
+    c.save(); c.beginPath(); c.rect(0, 77, W, 40); c.clip();
+    disc(c, cx + jx, 86, 24, "#241d33"); disc(c, cx + jx - 6, 82, 14, "#2f2742");
+    c.restore();
+    R(c, cx - 22 + jx, 76, 44, 4, liq);
+    R(c, cx - 26 + jx, 73, 52, 4, "#3a3150"); R(c, cx - 24 + jx, 73, 20, 1, "#5a5078");
+    const nb = 5 + bubbleBoost;
+    for (let k = 0; k < nb; k++) {
+      const ph = (t * (1.1 + bubbleBoost * 0.15) + k * 0.37) % 1;
+      const x = cx - 18 + ((k * 23) % 36) + jx;
+      const y = 74 - ph * (5 + bubbleBoost * 2);
+      if (ph < 0.85) R(c, x, y, 2, 2, liq); else R(c, x - 1, y, 4, 1, liq);
+    }
+  },
+  draw(c, S, t, r, run) {
+    const cx = 80;
+    R(c, 0, 0, W, H, "#0e0a1a");
+    R(c, 0, 0, W, 6, "#1a1228");
+    for (let k = 0; k < 7; k++) R(c, 8 + k * 22, 6, 1, 6 + (k % 3) * 4, "#2a2040");
+    R(c, 0, 110, W, 10, "#160f22");
+    if (!run) { this.drawPot(c, cx, 0, "#5ee84a", t, 0, 0); glow(c, cx, 76, 30, "#5ee84a", 0.12); return; }
+    const tb = this.tb(r);
+    if (t < tb) {
+      const liq = this.liquid(t, r);
+      const rumble = seg(t, 0.8, tb);
+      const jx = Math.round((Math.random() - 0.5) * rumble * (1 + r) * 1.4);
+      glow(c, cx, 76, 34 + rumble * 10, liq, 0.12 + rumble * 0.25);
+      this.drawPot(c, cx, jx, liq, t, r, Math.round(rumble * (4 + r * 2)));
+      if (t < 0.75) sprC(c, COIN, COIN_PAL, cx, lerp(-6, 74, (t / 0.75) ** 2), 1);
+      if (t > 0.75) S.once("splash2", () => S.emit(cx, 74, 12, { cols: ["#5ee84a", "#b7ff9e"], ang: -Math.PI / 2, spread: 1.4, sp: 60, g: 160, life: 0.7 }));
+      if (rumble > 0.3 && Math.random() < 0.25) S.emit(cx + (Math.random() - 0.5) * 30, 74, 1, { cols: [liq], ang: -Math.PI / 2, spread: 0.5, sp: 40, g: 120, life: 0.6 });
+      return;
+    }
+    S.once("burst", () => {
+      S.burstFx(cx, 60);
+      S.emit(cx, 70, 30, { cols: [RAR[r].c, RAR[r].d, "#ffffff"], ang: -Math.PI / 2, spread: 1.6, sp: 110, g: 170, life: 1.3, s: 2 });
+    });
+    const bt = t - tb;
+    const hgt = eo(seg(bt, 0, 0.3)) * 74 * (1 - eo(seg(bt, 0.9, 1.5)));
+    const liq = RAR[r].c;
+    for (let y = 0; y < hgt; y++) {
+      const yy = 76 - y;
+      const wob = Math.round(Math.sin(yy * 0.35 + bt * 18) * 1.5);
+      const wdt = 12 + Math.round(Math.sin(yy * 0.2 + bt * 9) * 2);
+      R(c, cx - wdt / 2 + wob, yy, wdt, 1, liq);
+      R(c, cx - 2 + wob, yy, 4, 1, "#ffffff");
+    }
+    this.drawPot(c, cx, 0, liq, t, r, 2);
+    const iy = Math.min(lerp(76, 40, eo(seg(bt, 0, 0.45))), 76 - hgt - 6 + 14 * seg(bt, 0.9, 1.5));
+    drawItem(c, r, cx, Math.max(40, Math.min(iy, 60)), bt);
+  },
+};
+
+// ---------- Retro Athletes: one body template, gear layered by zone ----------
+// Body letters are zones, not colors. Gear fills zones, so one shirt fits every body:
+// h/H hair, s/S skin, e eye, m mouth, o outline, k knee pad,
+// t/T shirt, u upper arm (sleeve), l forearm (long sleeve), n hand,
+// p/P hips + thighs (shorts), q/Q shins (long pants), w sock, f/F shoe.
+const BODIES = [
+  {
+    name: "NES Classic",
+    pitch: "The original Retro Athlete, tidied up: front-facing, 12 by 19 pixels, every zone two pixels wide so recolors and stripes always read.",
+    pros: ["Simplest to draw gear and poses for", "Arms and legs clearly separate for sleeves and pants", "Hats sit on a small 6-pixel head"],
+    rows: ["....hhhh....", "...hhhhhh...", "...hssssh...", "...sesses...", "...ssssss...", "....smms....", ".....ss.....", "..uttttttu..", ".uutttttTuu.", ".u.ttttTT.u.", ".l.ttttTT.l.", ".n.ttttTT.n.", "...ppppPP...", "...pp..pP...", "...qq..qQ...", "...qq..qQ...", "...qq..qQ...", "...ww..ww...", "..ffF..ffF.."],
+    head: { x: 6, y: 0, w: 6 }, chest: { x: 6, y: 8 }, hand: { x: 10, y: 11 }, emblem: "big",
+  },
+  {
+    name: "Street Brawler",
+    pitch: "Late-80s Japanese sports-game style: black outline, big head, short legs, turned three-quarters toward the ball. Gear pops against the outline and the face has room for fangs or paint.",
+    pros: ["Outline makes every item readable", "Big head fits hats and face items", "Short legs leave less room for pants and shoes"],
+    rows: ["...ooooooo....", "..ohhhhhhhoo..", ".ohhhhhhhhhho.", ".ohhhssssssso.", ".ohssssesseso.", ".ohssssesseso.", "..osssssssso..", "..ossssmmsso..", "...osssssso...", ".ouuttttttuuo.", ".ouotttTTTouo.", ".olotttTTTolo.", ".onotttTTTono.", "..oopppPPPoo..", "...oppoopPo...", "...oqqooqQo...", "...owwoowwo...", "..offfooffFo..", "..oooooooooo.."],
+    head: { x: 7, y: 1, w: 10 }, chest: { x: 7, y: 11 }, hand: { x: 11, y: 12 }, emblem: "big",
+  },
+  {
+    name: "Side-On Spiker",
+    pitch: "Seen from the side, mid-stride, like an arcade volleyball game. The arm reaches forward, so held items show best. Spikes and dives will look the most natural.",
+    pros: ["Most volleyball-looking motion", "Held items stick out in front", "Back of the shirt hides chest designs"],
+    rows: ["....hhhh....", "...hhhhhs...", "...hhsses...", "...hsssssss.", "....sssms...", ".....ss.....", "....tttt....", "...ttttuul..", "...tttT..ln.", "...tttT.....", "...TttT.....", "...pppP.....", "...pp.pP....", "..qq...qQ...", "..qq....qQ..", ".ww.....ww..", "fff.....ffF."],
+    head: { x: 6, y: 0, w: 6 }, chest: { x: 5, y: 8 }, hand: { x: 10, y: 8 }, emblem: "small",
+  },
+  {
+    name: "16-Bit Pro",
+    pitch: "A taller, shaded athlete from the 16-bit era, with knee pads and longer limbs. The most detailed: shading on every zone makes rare gear look rich, but every item needs more pixels.",
+    pros: ["Rare gear looks the richest", "Knee pads and socks give extra slots", "Twice the pixels per item"],
+    rows: [".....hhhh.....", "....hhhhhH....", "....hhhhhHH...", "....hsssssH...", "....sesseS....", "....sssssS....", ".....smmS.....", "......sS......", "...ttttttttT..", "..uttttttttTu.", "..uutttttttTuu", "..uu.ttttTT.uu", "..ll.ttttTT.ll", "..ll.ttttTT.ll", "..nn.ttttTT.nn", ".....pppppP...", ".....pppPPP...", ".....pp..PP...", ".....qq..qQ...", ".....kk..kk...", ".....kk..kk...", ".....qq..qQ...", ".....qq..qQ...", ".....ww..ww...", ".....ww..ww...", "....fff..ffF..", "....FFF..FFF.."],
+    head: { x: 7, y: 0, w: 6 }, chest: { x: 7, y: 10 }, hand: { x: 13, y: 14 }, emblem: "big",
+  },
+  {
+    name: "Micro Atari",
+    pitch: "Tiny and blocky, 8 pixels wide, no face, like a 1978 cartridge. Gear is mostly color, so it is quick to make dozens of items, and it is the clearest at home-screen size.",
+    pros: ["Fastest to make lots of items", "Clearest at tiny sizes", "Little room for detail on rare gear"],
+    rows: ["..hhhh..", "..ssss..", "..ssss..", "...ss...", ".uttttu.", "u.tttt.u", "l.tttt.l", "n.tttt.n", "..pppp..", "..p..p..", "..q..q..", "..q..q..", "..w..w..", ".ff..ff."],
+    head: { x: 4, y: 0, w: 4 }, chest: { x: 4, y: 5 }, hand: { x: 7, y: 7 }, emblem: "none",
+  },
+];
+
+const BASE_PAL = {
+  h: "#6b6380", H: "#55506b", s: "#c9b49a", S: "#a8927a", e: "#1a1024", m: "#8a5a5a",
+  o: "#1a1024", k: "#5a5078", n: "#c9b49a", w: "#e8dff5",
+};
+
+const GEAR = {
+  hat: [
+    { id: "none", name: "No hat", tier: -1 },
+    { id: "beanie", name: "Pumpkin Beanie", tier: 0 },
+    { id: "witch", name: "Witch's Hat", tier: 1 },
+    { id: "tophat", name: "Gilded Top Hat", tier: 3 },
+  ],
+  shirt: [
+    { id: "tee", name: "Plain tee", tier: -1, t: "#b9b2c9", T: "#9d96b0" },
+    { id: "stripes", name: "Candy-corn stripes", tier: 0, t: "#ff7a1a", T: "#c4550a", stripe: "#ffe14d" },
+    { id: "skull", name: "Skull tee", tier: 1, t: "#2a2340", T: "#1f1a30", emblem: "skull" },
+    { id: "hoodie", name: "Witchy hoodie", tier: 2, t: "#6b3fa8", T: "#52308a", sleeve: true, long: true, emblem: "moon" },
+  ],
+  pants: [
+    { id: "shorts", name: "Grey shorts", tier: -1, p: "#7d7591", P: "#6b6380" },
+    { id: "jeans", name: "Midnight jeans", tier: 0, p: "#2f3a63", P: "#232c4d", long: true },
+    { id: "track", name: "Ghost track pants", tier: 1, p: "#1f1a30", P: "#17131f", long: true, side: "#ff7a1a" },
+    { id: "slime", name: "Slime shorts", tier: 2, p: "#5ee84a", P: "#3fb02f", drip: true },
+  ],
+  shoes: [
+    { id: "white", name: "White sneakers", tier: -1, f: "#e8dff5", F: "#a49db0" },
+    { id: "hightops", name: "Orange high-tops", tier: 0, f: "#ff7a1a", F: "#c4550a", sock: "#ff7a1a" },
+    { id: "boots", name: "Witch boots", tier: 1, f: "#3a2350", F: "#24163a", sock: "#3a2350" },
+    { id: "ghost", name: "Ghostfire kicks", tier: 3, f: "#7dfcff", F: "#3ac6d6", glow: true },
+  ],
+  held: [
+    { id: "none", name: "Empty hands", tier: -1 },
+    { id: "pail", name: "Candy pail", tier: 0 },
+    { id: "lantern", name: "Lantern", tier: 1 },
+    { id: "broom", name: "Broomstick", tier: 2 },
+  ],
+};
+const ZONE_COLORS = { hat: "#ff3b4d", shirt: "#4fb2ff", pants: "#5ee84a", shoes: "#ffc53a", held: "#c46bff", skin: "#5a5078" };
+
+const gear = { hat: 0, shirt: 0, pants: 0, shoes: 0, held: 0 };
+let showZones = false;
+
+function athletePal(t) {
+  const sh = GEAR.shirt[gear.shirt], pa = GEAR.pants[gear.pants], so = GEAR.shoes[gear.shoes];
+  const pal = { ...BASE_PAL };
+  pal.t = sh.t; pal.T = sh.T;
+  pal.u = sh.sleeve ? sh.t : BASE_PAL.s;
+  pal.l = sh.long ? sh.T : BASE_PAL.s;
+  pal.p = pa.p; pal.P = pa.P;
+  pal.q = pa.long ? pa.p : BASE_PAL.s;
+  pal.Q = pa.long ? pa.P : BASE_PAL.S;
+  pal.f = so.f; pal.F = so.F;
+  if (so.sock) pal.w = so.sock;
+  if (so.glow) { const k = Math.floor(t * 8) % 4; pal.f = k < 2 ? "#7dfcff" : "#b8feff"; }
+  if (showZones) {
+    Object.assign(pal, {
+      h: ZONE_COLORS.hat, H: ZONE_COLORS.hat,
+      t: ZONE_COLORS.shirt, T: ZONE_COLORS.shirt, u: ZONE_COLORS.shirt, l: "#9fd4ff",
+      p: ZONE_COLORS.pants, P: ZONE_COLORS.pants, q: "#a8f59c", Q: "#a8f59c",
+      f: ZONE_COLORS.shoes, F: ZONE_COLORS.shoes, w: "#ffe39a",
+      n: ZONE_COLORS.held, s: ZONE_COLORS.skin, S: ZONE_COLORS.skin, e: "#1a1024", m: ZONE_COLORS.skin,
+    });
+  }
+  return pal;
+}
+
+const PANTS_ZONE = new Set(["p", "P", "q", "Q"]);
+function drawBody(c, b, left, top, t) {
+  const pal = athletePal(t);
+  const sh = GEAR.shirt[gear.shirt], pa = GEAR.pants[gear.pants];
+  b.rows.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      const ch = row[i];
+      let col = pal[ch];
+      if (!col) continue;
+      if (!showZones) {
+        if (sh.stripe && (ch === "t" || ch === "T") && j % 2 === 0) col = sh.stripe;
+        if (pa.side && PANTS_ZONE.has(ch) && (pa.long || ch === "p" || ch === "P") && !PANTS_ZONE.has(row[i - 1])) col = pa.side;
+      }
+      R(c, left + i, top + j, 1, 1, col);
+    }
+  });
+  if (showZones) return;
+  if (pa.drip) {
+    // slime drips hang off the bottom edge of the shorts
+    b.rows.forEach((row, j) => {
+      for (let i = 0; i < row.length; i++) {
+        if ((row[i] === "p" || row[i] === "P") && !"pP".includes(b.rows[j + 1]?.[i] ?? ".") && (i + j) % 2 === 0) {
+          const len = 1 + Math.round((Math.sin(t * 2 + i) + 1) * 0.8);
+          R(c, left + i, top + j + 1, 1, len, "#5ee84a");
+        }
+      }
+    });
+  }
+  if (sh.emblem && b.emblem !== "none") {
+    const cx = left + b.chest.x, cy = top + b.chest.y;
+    if (b.emblem === "small") R(c, cx, cy, 1, 1, "#ece6d6");
+    else if (sh.emblem === "skull") spr(c, [".bb.", "bkbk", ".bb."], { b: "#ece6d6", k: "#1a1024" }, cx - 2, cy - 1);
+    else spr(c, [".y", "y.", ".y"], { y: "#ffe14d" }, cx - 1, cy - 1);
+  }
+}
+
+function drawHat(c, b, left, top, t) {
+  const id = GEAR.hat[gear.hat].id;
+  if (id === "none") return;
+  const cx = left + b.head.x, y = top + b.head.y, w = b.head.w;
+  const x0 = Math.round(cx - w / 2);
+  if (showZones) { R(c, x0 - 1, y - 2, w + 2, 3, ZONE_COLORS.hat); return; }
+  if (id === "beanie") {
+    R(c, x0 - 1, y + 1, w + 2, 1, "#b4521a");
+    R(c, x0, y - 1, w, 2, "#e8742a");
+    R(c, x0 + 1, y - 2, w - 2, 1, "#e8742a");
+    R(c, cx - 1, y - 3, 2, 1, "#f3e9d2");
+  } else if (id === "witch") {
+    R(c, x0 - 3, y + 1, w + 6, 1, "#1a1024");
+    R(c, x0, y, w, 1, "#5ee84a");
+    R(c, cx - 1, y, 2, 1, "#ffd84a");
+    const hgt = Math.max(5, w);
+    for (let k = 1; k <= hgt; k++) {
+      const ww = Math.max(1, Math.round(w - 1 - (k * (w - 1)) / hgt));
+      R(c, Math.round(cx - ww / 2) + Math.round(k / 4), y - k, ww, 1, "#6b3fa8");
+    }
+  } else if (id === "tophat") {
+    R(c, x0 - 2, y + 1, w + 4, 1, "#ffc53a");
+    R(c, x0, y, w, 1, "#8f1426");
+    const sh = Math.floor(t * 8) % 6;
+    for (let k = 1; k <= 5; k++) R(c, x0, y - k, w, 1, k === 5 ? "#fff1b0" : "#ffc53a");
+    R(c, x0 + (sh % w), y - 4, 1, 3, "#fff1b0");
+    for (let k = 0; k < 3; k++) if (Math.sin(t * 5 + k * 2) > 0.3) R(c, x0 - 2 + ((k * 5) % (w + 4)), y - 7 - ((t * 6 + k * 3) % 4), 1, 1, "#fff1b0");
+  }
+}
+
+function drawHeld(c, b, left, top, t) {
+  const id = GEAR.held[gear.held].id;
+  if (id === "none") return;
+  const hx = left + b.hand.x, hy = top + b.hand.y;
+  if (showZones) { R(c, hx - 1, hy - 1, 4, 4, ZONE_COLORS.held); return; }
+  if (id === "pail") spr(c, ["..k..", ".k.k.", "ooooo", "oyoyo", "ooooo", ".ooo."], { k: "#1a1024", o: "#ff7a1a", y: "#1a1024" }, hx - 2, hy);
+  else if (id === "lantern") {
+    const lit = Math.sin(t * 9) + Math.sin(t * 5.3) > -0.4;
+    glow(c, hx, hy + 4, 7, "#ffd84a", lit ? 0.5 : 0.3);
+    spr(c, ["..k..", ".kkk.", "kyyyk", "kyYyk", "kyyyk", ".kkk."], { k: "#3a3150", y: "#ffd84a", Y: lit ? "#fff3a0" : "#ffd84a" }, hx - 2, hy);
+  } else if (id === "broom") {
+    R(c, hx, hy - 9, 1, 15, "#7a4a24");
+    spr(c, [".yyy.", "yyyyy", "yYyYy", "yyyyy"], { y: "#d9a441", Y: "#a8792a" }, hx - 2, hy + 6);
+  }
+}
+
+function drawAthlete(c, b, x, bottom, t, rival = false) {
+  const bob = reduced ? 0 : Math.round((Math.sin(t * 3) + 1) / 2);
+  const w = b.rows[0].length;
+  const left = Math.round(x - w / 2), top = bottom - b.rows.length - bob;
+  if (rival) {
+    // rival wears default gear in a different color so you can tell who is who
+    const saved = { ...gear }, sz = showZones;
+    Object.assign(gear, { hat: 0, shirt: 0, pants: 0, shoes: 0, held: 0 }); showZones = false;
+    spr(c, b.rows, { ...athletePal(t), t: "#6e5d8f", T: "#55467a", p: "#3a3150", P: "#2a2340", u: BASE_PAL.s }, left, top);
+    Object.assign(gear, saved); showZones = sz;
+    return;
+  }
+  drawBody(c, b, left, top, t);
+  drawHat(c, b, left, top, t);
+  drawHeld(c, b, left, top, t);
+}
+
+const athGrid = document.getElementById("ath-grid");
+const athStages = [];
+BODIES.forEach((b, i) => {
+  const card = document.createElement("article");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="card-top"><h3>${b.name}</h3><span class="letter">Athlete ${"ABCDE"[i]}</span></div>
+    <canvas class="av-stage" width="44" height="44" aria-label="${b.name}, profile size, wearing the selected gear"></canvas>
+    <div class="av-small"><canvas width="96" height="34" style="width:96px;height:34px" aria-label="${b.name} at real home-screen size"></canvas><span>Real size in the home-screen rally, you vs your rival</span></div>
+    <p class="pitch">${b.pitch}</p>
+    <ul class="pros">${b.pros.map((p) => `<li>${p}</li>`).join("")}</ul>`;
+  athGrid.appendChild(card);
+  const [big, small] = card.querySelectorAll("canvas");
+  athStages.push({ b, big: big.getContext("2d"), small: small.getContext("2d") });
+});
+
+const mixer = document.getElementById("mixer");
+const SLOT_LABELS = { hat: "Hat", shirt: "Shirt", pants: "Pants", shoes: "Shoes", held: "In hand" };
+for (const slot of Object.keys(GEAR)) {
+  const row = document.createElement("div");
+  row.className = "mix-row";
+  row.setAttribute("role", "group");
+  row.setAttribute("aria-label", SLOT_LABELS[slot]);
+  row.innerHTML = `<span class="label">${SLOT_LABELS[slot]}</span>` + GEAR[slot].map((g, k) =>
+    `<button class="chip ${g.tier >= 0 ? "c" + g.tier : ""}" data-slot="${slot}" data-k="${k}" aria-pressed="${k === 0}">${g.name}</button>`).join("");
+  mixer.appendChild(row);
+}
+function syncMixer() {
+  mixer.querySelectorAll("[data-slot]").forEach((b) => b.setAttribute("aria-pressed", String(gear[b.dataset.slot] === Number(b.dataset.k))));
+}
+mixer.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-slot]");
+  if (!b) return;
+  gear[b.dataset.slot] = Number(b.dataset.k);
+  syncMixer();
+});
+document.getElementById("mix-random").addEventListener("click", () => {
+  for (const slot of Object.keys(GEAR)) gear[slot] = Math.floor(Math.random() * GEAR[slot].length);
+  syncMixer();
+});
+document.getElementById("mix-reset").addEventListener("click", () => {
+  for (const slot of Object.keys(GEAR)) gear[slot] = 0;
+  syncMixer();
+});
+const zonesBtn = document.getElementById("mix-zones");
+zonesBtn.addEventListener("click", () => {
+  showZones = !showZones;
+  zonesBtn.setAttribute("aria-pressed", String(showZones));
+});
+
+function drawAthletes(t) {
+  for (const { b, big, small } of athStages) {
+    R(big, 0, 0, 44, 44, "#140a26");
+    glow(big, 22, 24, 20, "#4b3f70", 0.4);
+    R(big, 0, 39, 44, 5, "#1c1030"); R(big, 0, 39, 44, 1, "#3a2a5c");
+    drawAthlete(big, b, 22, 39, t);
+
+    R(small, 0, 0, 96, 34, "#140a26");
+    R(small, 0, 31, 96, 3, "#1c1030"); R(small, 0, 31, 96, 1, "#3a2a5c");
+    R(small, 47, 16, 1, 15, "#6b5f8d"); R(small, 44, 16, 7, 1, "#a99bc9");
+    drawAthlete(small, b, 20, 31, t);
+    small.save(); small.translate(96, 0); small.scale(-1, 1);
+    drawAthlete(small, b, 20, 31, t + 1.3, true);
+    small.restore();
+    const p = reduced ? 0.3 : (t * 0.8) % 2;
+    const f = p < 1 ? p : 2 - p;
+    R(small, lerp(28, 66, f), 12 - Math.sin(f * Math.PI) * 10, 2, 2, "#ffcf3a");
+  }
+}
+
+const DIRECTORS = [cauldron];
+const stages = [];
+
+function rollRarity() {
+  let x = Math.random() * 100;
+  for (let i = 0; i < 4; i++) { if (x < ODDS[i]) return i; x -= ODDS[i]; }
+  return 0;
+}
+
+const grid = document.getElementById("box-grid");
+DIRECTORS.forEach((d, i) => {
+  const card = document.createElement("article");
+  card.className = "card";
+  const letter = "C";
+  card.innerHTML = `
+    <div class="card-top"><h3>${d.name}</h3><span class="letter">Box ${letter}</span></div>
+    <canvas class="stage" width="${W}" height="${H}" tabindex="0" role="button" aria-label="Open the ${d.name}"></canvas>
+    <div class="controls" role="group" aria-label="Rarity for ${d.name}">
+      <button class="open" id="open-${i}">Open</button>
+      <button class="chip" data-r="rand" aria-pressed="true">Random</button>
+      ${RAR.map((x, k) => `<button class="chip c${k}" data-r="${k}" aria-pressed="false">${x.name}</button>`).join("")}
+    </div>
+    <div class="result" aria-live="polite"></div>
+    <p class="pitch">${d.pitch}</p>
+    <dl class="facts">${d.facts.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl>`;
+  grid.appendChild(card);
+  const canvas = card.querySelector("canvas");
+  const result = card.querySelector(".result");
+  const stage = new Stage(canvas, d, (r) => {
+    result.innerHTML = r === null ? "" : `<span class="tier t${r}">${RAR[r].name}</span><span class="t${r}">${ITEMS[r].name}</span>`;
+  });
+  stages.push(stage);
+  let choice = "rand";
+  card.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
+    choice = b.dataset.r;
+    card.querySelectorAll(".chip").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    stage.open(choice === "rand" ? rollRarity() : Number(choice));
+  }));
+  const go = () => stage.open(choice === "rand" ? rollRarity() : Number(choice));
+  card.querySelector(".open").addEventListener("click", go);
+  canvas.addEventListener("click", go);
+  canvas.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+});
+// ---------- Loop ----------
+let last = performance.now();
+let avT = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  for (const s of stages) s.step(dt);
+  avT += dt;
+  drawAthletes(avT);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ---------- Odds table ----------
+function renderTiers(odds, pool) {
+  document.getElementById("tier-body").innerHTML = RAR.map((x, i) => {
+    const each = pool[i] ? odds[i] / pool[i] : 0;
+    return `<tr><td class="t${i}">${x.name}</td><td class="num">${odds[i]}%</td><td class="num">${pool[i]}</td><td class="num">${each >= 1 ? each.toFixed(2) : each.toFixed(3)}%</td></tr>`;
+  }).join("") + `<tr><td><b>Total</b></td><td class="num">${odds.reduce((a, b) => a + b, 0)}%</td><td class="num">${pool.reduce((a, b) => a + b, 0)}</td><td></td></tr>`;
+}
+
+// ---------- Simulator ----------
+const PROFILES = [
+  ["Plays every other week", 0.5],
+  ["Weekly regular", 1],
+  ["Twice a week", 2],
+  ["Plays every single day", 7],
+];
+const val = (id) => Number(document.getElementById(id).value) || 0;
+function simulate() {
+  const cost = 1;
+  const games = Math.max(1, Math.round(val("in-games")));
+  const weeks = Math.max(0.5, val("in-weeks"));
+  const odds = [0, 1, 2, 3].map((i) => Math.max(0, val("in-o" + i)));
+  const pool = [0, 1, 2, 3].map((i) => Math.max(0, Math.round(val("in-p" + i))));
+  renderTiers(odds, pool);
+  const total = pool.reduce((a, b) => a + b, 0);
+  const N = 3000;
+  const rows = PROFILES.map(([label, perWeek]) => {
+    let sumTok = 0, sumPulls = 0, anyLeg = 0, epics = 0, coll = 0, full = 0;
+    const maxSessions = Math.floor(weeks * 7);
+    for (let n = 0; n < N; n++) {
+      const exp = perWeek * weeks;
+      let sessions = Math.floor(exp) + (Math.random() < exp % 1 ? 1 : 0);
+      sessions = Math.min(sessions, maxSessions);
+      let tokens = 0;
+      for (let s = 0; s < sessions; s++) {
+        let wins = 0;
+        for (let g = 0; g < games; g++) if (Math.random() < 0.5) wins++;
+        tokens += Math.min(10, games + wins);
+      }
+      const pulls = Math.min(Math.floor(tokens / cost), total);
+      const owned = [0, 0, 0, 0];
+      for (let k = 0; k < pulls; k++) {
+        let sum = 0;
+        for (let i = 0; i < 4; i++) if (owned[i] < pool[i]) sum += odds[i];
+        if (sum <= 0) {
+          const i = owned.findIndex((o, j) => o < pool[j]);
+          if (i < 0) break;
+          owned[i]++; continue;
+        }
+        let x = Math.random() * sum;
+        for (let i = 0; i < 4; i++) {
+          if (owned[i] >= pool[i]) continue;
+          if (x < odds[i]) { owned[i]++; break; }
+          x -= odds[i];
+        }
+      }
+      sumTok += tokens; sumPulls += pulls;
+      if (owned[3] > 0) anyLeg++;
+      epics += owned[2];
+      const got = owned.reduce((a, b) => a + b, 0);
+      coll += total ? got / total : 0;
+      if (got === total && total > 0) full++;
+    }
+    return `<tr><td>${label}</td><td class="num">${Math.round(sumPulls / N)}</td><td class="num t3">${Math.round((anyLeg / N) * 100)}%</td><td class="num t2">${(epics / N).toFixed(1)}</td><td class="num">${Math.round((coll / N) * 100)}%</td><td class="num">${Math.round((full / N) * 100)}%</td></tr>`;
+  });
+  document.getElementById("sim-body").innerHTML = rows.join("");
+  const oddsSum = odds.reduce((a, b) => a + b, 0);
+  const maxTok = Math.floor(weeks * 7) * 10;
+  document.getElementById("sim-note").textContent =
+    `Most anyone can earn this season: ${maxTok} tokens (10 a day for ${Math.floor(weeks * 7)} days), for a ${total}-item set.` +
+    (Math.abs(oddsSum - 100) > 0.01 ? ` Tier odds add up to ${oddsSum}%, so they're treated as relative weights.` : "");
+}
+const PRESETS = {
+  small: { o: [70, 22, 7, 1], p: [30, 16, 8, 4] },
+  big: { o: [76, 20, 3.8, 0.2], p: [100, 50, 20, 6] },
+};
+document.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => {
+  const pr = PRESETS[b.dataset.preset];
+  pr.o.forEach((v, i) => { document.getElementById("in-o" + i).value = v; });
+  pr.p.forEach((v, i) => { document.getElementById("in-p" + i).value = v; });
+  document.querySelectorAll("[data-preset]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  simulate();
+}));
+document.querySelectorAll(".inputs input").forEach((el) => el.addEventListener("input", simulate));
+simulate();
+})();
+</script>

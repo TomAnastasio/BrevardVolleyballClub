@@ -1,0 +1,3 @@
+// format sample only
+addSkin("epic", { name: "Sample Blob", pitch: "Format check.", rows: ["....gggggg....", "..gggggggggg..", ".ggwkggggwkgg.", "gggggggggggggg", "gggggmmmmggggg", "gggggggggggggg", ".gggggggggggg.", "..gg..gg..gg.."], pal: { g: "#5ee84a", w: "#fff", k: "#000", m: "#2f8a3a" }, animPal: (t) => (t % 3 > 2.8 ? { w: "#5ee84a", k: "#5ee84a" } : {}) });
+addSkin("legendary", { name: "Sample Wisp", pitch: "Format check.", float: () => 3, rows: ["..yy..", ".yYYy.", "yYwwYy", ".yYYy."], pal: { y: "#ffd84a", Y: "#fff3a0", w: "#fff" }, under: (c, l, tp, t) => glow(c, l + 3, tp + 2, 12, "#ffd84a", 0.5), over: (c, l, tp, t) => sparkle(c, l + 8, tp, "#fff", Math.sin(t * 5) > 0) });

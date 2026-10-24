@@ -1,0 +1,751 @@
+<title>BVC Monster Transformations</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: one long night-sky column; three stacked sections (boxes, avatars, odds), cards in auto-fit grids. Single dark look that matches the app's Halloween skin. */
+:root {
+  --night-0: #07040f;
+  --night-1: #140a26;
+  --card: #1f1338;
+  --card-2: #2a1a4a;
+  --line: #4b3f70;
+  --fg: #f6f0ff;
+  --muted: #a99bc9;
+  --orange: #ff7a1a;
+  --common: #c9c2d9;
+  --rare: #4fb2ff;
+  --epic: #c46bff;
+  --legendary: #ffc53a;
+  --display: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tag: "Press Start 2P", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: radial-gradient(1200px 600px at 50% -200px, #24123f, transparent 70%), var(--night-1);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+header { display: flex; flex-direction: column; gap: 10px; max-width: 70ch; }
+.eyebrow { font-family: var(--tag); font-size: 10px; letter-spacing: 0.08em; color: var(--orange); text-transform: uppercase; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.1; }
+h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 700; }
+h1 .glow { color: var(--legendary); text-shadow: 0 0 18px rgb(255 197 58 / 0.45); }
+h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; }
+h3 { font-size: 22px; font-weight: 600; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: 17px; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.sec-head { display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+.sec-head p { color: var(--muted); }
+
+.grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid > * { min-width: 0; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.letter { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.stage {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  image-rendering: pixelated;
+  display: block;
+  border-radius: 4px;
+  background: var(--night-0);
+  cursor: pointer;
+}
+.pitch { color: var(--muted); font-size: 15px; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.n { font-family: var(--body); font-weight: 700; }
+.kinds { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+.kinds div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.kinds dt { font-weight: 700; }
+.kinds dd { margin: 0; min-width: 0; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 600 14px var(--display);
+  color: var(--fg);
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] { border-color: currentColor; background: #33205a; }
+.chip:focus-visible, .open:focus-visible, .stage:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.chip.c0 { color: var(--common); } .chip.c1 { color: var(--rare); } .chip.c2 { color: var(--epic); } .chip.c3 { color: var(--legendary); }
+.open {
+  font: 700 16px var(--display);
+  background: var(--orange);
+  color: var(--night-0);
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.result { min-height: 24px; font: 600 16px var(--display); }
+.result .tier { font-family: var(--tag); font-size: 10px; margin-right: 8px; }
+.t0 { color: var(--common); } .t1 { color: var(--rare); } .t2 { color: var(--epic); } .t3 { color: var(--legendary); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
+.toolbar .label { font-family: var(--tag); font-size: 10px; color: var(--muted); }
+.av-stage { width: 100%; aspect-ratio: 1; image-rendering: pixelated; display: block; background: var(--night-0); border-radius: 4px; }
+.av-small { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+.av-small canvas { image-rendering: pixelated; background: var(--night-0); border-radius: 3px; flex: none; }
+.pros { margin: 0; padding-left: 18px; font-size: 14px; display: flex; flex-direction: column; gap: 3px; }
+
+.split { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+.split > * { min-width: 0; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 400 9px var(--tag); color: var(--muted); letter-spacing: 0.05em; }
+td.num, th.num { text-align: right; }
+td.wrap { white-space: normal; min-width: 180px; }
+.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.inputs label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.inputs input {
+  font: 700 16px var(--body);
+  background: var(--card-2);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 8px;
+  width: 100%;
+}
+.inputs input:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+.note { font-size: 14px; color: var(--muted); }
+.agreed { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.bar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; }
+.bar span { display: block; height: 100%; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+.mixer-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+.mixer { display: flex; flex-direction: column; gap: 8px; }
+.mix-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mix-row .label { width: 64px; flex: none; }
+.chip.c0[aria-pressed="true"], .chip.c1[aria-pressed="true"], .chip.c2[aria-pressed="true"], .chip.c3[aria-pressed="true"] { border-color: currentColor; }
+.grid.one { grid-template-columns: minmax(0, 520px); }
+.chip[data-preset] { font-family: var(--body); font-weight: 700; }
+.views { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+.views figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.views canvas { width: 100%; aspect-ratio: 22 / 36; image-rendering: pixelated; background: var(--night-0); border-radius: 4px; display: block; }
+.views figcaption { font-family: var(--tag); font-size: 9px; color: var(--muted); }
+.code { font-family: var(--tag); font-size: 12px; }
+.grid.skins { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+</style>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Brevard Volleyball Club · special rewards, ideas only</span>
+    <h1>Ten monster <span class="glow">transformations</span></h1>
+    <p class="lede">Each one replaces the whole avatar, whatever hat, shirt, pants and shoes are equipped. "Before" shows a player in a sample outfit, "After" shows them transformed. These are rough sketches to check the idea, one per monster, not finished art or tiers yet.</p>
+  </header>
+  <div class="grid skins" id="skin-grid"></div>
+</div>
+<script>
+(() => {
+// =====================================================================
+// BVC cosmetics engine: one 16-Bit Pro body, gear layered by zone.
+// Data files call addTheme(slot, theme). See FORMAT below.
+// =====================================================================
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TAU = Math.PI * 2;
+
+// ---------- drawing helpers ----------
+function R(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function spr(c, rows, pal, x, y) {
+  rows.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) { const col = pal[row[i]]; if (col) R(c, x + i, y + j, 1, 1, col); }
+  });
+}
+function glow(c, cx, cy, r, col, a) {
+  const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, col); g.addColorStop(1, "transparent");
+  c.save(); c.globalAlpha = Math.max(0, a); c.fillStyle = g; c.fillRect(cx - r, cy - r, r * 2, r * 2); c.restore();
+}
+function sparkle(c, x, y, col, big) {
+  R(c, x, y - (big ? 2 : 1), 1, big ? 5 : 3, col);
+  R(c, x - (big ? 2 : 1), y, big ? 5 : 3, 1, col);
+}
+function fade(c, alpha, fn) { c.save(); c.globalAlpha = Math.max(0, Math.min(1, alpha)); fn(); c.restore(); }
+const darken = (hex, f = 0.72) => {
+  const n = parseInt(hex.slice(1), 16);
+  const v = [n >> 16, (n >> 8) & 255, n & 255].map((x) => Math.round(x * f));
+  return "#" + v.map((x) => Math.min(255, x).toString(16).padStart(2, "0")).join("");
+};
+const lighten = (hex, f = 0.3) => {
+  const n = parseInt(hex.slice(1), 16);
+  const v = [n >> 16, (n >> 8) & 255, n & 255].map((x) => Math.round(x + (255 - x) * f));
+  return "#" + v.map((x) => x.toString(16).padStart(2, "0")).join("");
+};
+const at = (list, x, y) => list.some(([a, b]) => a === x && b === y);
+// deterministic 0..1 noise from integers, for stable speckles
+const hash = (a, b = 0, c2 = 0) => { let h = (a * 374761393 + b * 668265263 + c2 * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+
+// ---------- head grid builder: fill shapes, then auto-outline ----------
+const CX = 7; // head centre column
+const OUT = "#0b0614";
+function makeGrid() {
+  const m = new Map();
+  return {
+    m,
+    set(x, y, c) { m.set(`${Math.round(x)},${Math.round(y)}`, { x: Math.round(x), y: Math.round(y), c }); },
+    row(x0, x1, y, c) { for (let x = Math.round(x0); x <= Math.round(x1); x++) this.set(x, y, c); },
+    has(x, y) { return m.has(`${x},${y}`); },
+    get(x, y) { return m.get(`${x},${y}`); },
+    del(x, y) { m.delete(`${x},${y}`); },
+  };
+}
+// outlines the sides and top of everything in the grid (not underneath: it sits on the head)
+function outline(g, col = OUT) {
+  const add = [];
+  for (const { x, y } of g.m.values())
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, -1], [1, -1], [-1, -1]])
+      if (!g.has(x + dx, y + dy)) add.push([x + dx, y + dy]);
+  for (const [x, y] of add) g.set(x, y, col);
+}
+// shaded row: highlight on the left edge, shadow on the right two pixels
+function shadedRow(g, x0, x1, y, P) {
+  x0 = Math.round(x0); x1 = Math.round(x1);
+  for (let x = x0; x <= x1; x++) g.set(x, y, x === x0 ? P.hi : x >= x1 - 1 && x1 - x0 > 2 ? P.sh : P.base);
+}
+// filled ellipse into a grid (cx, cy centre; rx, ry radii), colored by fn(x, y, x0, x1) or a palette
+function ellipse(g, cx, cy, rx, ry, colorFn) {
+  for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+    const d = 1 - ((y - cy) / ry) ** 2;
+    if (d <= 0) continue;
+    const half = Math.sqrt(d) * rx;
+    const x0 = Math.round(cx - half), x1 = Math.round(cx + half);
+    for (let x = x0; x <= x1; x++) g.set(x, y, colorFn(x, y, x0, x1));
+  }
+}
+
+// ---------- the 16-Bit Pro ----------
+// Zone letters: h/H hair, s/S skin, e eye, m mouth, k knee pad, n hand,
+// t/T torso (T = right shade), u upper arm, l forearm,
+// p/P hips+thighs (rows 15-17), q/Q shins (rows 18, 21, 22), w socks (rows 23-24), f/F shoes (rows 25-26).
+// Head: hair rows 0-2, face rows 3-6 (eyes at x 5 and 8, row 4), neck row 7. Head spans x 4-10, centre x 7.
+// Torso rows 8-14 (x 3-11 at the shoulders, x 5-10 lower), arms x 2-3 and 12-13.
+// Legs: left x 5-6, right x 9-10. Shoes: left x 4-6, right x 9-11, toes point outward (x 4 and x 11).
+const BODY = [".....hhhh.....", "....hhhhhH....", "....hhhhhHH...", "....hsssssH...", "....sesseS....", "....sssssS....", ".....smmS.....", "......sS......", "...ttttttttT..", "..uttttttttTu.", "..uutttttttTuu", "..uu.ttttTT.uu", "..ll.ttttTT.ll", "..ll.ttttTT.ll", "..nn.ttttTT.nn", ".....pppppP...", ".....pppPPP...", ".....pp..PP...", ".....qq..qQ...", ".....kk..kk...", ".....kk..kk...", ".....qq..qQ...", ".....qq..qQ...", ".....ww..ww...", ".....ww..ww...", "....fff..ffF..", "....FFF..FFF.."];
+const SKIN = "#c9b49a", SKIN_D = "#a8927a";
+const BASE = { h: "#6b6380", H: "#55506b", s: SKIN, S: SKIN_D, e: "#1a1024", m: "#8a5a5a", k: "#5a5078", n: SKIN, w: "#e8dff5", f: "#e8dff5", F: "#a49db0", q: SKIN, Q: SKIN_D, t: "#b9b2c9", T: "#9d96b0", u: SKIN, l: SKIN, p: "#7d7591", P: "#6b6380" };
+
+/* FORMAT — what an item is, per slot. Every hook is optional unless noted.
+   All x/y are body pixel coordinates (0..13, 0..26); left/top are canvas offsets of the body.
+   head:  { build(t) -> grid (required; draw with makeGrid/outline/ellipse; may cover face rows 0-7),
+            under(c,left,top,t), over(c,left,top,t), float(t) -> extra pixels up (int) }
+   shirt: { sleeve: "short"|"long", px(x,y,zone,t) -> color (required; zones t T u l; null = skin),
+            under, over }
+   pants: { long: bool (covers shins/knees), socks: bool (also colors w), ghost: bool (hide legs+shoes),
+            px(x,y,zone,t) -> color (required; zones p P, plus q Q k if long, w if socks; null = see-through),
+            shin(x,y,zone,t) (shorts only: color the bare shins), under, over }
+   shoes: { high: bool (also colors socks w), lift: int (hover/platform px), px(x,y,zone,t) -> color (required; zones f F, w if high; null = hidden),
+            under(c,left,groundTop,t) (groundTop ignores lift), over }
+   theme: { name, pitch,
+            common: { pitch, colors: [ {name, ...your fields} x6 ], make(color) -> item },
+            rare: { name, pitch, item }, epic: { name, pitch, item }, legendary: { name, pitch, item } }
+*/
+const THEMES = { head: [], shirt: [], pants: [], shoes: [] };
+function addTheme(slot, theme) { THEMES[slot].push(theme); }
+
+function drawAvatar(c, gear, x, bottom, t, still = false) {
+  const { head, shirt, pants, shoes } = gear;
+  const bob = reduced || still ? 0 : Math.round((Math.sin(t * 3) + 1) / 2);
+  const lift = shoes && shoes.lift ? shoes.lift : 0;
+  const left = Math.round(x - 7), groundTop = bottom - BODY.length - bob, top = groundTop - lift;
+  for (const it of [pants, shirt]) if (it && it.under) it.under(c, left, top, t);
+  if (shoes && shoes.under) shoes.under(c, left, groundTop, t);
+  BODY.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      const z = row[i];
+      if (z === ".") continue;
+      let col = BASE[z];
+      if (pants && pants.ghost && "pPqQkwfF".includes(z)) continue;
+      if (shirt && "tTul".includes(z)) col = z === "l" && shirt.sleeve !== "long" ? SKIN : shirt.px(i, j, z, t) ?? (z === "u" || z === "l" ? SKIN : col);
+      if (pants) {
+        if (z === "p" || z === "P") col = pants.px(i, j, z, t);
+        else if ("qQk".includes(z)) col = pants.long ? pants.px(i, j, z, t) : pants.shin ? pants.shin(i, j, z, t) ?? col : col;
+        else if (z === "w" && pants.socks) col = pants.px(i, j, z, t);
+      }
+      if (shoes && (z === "f" || z === "F" || (z === "w" && shoes.high))) col = shoes.px(i, j, z, t);
+      if (col) R(c, left + i, top + j, 1, 1, col);
+    }
+  });
+  for (const it of [pants, shirt, shoes]) if (it && it.over) it.over(c, left, top, t);
+  if (head) {
+    const hTop = top - (head.float ? head.float(t) : 0);
+    if (head.under) head.under(c, left, hTop, t);
+    for (const { x: px, y: py, c: col } of head.build(t).m.values()) R(c, left + px, hTop + py, 1, 1, col);
+    if (head.over) head.over(c, left, hTop, t);
+  }
+}
+// ---------- Full-body transformations ----------
+// A skin replaces the whole avatar. Sprites are up to 16 wide, bottom row sits on the ground.
+// Rows are padded to 16; x 0..15 with the body's centre around x 7-8.
+const SKINS = [
+  {
+    name: "Headless Horseman",
+    pitch: "A tall rider in a long dark coat and boots with no head at all, just flames where the neck should be, carrying a blazing jack-o'-lantern.",
+    pal: { k: "#1a1024", c: "#2a2240", C: "#1a1530", r: "#8f1426", a: "#2a2240", A: "#1a1530", b: "#3a2a1a", B: "#1f160c", g: "#4a4060", p: "#3a3646", y: "#c9a24a" },
+    rows: [
+      "......kkkk......",
+      ".....cCrrCc.....",
+      "....ccCrrCcc....",
+      "...ccccccccccc..",
+      "..accccycccccA..",
+      "..accccccccccA..",
+      "..accccycccccA..",
+      "..accccccccccA..",
+      "..gccccycccccg..",
+      "...ccccccccccC..",
+      "...cccc..ccccC..",
+      "...ccc.pp.cccC..",
+      "...cc..pp..ccC..",
+      "......pp.pp.....",
+      "......pp.pp.....",
+      ".....bbb.bbb....",
+      ".....bbb.bbb....",
+      ".....bbb.bbb....",
+      "....bbbb.bbbb...",
+      "....BBBB.BBBB...",
+    ],
+    over(c, left, top, t) {
+      // neck flames
+      const COLS = ["#ffffff", "#fff3a0", "#ffd84a", "#ff7a1a", "#c4300a"];
+      for (let s = -1; s <= 2; s++) for (let k = 0; k < 3; k++) {
+        const ph = (t * 2.4 + k / 3 + (s + 1) * 0.23) % 1;
+        fade(c, 1 - ph * 0.5, () => R(c, left + 7 + s + Math.round(Math.sin(t * 9 + s + k) * ph), top - 1 - ph * (6 - Math.abs(s - 0.5) * 1.5), 1, 1, COLS[Math.min(4, Math.floor(ph * 5))]));
+      }
+      // the pumpkin in his right hand
+      const lit = Math.sin(t * 9) + Math.sin(t * 5.1) > -0.6 ? "#fff3a0" : "#ffd84a";
+      glow(c, left + 14, top + 11, 8, "#ff7a1a", 0.4);
+      spr(c, [".ooooo.", "ooyoyoo", "ooooooo", "oyyyyyo", ".ooooo."], { o: "#ff7a1a", y: lit }, left + 11, top + 9);
+      R(c, left + 14, top + 8, 1, 1, "#4a7a28");
+    },
+  },
+  {
+    name: "Grim Reaper",
+    pitch: "A floor-length black robe that floats above the ground, a skull glowing inside the hood, and a huge scythe taller than the player.",
+    pal: { r: "#231d33", R: "#14101c", k: "#07040f", h: "#ece6d6", s: "#ece6d6" },
+    float: (t) => (reduced ? 1 : 1 + Math.round((Math.sin(t * 2) + 1) / 2)),
+    rows: [
+      ".......rrr......",
+      "......rrrrr.....",
+      ".....rrrrrrr....",
+      ".....rRkkkRr....",
+      ".....rkkkkkr....",
+      ".....rkkkkkr....",
+      "....rrRkkkRrr...",
+      "...rrrrrrrrrrr..",
+      "..rrrrrrrrrrrrr.",
+      "..rrrrrrrrrrrRr.",
+      ".hrrrrrrrrrrrRr.",
+      "..rrrrrrrrrrrRr.",
+      "..rrrrrrrrrrrRr.",
+      "..rrrrrrrrrrrRr.",
+      "...rrrrrrrrrrR..",
+      "...rrrrrrrrrrR..",
+      "...rrrrrrrrrrRr.",
+      "..rrrrrrrrrrrRr.",
+      "..rrrrrrrrrrrRr.",
+      "..rrrrrrrrrrrrRr",
+      ".rrrrrrrrrrrrrRr",
+      ".rrrrrrrrrrrrrRr",
+      "rrrrrrrrrrrrrrRr",
+      "r.rr.rrr.rr.rr.r",
+    ],
+    under(c, left, top, t) {
+      // scythe: staff behind the left hand, blade sweeping over the hood
+      for (let y = -3; y <= 23; y++) R(c, left + 1, top + y, 1, 1, "#5a3a20");
+      [[1, -4], [2, -5], [3, -5], [4, -5], [5, -4], [6, -3], [7, -2], [2, -4], [3, -4], [4, -4]].forEach(([x, y]) => R(c, left + x, top + y, 1, 1, x >= 6 ? "#ffffff" : "#c9c2d9"));
+    },
+    over(c, left, top, t) {
+      const blink = t % 4 > 3.85;
+      spr(c, [".sss.", "skssk".replace(/k/g, blink ? "s" : "k"), ".sss.", ".s.s."], { s: "#d8d0c0", k: "#ff3b4d" }, left + 6, top + 3);
+      glow(c, left + 8, top + 5, 6, "#ff3b4d", 0.25);
+      fade(c, 0.35, () => { for (let k = 0; k < 3; k++) R(c, left + 2 + k * 5 + Math.round(Math.sin(t * 2 + k) * 2), top + 24, 3, 1, "#a99bc9"); });
+    },
+  },
+  {
+    name: "Werewolf",
+    pitch: "Mid-transformation: a hunched, furry wolf with a long snout, glowing yellow eyes, claws, and the shorts barely hanging on.",
+    pal: { F: "#3a2614", f: "#6b4a28", l: "#a8844e", y: "#ffd84a", n: "#8a6a3e", k: "#1a1024", c: "#ece6d6", p: "#3a4a78", w: "#ffffff" },
+    rows: [
+      "....F......F....",
+      "....FF....FF....",
+      "....FffffffF....",
+      "...fffffffff....",
+      "...ffyffffyff...",
+      "...ffffffffff...",
+      "....ffnnnnff....",
+      ".....fnnnkf.....",
+      "....ffwnnwff....",
+      "..ffffffffffff..",
+      ".fffflllllfffff.",
+      ".ffffllllllffff.",
+      "ff.ffllllllff.ff",
+      "ff.ffffffffff.ff",
+      "cc..ffffffff..cc",
+      "....pppppppp....",
+      "....pp.pppppp...",
+      "....pp....pp....",
+      "....ff....ff....",
+      "...fff....fff...",
+      "...ff......ff...",
+      "....ff....ff....",
+      "....ff....ff....",
+      "....ff....ff....",
+      "...fff....fff...",
+      "..ffff....ffff..",
+      "..cfcf....fcfc..",
+    ],
+    over(c, left, top, t) {
+      if (t % 3.5 > 3.3) { R(c, left + 5, top + 4, 1, 1, "#6b4a28"); R(c, left + 10, top + 4, 1, 1, "#6b4a28"); }
+      else glow(c, left + 8, top + 4, 5, "#ffd84a", 0.25);
+    },
+  },
+  {
+    name: "Frankenstein's Monster",
+    pitch: "The classic monster: a huge square green head with a flat top, neck bolts and stitches, a too-small jacket, long arms and giant boots.",
+    pal: { h: "#14101c", g: "#6b9a52", G: "#4a7038", b: "#a49db0", k: "#1a1024", w: "#f3efe6", m: "#2f3a2a", j: "#2a2433", J: "#1a1622", p: "#3a3646", B: "#14101c" },
+    rows: [
+      "...hhhhhhhhhh...",
+      "...hhhhhhhhhh...",
+      "...gkgkgkgggg...",
+      "..bGGGGGGGGGGb..",
+      "...gwkgggwkgg...",
+      "...gggggggggG...",
+      "...ggmmmmmmgG...",
+      "....ggggggggG...",
+      "......gggg......",
+      "..jjjjjjjjjjjJ..",
+      ".jjjjjjjjjjjjJj.",
+      ".jj.jjjjjjjjJ.jj",
+      ".jj.jjjjjjjjJ.jj",
+      ".jj.jjjjjjjjJ.jj",
+      ".gg.jjjjjjjjJ.gg",
+      ".gg.pppppppp..gg",
+      ".GG.pppp.pppp.GG",
+      "....ppp...ppp...",
+      "....ppp...ppp...",
+      "....ggp...pgg...",
+      "....ppp...ppp...",
+      "...BBBB...BBBB..",
+      "...BBBB...BBBB..",
+      "..BBBBB...BBBBB.",
+      "..BBBBB...BBBBB.",
+    ],
+    over(c, left, top, t) {
+      if (Math.floor(t * 3) % 7 === 0) {
+        glow(c, left + 2, top + 3, 4, "#9fd4ff", 0.6); glow(c, left + 13, top + 3, 4, "#9fd4ff", 0.6);
+        R(c, left + 1, top + 2, 1, 1, "#ffffff"); R(c, left + 14, top + 4, 1, 1, "#ffffff");
+      }
+    },
+  },
+  {
+    name: "Vampire Count",
+    pitch: "Slicked-back hair with a sharp widow's peak, pale skin, red eyes and fangs, inside an enormous red-lined cape that spreads the full width of the space.",
+    pal: { h: "#14101c", s: "#e0d8e8", S: "#b8aec8", e: "#ff3b4d", f: "#ffffff", m: "#5c0c18", c: "#14101c", C: "#8f1426", w: "#f3efe6", v: "#8f1426", p: "#1a1622", b: "#0b0614" },
+    rows: [
+      ".....hhhhhh.....",
+      "....hhhhhhhh....",
+      "....hhhshhhh....",
+      "....hsssssSh....",
+      "....seSsseSs....",
+      "....sssssssS....",
+      ".....smffmS.....",
+      "..CC..ssss..CC..",
+      ".cCCcwwvvwwcCCc.",
+      "ccCCcwwvvwwcCCcc",
+      "ccCCcvvvvvvcCCcc",
+      "ccCCcvvvvvvcCCcc",
+      "ccCCcvvvvvvcCCcc",
+      "ccCCcvvvvvvcCCcc",
+      "ccCCcsppppscCCcc",
+      "ccCCc.pppp.cCCcc",
+      "ccCCc.pp.pp.CCcc",
+      "ccCCc.pp.pp.CCcc",
+      "ccCCc.pp.pp.CCcc",
+      ".cCCc.pp.pp.CCc.",
+      ".cCCc.pp.pp.CCc.",
+      "..CCc.pp.pp.Cc..",
+      "..cc..pp.pp.cc..",
+      ".....bbb.bbb....",
+      ".....bbb.bbb....",
+    ],
+    over(c, left, top, t) {
+      // the cape's hem ripples
+      const w = reduced ? 0 : Math.floor(t * 4) % 2;
+      for (let x = 0; x < 16; x += 2) R(c, left + x + w, top + 23, 1, 1, "#14101c");
+      glow(c, left + 7, top + 4, 5, "#ff3b4d", 0.18);
+    },
+  },
+  {
+    name: "Swamp Creature",
+    pitch: "A scaly green thing from the lagoon: a finned head, huge black eyes, gills, webbed hands and seaweed hanging off it, dripping wet.",
+    pal: { g: "#3f7a5a", G: "#2a5a40", l: "#7ab88a", f: "#2a8a8a", e: "#07040f", w: "#b8feff", m: "#1a3a2a", s: "#4a6a28", c: "#9fd4c8" },
+    rows: [
+      ".......ff.......",
+      "...f..ffff..f...",
+      "...ffgggggggff..",
+      "....ggggggggg...",
+      "...gweggggwegg..",
+      "...geeggggeegg..",
+      "...ggggggggggG..",
+      "....gmmmmmmgG...",
+      ".....gggggggG...",
+      "..gggglllllgggG.",
+      ".ggg.lllllll.gGg",
+      ".gg.glllllllgsgg",
+      ".gg.glllllllg.sg",
+      ".gg.gglllllgg.gg",
+      "fgf.ggggggggg.fgf",
+      "f.f.ggggggggg.f.f",
+      "....gggg.gggg...",
+      "....ggg...ggg...",
+      "....ggs...ggg...",
+      "....ggg...gsg...",
+      "....ggg...ggg...",
+      "....ggg...ggg...",
+      "...fggg...gggf..",
+      "..ffggg...gggff.",
+    ],
+    over(c, left, top, t) {
+      for (const [x, sp] of [[2, 0], [13, 0.4], [6, 0.7], [10, 0.2]]) {
+        const ph = (t * 0.8 + sp) % 1;
+        fade(c, 1 - ph, () => R(c, left + x, top + 14 + Math.round(ph * 10), 1, 1, "#9fd4ff"));
+      }
+    },
+  },
+  {
+    name: "Living Scarecrow",
+    pitch: "A burlap-sack head with a stitched grin under a wide straw hat, a patched plaid shirt, straw bursting from the cuffs, and a wooden post instead of legs.",
+    pal: { y: "#d9a441", Y: "#a8792a", b: "#a8844e", B: "#8a6a3e", k: "#1a1024", o: "#ff7a1a", r: "#8f2a1a", R: "#c4402a", x: "#3a2a1a", s: "#f3d27a", w: "#5a3a20", W: "#3a2614" },
+    rows: [
+      "......YyyyY.....",
+      ".....YyyyyyY....",
+      "..yyyyrrrrryyy..",
+      ".yyyyyyyyyyyyyy.",
+      "....bbbbbbbb....",
+      "....bkobbkobB...",
+      "....bbbbbbbbB...",
+      "....bkxkxkxkB...",
+      ".....bbbbbbB....",
+      "..RRRRrRRRrRRR..",
+      ".RRrRRRrRRRrRRR.",
+      "sRR.RrRRRrRRR.RRs",
+      "sRr.RRRrRRRrR.rRs",
+      "ss..RrRRRrRRR..ss",
+      "....RRRrRRRrR...",
+      "....xxxxxxxxx...",
+      "......sswss.....",
+      ".......ww.......",
+      ".......wW.......",
+      ".......wW.......",
+      ".......wW.......",
+      ".......wW.......",
+      ".......wW.......",
+      ".....wwwWWW.....",
+    ],
+    over(c, left, top, t) {
+      const sway = reduced ? 0 : Math.round(Math.sin(t * 2));
+      R(c, left + 1 + sway, top + 13, 1, 1, "#f3d27a"); R(c, left + 14 - sway, top + 13, 1, 1, "#f3d27a");
+      const fl = Math.sin(t * 7) > 0 ? "#ffd84a" : "#ff7a1a";
+      R(c, left + 6, top + 5, 1, 1, fl); R(c, left + 10, top + 5, 1, 1, fl);
+      // a crow on the hat brim
+      spr(c, ["kk..", "kkkk", ".k.."], { k: "#231d33" }, left + 12, top + 0);
+      R(c, left + 15, top + 1, 1, 1, "#ffd84a");
+    },
+  },
+  {
+    name: "Big Boo",
+    pitch: "The whole player becomes one giant, friendly bedsheet ghost that floats and bobs, with a wavy hem, stubby arms and a goofy face.",
+    pal: { w: "#f3efe6", W: "#d9d2e6", k: "#1a1024", m: "#ff8fb8" },
+    float: (t) => (reduced ? 2 : 2 + Math.round((Math.sin(t * 1.8) + 1) * 1.5)),
+    rows: [
+      "......wwww......",
+      "....wwwwwwww....",
+      "...wwwwwwwwwwW..",
+      "..wwwwwwwwwwwWW.",
+      "..wwwwwwwwwwwWW.",
+      ".wwwkkwwwwkkwwWW",
+      ".wwwkkwwwwkkwwWW",
+      ".wwwwwwwwwwwwwWW",
+      ".wwmwwwkkwwwmwWW",
+      ".wwwwwwkkwwwwwWW",
+      ".wwwwwwwwwwwwwWW",
+      "wwwwwwwwwwwwwwWW",
+      "wwwwwwwwwwwwwwWWW",
+      "ww.wwwwwwwwwww.WW",
+      "...wwwwwwwwwwwW..",
+      "...wwwwwwwwwwwW..",
+      "...wwwwwwwwwwwW..",
+      "..wwwwwwwwwwwwWW.",
+      "..wwwwwwwwwwwwWW.",
+      "..wwwwwwwwwwwwWW.",
+      ".wwwwwwwwwwwwwwWW",
+    ],
+    over(c, left, top, t) {
+      const w = reduced ? 0 : Math.floor(t * 3) % 2;
+      for (let x = 1; x < 17; x++) if ((x + w) % 3) R(c, left + x, top + 21, 1, 1, x > 14 ? "#d9d2e6" : "#f3efe6");
+      glow(c, left + 8, top + 10, 14, "#e8e0f0", 0.12);
+      if (t % 4 > 3.8) { R(c, left + 4, top + 5, 2, 2, "#f3efe6"); R(c, left + 10, top + 5, 2, 2, "#f3efe6"); R(c, left + 4, top + 6, 2, 1, "#1a1024"); R(c, left + 10, top + 6, 2, 1, "#1a1024"); }
+    },
+  },
+  {
+    name: "Zombie Athlete",
+    pitch: "A BVC player who never left the court: grey-green skin, a torn club jersey with #00, one knee pad, one missing shoe, and a volleyball under the arm.",
+    pal: { h: "#3a3646", z: "#8a9a72", Z: "#6a7a54", e: "#f3efe6", r: "#8f1426", k: "#1a1024", j: "#ff7a1a", J: "#c4550a", n: "#1a1024", p: "#2a2433", d: "#5a5078", w: "#e8dff5", s: "#e8dff5", S: "#a49db0", b: "#f3efe6", y: "#ffcf3a" },
+    rows: [
+      ".....hhhh.......",
+      "....hh.hhh......",
+      "....hzzzzZ......",
+      "....zekzzkZ.....",
+      "....zzzzzZr.....",
+      ".....zkkkZ......",
+      "......zZ........",
+      "...jjjjjjjJ.....",
+      "..zjjnjjnjJz....",
+      "..zjjnjjnjJzz...",
+      "..zzjnjjnjJ.zz..",
+      "..zzjjjjjjJ..zz.",
+      "..zz.jjj.jJ...zz",
+      "..zz.ppppP......",
+      ".....ppppP......",
+      ".....pp..P......",
+      ".....zz..zZ.....",
+      ".....dd..zZ.....",
+      ".....dd..zr.....",
+      ".....zz..zZ.....",
+      ".....zz..zZ.....",
+      ".....ww..zZ.....",
+      ".....ww..zZ.....",
+      "....sss..zzz....",
+      "....SSS..ZZZ....",
+    ],
+    over(c, left, top, t) {
+      spr(c, [".bbb.", "byybb", "bbbyb", ".bbb."], { b: "#f3efe6", y: "#3d6fd1" }, left + 0, top + 13);
+      if (Math.floor(t * 1.5) % 5 === 0) R(c, left + 11, top + 5, 1, 1, "#8f1426");
+    },
+  },
+  {
+    name: "Pumpkin Golem",
+    pitch: "A hulking creature made of the pumpkin patch: a carved pumpkin head, a pumpkin torso, twisting vine arms and legs, and leafy hands.",
+    pal: { o: "#ff7a1a", O: "#c4550a", r: "#e0661a", y: "#ffd84a", v: "#3f6b3a", V: "#2a4a26", l: "#5a8a3a", s: "#4a7a28", k: "#1a1024" },
+    rows: [
+      ".......ss.......",
+      "...oooooooooo...",
+      "..ooroooooroOo..",
+      ".oooyyoooyyooOO.",
+      ".ooyyyoooyyyoOO.",
+      ".oooooyyooooOOO.",
+      ".ooyoyyyyyoyoOO.",
+      "..ooyyoooyyoOO..",
+      "....oooooooo....",
+      "......vVvV......",
+      "..oooooooooooo..",
+      ".ooorooooooroOO.",
+      "lvoooroooooroOvl",
+      "lvoooroooooroOvl",
+      "llvooorooooroOvll",
+      "..vooorooooroO.v.",
+      "...ooooooooooO..",
+      ".....vv..vV.....",
+      ".....vV..vV.....",
+      "....vV....vV....",
+      "....vV....vV....",
+      "....vV....vV....",
+      "...vvV....vVV...",
+      "..llvV....vVll..",
+    ],
+    over(c, left, top, t) {
+      const lit = Math.sin(t * 9) + Math.sin(t * 5.1) > -0.6 ? "#fff3a0" : "#ffd84a";
+      [[4, 3], [5, 3], [3, 4], [4, 4], [5, 4], [9, 3], [10, 3], [9, 4], [10, 4], [11, 4], [6, 5], [7, 5], [3, 6], [5, 6], [6, 6], [7, 6], [8, 6], [9, 6], [11, 6], [4, 7], [5, 7], [9, 7], [10, 7]].forEach(([x, y]) => R(c, left + x, top + y, 1, 1, lit));
+      glow(c, left + 7, top + 5, 9, "#ff9a3a", 0.25 + 0.08 * Math.sin(t * 9));
+    },
+  },
+];
+
+// ---------- page ----------
+const SKIN_W = 18;
+function drawSkin(c, s, x, ground, t, still = false) {
+  const bob = reduced || still ? 0 : Math.round((Math.sin(t * 3) + 1) / 2);
+  const f = s.float ? s.float(still ? 0 : t) : 0;
+  const rows = s.rows.map((r) => r.padEnd(16, "."));
+  const left = Math.round(x - 8), top = ground - rows.length - bob - f;
+  if (s.under) s.under(c, left, top, t);
+  spr(c, rows, s.pal, left, top);
+  if (s.over) s.over(c, left, top, t);
+}
+const grid = document.getElementById("skin-grid");
+const cards = [];
+SKINS.forEach((s, i) => {
+  const card = document.createElement("article");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="card-top"><h3>${s.name}</h3><span class="code t3">X${i + 1}</span></div>
+    <div class="views">
+      <figure><canvas class="before" width="22" height="36" aria-label="The default avatar, before"></canvas><figcaption>Before</figcaption></figure>
+      <figure><canvas class="after" width="22" height="36" aria-label="${s.name}, after"></canvas><figcaption>After</figcaption></figure>
+    </div>
+    <div class="av-small"><canvas width="96" height="36" style="width:96px;height:36px" aria-label="${s.name} at real home-screen size"></canvas><span>Real size in the rally, vs your rival</span></div>
+    <p class="pitch">${s.pitch}</p>`;
+  grid.appendChild(card);
+  const [before, after, small] = card.querySelectorAll("canvas");
+  cards.push({ s, before: before.getContext("2d"), after: after.getContext("2d"), small: small.getContext("2d") });
+});
+// a sample outfit for the "before" view, to show the skin ignores it
+const SAMPLE = {
+  head: { build() { const g = makeGrid(); g.row(4, 10, 0, "#ff7a1a"); g.row(3, 11, 1, "#c4550a"); outline(g); return g; } },
+  shirt: { sleeve: "short", px: (x, y, z) => (y % 2 ? "#6b3fa8" : z === "T" ? "#3d2470" : "#52308a") },
+  pants: { long: true, px: (x, y, z) => (z === "P" || z === "Q" ? "#232c4d" : "#2f3a63") },
+  shoes: { px: (x, y) => (y === 26 ? "#c4550a" : "#ff7a1a") },
+};
+function frame(t) {
+  for (const { s, before, after, small } of cards) {
+    for (const [ctx, isAfter] of [[before, false], [after, true]]) {
+      R(ctx, 0, 0, 22, 36, "#140a26");
+      glow(ctx, 11, 18, 15, "#4b3f70", 0.4);
+      R(ctx, 0, 33, 22, 3, "#1c1030"); R(ctx, 0, 33, 22, 1, "#3a2a5c");
+      if (isAfter) drawSkin(ctx, s, 11, 33, t); else drawAvatar(ctx, SAMPLE, 11, 33, t);
+    }
+    R(small, 0, 0, 96, 36, "#140a26");
+    R(small, 0, 33, 96, 3, "#1c1030"); R(small, 0, 33, 96, 1, "#3a2a5c");
+    R(small, 47, 18, 1, 15, "#6b5f8d"); R(small, 44, 18, 7, 1, "#a99bc9");
+    drawSkin(small, s, 22, 33, t);
+    small.save(); small.translate(96, 0); small.scale(-1, 1);
+    drawAvatar(small, {}, 20, 33, t + 1.3);
+    small.restore();
+    const ph = reduced ? 0.3 : (t * 0.8) % 2, f = ph < 1 ? ph : 2 - ph;
+    R(small, 30 + 36 * f, 3 + (1 - Math.sin(f * Math.PI)) * 9, 2, 2, "#ffcf3a");
+  }
+}
+const start = performance.now();
+(function loop(now) { frame(Math.max(0, (now - start) / 1000)); requestAnimationFrame(loop); })(start);
+})();
+</script>
