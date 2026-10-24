@@ -76,6 +76,17 @@ and monster transformations aren't in the app yet. On short screens (small
 phones, landscape) the avatars and net are drawn a bit smaller so tall
 headgear and jumps fit.
 
+### Tokens (earning now, nothing to spend them on yet)
+
+Every ranked game saved since 2026-10-24 earns tokens for each player in it
+who signs in: 2 for a win, 1 otherwise, at most 10 a day (Eastern time, by
+when the game was saved). Casual games, placeholder players and older games
+earn nothing; games a placeholder brings into an account through a merge
+never pay. Tokens are counted about a minute after a game is saved and are
+never taken back. They'll buy Cauldron pulls for pixel-avatar items; the
+screens for that aren't built yet. The database side (balances, the item
+list, pulls and outfits) is migration `20261024200000_tokens_items_and_pulls.sql`.
+
 ### Profile stats
 
 Below the Overall/Ranked records, a profile shows:

@@ -11,11 +11,15 @@ After Halloween, ask the owner whether to delete `src/themes/halloween/`
 (steps in README "Seasonal themes") or keep it for next October with new
 dates.
 
-## Pixel avatars: home-screen rally
+## Pixel avatars: tokens are live, screens next
 
-The rally draws everyone plain grey until the tokens/items database exists
-(full plan: `design/gacha/PLAN.md` on branch `claude/gacha-avatars-design`).
-That step should set each player's `gear` in `src/avatar/useRallyPlayers.js`.
+Tokens, the item list, pulls and outfits are in the database (README
+"Tokens"). Still to build, in order: the item art in the app, the profile
+card, the Cauldron pull screen and the Locker; then the rally reads each
+player's outfit (`gear` in `src/avatar/useRallyPlayers.js`). Full plan:
+`design/gacha/PLAN.md` and `DATABASE.md` on branch
+`claude/gacha-avatars-design`, which also has the item catalog generator and
+the database scenario tests. Halloween items stop dropping Dec 1.
 Unconfirmed: when you're #1 with no toughest opponent, your rival is #2.
 
 ## Open: tournaments (Queen of Paradise, Sat 2026-10-31)
