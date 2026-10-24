@@ -84,7 +84,9 @@ who signs in: 2 for a win, 1 otherwise, at most 10 a day (Eastern time, by
 when the game was saved). Casual games, placeholder players and older games
 earn nothing; games a placeholder brings into an account through a merge
 never pay. Tokens are counted about a minute after a game is saved and are
-never taken back.
+never taken back. On 2026-10-24 every account that signs in with Google got
+a one-time gift of 10 tokens (`token_gifts`, migration
+`20261024235000_gift_10_tokens.sql`); accounts made later don't get it.
 
 - **Profile card:** every profile shows the player's pixel avatar on a
   little stage, with what they wear (head, shirt, pants, shoes, and a
