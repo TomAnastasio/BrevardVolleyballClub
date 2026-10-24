@@ -197,7 +197,9 @@ How tokens, the Cauldron and the Locker work for players is in the main
   `20261024235000_gift_10_tokens.sql` with a *new gift name* (that name is
   what stops anyone getting the same gift twice). It's the owner's call
   each time.
-- **Before any new token, item or outfit migration**, run the database
-  scenario tests (a throwaway copy of the database, no real data). They're
-  on branch `claude/gacha-avatars-design` in `design/gacha/db/`; its README
-  says how to run them.
+- **Before any new migration**, run the database scenario tests: `npm run
+  test:db`. They build a throwaway copy of the database from every file in
+  `supabase/migrations/` (in-memory PGlite, no real data) and check tokens,
+  outfits, the gift and who can call which function (`supabase/tests/`).
+  A migration reaches staging and production at the same moment, so this
+  is the only place to try one first. Add a scenario for anything new.
