@@ -84,10 +84,10 @@ Picked and final (49 items: 30 Common, 4 Rare, 6 Epic, 9 Legendary):
 | Witch Stockings (page 09) | C1 Classic Stripes ×6 | R2 Mismatched | E1 Marquee Stripes, E3 Potion Belt | L2 Bubbling Brew, L3 Flame Stockings |
 
 Waiting for the owner to name what to **cut** (everything not named stays in):
-- **Wardrobe batch (page 13):** 43 more themes, 387 items. Codes: H1–H10
-  head, S1–S10 shirts, P1–P10 pants, F1–F13 shoes (F11–F13 are the three
-  Slime Kicks option sets). Cut a theme ("H3") or one tier ("H3-E").
-- **Transformations (page 14):** XL1–XL40 Legendary and XE1–XE40 Epic. The
+- **Wardrobe batch (page 13):** 43 more themes, 387 items, on 172 cards
+  numbered 101–272 (a Common card covers its six colors; each theme shows
+  its range). The last three shoe themes are the Slime Kicks option sets.
+- **Transformations (page 14):** 301–340 Legendary and 341–380 Epic. The
   owner expects to cut about half.
 
 ## Still to decide

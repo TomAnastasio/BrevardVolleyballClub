@@ -165,7 +165,7 @@ td.wrap { white-space: normal; min-width: 180px; }
 .tile { background: var(--card-2); border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 .tile-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
 .tier { font-family: var(--tag); font-size: 9px; }
-.tcode { font-family: var(--tag); font-size: 10px; }
+.tcode { font-family: var(--tag); font-size: 16px; }
 .views { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
 .views canvas { width: 100%; image-rendering: pixelated; background: var(--night-0); border-radius: 3px; display: block; }
 .views .prof { aspect-ratio: 24 / 40; }
@@ -184,8 +184,8 @@ td.wrap { white-space: normal; min-width: 180px; }
   <header>
     <span class="eyebrow">Brevard Volleyball Club · Halloween wardrobe, nothing built yet</span>
     <h1>The <span class="glow">big batch</span></h1>
-    <p class="lede">Ten more themes for each slot, plus every Slime Kicks option as shoes F11–F13, each with all four tiers: a Common in six colors, a Rare, an Epic and a Legendary. That's <b id="total" class="n">0</b> items. Tap a Common's swatches to see its colors.</p>
-    <p class="how"><b>To cut something,</b> reply with its code: a whole theme like <b>H3</b>, or one tier of it like <b>H3-E</b>. Everything you don't name stays in.</p>
+    <p class="lede">Ten more themes for each slot, plus every Slime Kicks option as the last three shoe themes, each with all four tiers: a Common in six colors, a Rare, an Epic and a Legendary. That's <b id="total" class="n">0</b> items. Tap a Common's swatches to see its colors.</p>
+    <p class="how"><b>To cut something,</b> reply with its number, like <b>104</b>. A Common card's number covers all six of its colors. Each theme's number range is next to its name, so a whole theme is like <b>101–104</b>. Everything you don't name stays in. (Monsters on page 14 start at 301.)</p>
     <nav class="nav" id="slot-nav" aria-label="Jump to a slot"></nav>
   </header>
   <main id="slots" style="display:flex;flex-direction:column;gap:48px"></main>
@@ -3586,12 +3586,15 @@ function paintProf(ctx, slot, item, t) {
 const main = document.getElementById("slots");
 const nav = document.getElementById("slot-nav");
 let total = 0;
+// Every card gets a three-digit number for the owner to cut by, counting up
+// from 101 in page order (page 14's monsters start at 301, so they never clash).
+let num = 101;
 for (const slot of SLOTS) {
   const themes = THEMES[slot.key];
   const sec = document.createElement("section");
   sec.id = slot.key;
   sec.className = "slot";
-  sec.innerHTML = `<div class="sec-head"><span class="eyebrow">${themes.length} themes · codes ${slot.prefix}1–${slot.prefix}${themes.length}</span><h2>${slot.title}</h2></div>`;
+  sec.innerHTML = `<div class="sec-head"><span class="eyebrow">${themes.length} themes</span><h2>${slot.title}</h2></div>`;
   nav.insertAdjacentHTML("beforeend", `<a class="chip" href="#${slot.key}">${slot.title} <span class="n">${themes.length}</span></a>`);
   themes.forEach((th, ti) => {
     const code = `${slot.prefix}${ti + 1}`;
@@ -3600,6 +3603,7 @@ for (const slot of SLOTS) {
     art.id = code.toLowerCase();
     art.innerHTML = `<div class="theme-head"><span class="code">${code}</span><h3>${th.name}</h3><p>${th.pitch}</p></div><div class="tiers4"></div>`;
     const row = art.querySelector(".tiers4");
+    const first = num;
     for (const tier of TIER) {
       const d = th[tier.key];
       if (!d) continue;
@@ -3608,7 +3612,7 @@ for (const slot of SLOTS) {
       tile.className = "tile";
       const name = tier.key === "common" ? `${d.colors.length} colors` : d.name;
       tile.innerHTML = `
-        <div class="tile-top"><span class="tier ${tier.cls}">${tier.label}</span><span class="tcode ${tier.cls}">${code}-${tier.tag}</span></div>
+        <div class="tile-top"><span class="tier ${tier.cls}">${tier.label}</span><span class="tcode ${tier.cls}">${num++}</span></div>
         <div class="views">
           <canvas class="close" width="${slot.close.w}" height="${slot.close.h}" style="aspect-ratio:${slot.close.w}/${slot.close.h}" aria-label="${th.name} ${tier.label} close-up"></canvas>
           <canvas class="prof" width="24" height="40" aria-label="${th.name} ${tier.label} on the avatar"></canvas>
@@ -3639,6 +3643,7 @@ for (const slot of SLOTS) {
       tiles.push(entry);
       io.observe(tile);
     }
+    art.querySelector(".code").textContent = `${first}–${num - 1}`;
     sec.appendChild(art);
   });
   main.appendChild(sec);

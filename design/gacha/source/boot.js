@@ -34,12 +34,15 @@ function paintProf(ctx, slot, item, t) {
 const main = document.getElementById("slots");
 const nav = document.getElementById("slot-nav");
 let total = 0;
+// Every card gets a three-digit number for the owner to cut by, counting up
+// from 101 in page order (page 14's monsters start at 301, so they never clash).
+let num = 101;
 for (const slot of SLOTS) {
   const themes = THEMES[slot.key];
   const sec = document.createElement("section");
   sec.id = slot.key;
   sec.className = "slot";
-  sec.innerHTML = `<div class="sec-head"><span class="eyebrow">${themes.length} themes · codes ${slot.prefix}1–${slot.prefix}${themes.length}</span><h2>${slot.title}</h2></div>`;
+  sec.innerHTML = `<div class="sec-head"><span class="eyebrow">${themes.length} themes</span><h2>${slot.title}</h2></div>`;
   nav.insertAdjacentHTML("beforeend", `<a class="chip" href="#${slot.key}">${slot.title} <span class="n">${themes.length}</span></a>`);
   themes.forEach((th, ti) => {
     const code = `${slot.prefix}${ti + 1}`;
@@ -48,6 +51,7 @@ for (const slot of SLOTS) {
     art.id = code.toLowerCase();
     art.innerHTML = `<div class="theme-head"><span class="code">${code}</span><h3>${th.name}</h3><p>${th.pitch}</p></div><div class="tiers4"></div>`;
     const row = art.querySelector(".tiers4");
+    const first = num;
     for (const tier of TIER) {
       const d = th[tier.key];
       if (!d) continue;
@@ -56,7 +60,7 @@ for (const slot of SLOTS) {
       tile.className = "tile";
       const name = tier.key === "common" ? `${d.colors.length} colors` : d.name;
       tile.innerHTML = `
-        <div class="tile-top"><span class="tier ${tier.cls}">${tier.label}</span><span class="tcode ${tier.cls}">${code}-${tier.tag}</span></div>
+        <div class="tile-top"><span class="tier ${tier.cls}">${tier.label}</span><span class="tcode ${tier.cls}">${num++}</span></div>
         <div class="views">
           <canvas class="close" width="${slot.close.w}" height="${slot.close.h}" style="aspect-ratio:${slot.close.w}/${slot.close.h}" aria-label="${th.name} ${tier.label} close-up"></canvas>
           <canvas class="prof" width="24" height="40" aria-label="${th.name} ${tier.label} on the avatar"></canvas>
@@ -87,6 +91,7 @@ for (const slot of SLOTS) {
       tiles.push(entry);
       io.observe(tile);
     }
+    art.querySelector(".code").textContent = `${first}–${num - 1}`;
     sec.appendChild(art);
   });
   main.appendChild(sec);

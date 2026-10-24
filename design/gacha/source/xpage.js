@@ -3,6 +3,9 @@ const SECTIONS = [
   { tier: "epic", prefix: "XE", title: "Epic", cls: "t2", blurb: "Strong silhouettes with one small animation each." },
 ];
 const xtiles = [];
+// Three-digit numbers for the owner to cut by, from 301 in page order (page
+// 13's wardrobe uses 101 upward).
+let xnum = 301;
 const xvisible = new Set();
 const xio = new IntersectionObserver((es) => { for (const e of es) e.isIntersecting ? xvisible.add(e.target) : xvisible.delete(e.target); }, { rootMargin: "200px" });
 const xmain = document.getElementById("xslots");
@@ -12,14 +15,14 @@ for (const sec of SECTIONS) {
   const el = document.createElement("section");
   el.id = sec.tier;
   el.className = "slot";
-  el.innerHTML = `<div class="sec-head"><span class="eyebrow ${sec.cls}">${list.length} transformations · codes ${sec.prefix}1–${sec.prefix}${list.length}</span><h2 class="${sec.cls}">${sec.title}</h2><p>${sec.blurb}</p></div><div class="grid xgrid"></div>`;
+  el.innerHTML = `<div class="sec-head"><span class="eyebrow ${sec.cls}">${list.length} transformations · ${xnum}–${xnum + list.length - 1}</span><h2 class="${sec.cls}">${sec.title}</h2><p>${sec.blurb}</p></div><div class="grid xgrid"></div>`;
   xnav.insertAdjacentHTML("beforeend", `<a class="chip ${sec.cls}" href="#${sec.tier}">${sec.title} <span class="n">${list.length}</span></a>`);
   const grid = el.querySelector(".xgrid");
   list.forEach((s, i) => {
-    const code = `${sec.prefix}${i + 1}`;
+    const code = String(xnum++);
     const card = document.createElement("article");
     card.className = "card xcard";
-    card.id = code.toLowerCase();
+    card.id = `n${code}`;
     card.innerHTML = `
       <div class="card-top"><h3>${s.name}</h3><span class="code ${sec.cls}">${code}</span></div>
       <canvas class="xbig" width="30" height="38" aria-label="${s.name}"></canvas>
