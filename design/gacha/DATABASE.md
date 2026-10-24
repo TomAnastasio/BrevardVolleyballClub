@@ -1,7 +1,8 @@
 # Tokens, items and pulls: database plan
 
-Status: **proposal, waiting for the owner's OK** (2026-10-24). Nothing here is
-built. Product decisions behind it are in `PLAN.md`.
+Status: **live** since 2026-10-24 18:17 UTC (migration
+`20261024200000_tokens_items_and_pulls.sql` on `main`, production and staging).
+Product decisions behind it are in `PLAN.md`; scenario tests are in `db/`.
 
 One new, additive migration. It adds new tables and functions only: no
 existing table, column, trigger or function changes, and nothing touches Elo,
@@ -26,8 +27,9 @@ the linked `game_players` rows, plus `games.user_id` as Player 1 of a classic
 and placeholder (manual) profiles never earn; only accounts that sign in do.
 
 Per player, per game, once, ever:
-- 2 tokens if their side won, otherwise 1 (ties: 1). Every game counts:
-  ranked and casual, beach and indoor, tournament games.
+- 2 tokens if their side won, otherwise 1 (ties: 1). Ranked games only
+  (owner's call): beach and indoor, tournament games included; casual earns
+  nothing.
 - At most 10 a day. The day is the Eastern-time date the game was saved
   (`games.created_at`), not the date typed on the game. Within a day, games
   are paid in the order they were saved.
@@ -36,8 +38,13 @@ Per player, per game, once, ever:
 - Once paid, it's permanent: deleting the game, removing the player from it
   or changing its score never takes tokens back, and never pays again.
 - A player an admin adds to a game later is paid at the next settle (the day
-  still counts against that game's day). A placeholder merged into a Google
-  account brings its post-launch games with it, so those pay out too.
+  still counts against that game's day).
+- Games a placeholder brings into a real account through `merge_profiles`
+  never pay (owner's call). Triggers note any game moving away from a
+  placeholder; if that placeholder is deleted in the same transaction (which
+  is what a merge does), those games are recorded as paid-0 ("merged") for
+  the new owner. An admin edit that swaps a placeholder for a real player
+  isn't a merge, so that player is paid.
 
 ## Tables
 
@@ -79,18 +86,24 @@ data files, with keys that the app's art uses too. Halloween items get
 for good, though anyone who owns one keeps it. If no other set exists by
 then, `brew()` says there's nothing to brew and tokens keep saving up.
 
-## How it gets tested before it goes live
+## How it was tested before it went live
 
-1. Run every existing migration plus this one in a throwaway copy of
-   Postgres on the build machine (PGlite), with the Supabase sign-in tables
-   stubbed in.
-2. Script real scenarios there: each save path (2v2 beach incl. the Player 1
-   reassignment, squad beach, indoor, tournament scores, admin edits, merges,
-   deletes), the daily cap across midnight Eastern, ties, placeholders,
-   back-pay protection, pulls until a tier and then everything is collected,
-   odds over ~100,000 simulated pulls, two pulls at the same moment, equip
-   rules, and that someone else can't read your balance or spend your tokens.
-3. Check the migration can't fail halfway (it's one transaction) and that
-   last night's backup succeeded.
-4. Push. It applies to staging and production together; check both runs,
-   then try it on staging with the two test bots.
+1. Every migration in `supabase/migrations` plus this one ran in a throwaway
+   Postgres (PGlite) with the Supabase sign-in tables stubbed in (`db/`).
+2. 67 scenarios passed (`db/tokens.test.mjs`): each save path (2v2 beach incl.
+   the Player 1 reassignment, squad beach, indoor, tournament scores), admin
+   edits, merges, deletes, the daily cap across midnight Eastern, ties,
+   casual games, placeholders, back-pay protection, brewing every item with
+   no duplicates and then "nothing left", retired items, 20,000 simulated
+   pulls (75.9 / 20.1 / 3.82 / 0.18%), odds sharing once a tier is complete,
+   equip rules, and that nobody can read or change someone else's tokens or
+   items. They caught one real bug first (the merge trigger), fixed before
+   pushing.
+3. Not tested: two pulls at literally the same moment (PGlite has one
+   connection). `brew()` locks the player's balance row first, so a second
+   pull waits for the first.
+4. Both migration runs succeeded on 2026-10-24; on staging a test bot read
+   its balance (0), got the "need a token" message from `brew()`, saw only its
+   own balance and all 479 items, and signed-out calls were refused.
+
+Run the tests again before any future token or item migration.
