@@ -13,6 +13,8 @@ import WelcomeView from "./components/WelcomeView.jsx";
 import AdminPanelView from "./components/admin/AdminPanelView.jsx";
 import TournamentsShell from "./components/tournament/TournamentsShell.jsx";
 import VersionBadge from "./components/VersionBadge.jsx";
+import LockerView from "./components/loot/LockerView.jsx";
+import CauldronView from "./components/loot/CauldronView.jsx";
 import HalloweenDecor from "./themes/halloween/HalloweenDecor.jsx";
 import { activeTheme } from "./themes/activeTheme.js";
 import { letterPhotoChecksVersion, subscribeLetterPhotoChecks } from "./themes/halloween/googleLetterPhotos.js";
@@ -65,6 +67,7 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
 
   const openGame = (gameId) => pushPage({ type: "game", gameId });
   const openPlayer = (playerId) => pushPage({ type: "player", playerId });
+  const openLocker = () => pushPage({ type: "locker" });
 
   // A tournament game's 👑 tag (Past Games, profiles, game details) opens that tournament.
   function openTournament(id) {
@@ -97,6 +100,7 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
                 onOpenGame={openGame}
                 onOpenPlayer={openPlayer}
                 onOpenTournament={openTournament}
+                onOpenLocker={openLocker}
               />
             )}
             {view === "welcome" && (
@@ -128,6 +132,7 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
                 onOpenGame={openGame}
                 onOpenPlayer={openPlayer}
                 onOpenTournament={openTournament}
+                onOpenLocker={openLocker}
               />
             )}
             {view === "game" && (
@@ -170,8 +175,13 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
               onOpenGame={openGame}
               onOpenPlayer={openPlayer}
               onOpenTournament={openTournament}
+              onOpenLocker={openLocker}
             />
           )}
+          {topPage?.type === "locker" && (
+            <LockerView key={topPage.key} onBack={() => popPages()} onOpenCauldron={() => pushPage({ type: "cauldron" })} />
+          )}
+          {topPage?.type === "cauldron" && <CauldronView key={topPage.key} onBack={() => popPages()} onOpenLocker={() => popPages()} />}
           {topPage?.type === "edit" && (
             <EditGamePage
               key={topPage.key}

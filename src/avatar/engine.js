@@ -32,13 +32,27 @@ export function spr(c, rows, pal, x, y) {
 const BODY = [".....hhhh.....", "....hhhhhH....", "....hhhhhHH...", "....hsssssH...", "....sesseS....", "....sssssS....", ".....smmS.....", "......sS......", "...ttttttttT..", "..uttttttttTu.", "..uutttttttTuu", "..uu.ttttTT.uu", "..ll.ttttTT.ll", "..ll.ttttTT.ll", "..nn.ttttTT.nn", ".....pppppP...", ".....pppPPP...", ".....pp..PP...", ".....qq..qQ...", ".....kk..kk...", ".....kk..kk...", ".....qq..qQ...", ".....qq..qQ...", ".....ww..ww...", ".....ww..ww...", "....fff..ffF..", "....FFF..FFF.."];
 const SKIN = "#c9b49a";
 const SKIN_D = "#a8927a";
+// Avatar 2: the same body and zones (so every item fits both), with longer
+// hair framing the face down to the neck (rows 0-7 only, never under a shirt)
+// and a rosier mouth.
+const BODY_2 = [".....hhhhh....", "....hhhhhhH...", "...hhhhhhhHH..", "...hhsssssHH..", "...hsesseSH...", "...hsssssSH...", "...hhsmmSHH...", "...hh.sS.HH...", ...BODY.slice(8)];
+// The four skin colors (1 is lightest); 2 is the original, and the default.
+export const SKIN_TONES = [
+  { s: "#ecc9a8", S: "#cfa682" },
+  { s: SKIN, S: SKIN_D },
+  { s: "#a8744f", S: "#87583a" },
+  { s: "#6b4431", S: "#4f3022" },
+];
+// What a player looks like before choosing: Avatar 1, skin color 2.
+export const DEFAULT_LOOK = { avatar: 1, skin: 2 };
 // Plain grey: what everyone wears before they own any gear.
 const BASE = { h: "#6b6380", H: "#55506b", s: SKIN, S: SKIN_D, e: "#1a1024", m: "#8a5a5a", k: "#5a5078", n: SKIN, w: "#e8dff5", f: "#e8dff5", F: "#a49db0", q: SKIN, Q: SKIN_D, t: "#b9b2c9", T: "#9d96b0", u: SKIN, l: SKIN, p: "#7d7591", P: "#6b6380" };
 
 // Draws the avatar with its feet centred on (x, bottom). `gear` is
-// { head, shirt, pants, shoes } (any may be missing; see the item FORMAT in
-// the design branch's engine.js) or { transformation } to draw a whole-body
-// monster instead. `t` (seconds) drives item animations.
+// { head, shirt, pants, shoes, look } (any may be missing; see the item
+// FORMAT in the design branch's engine.js) or { transformation } to draw a
+// whole-body monster instead. `look` is { avatar: 1 | 2, skin: 1-4 }
+// (DEFAULT_LOOK if missing). `t` (seconds) drives item animations.
 export function drawAvatar(c, gear, x, bottom, t) {
   if (gear?.transformation) {
     drawTransformation(c, gear.transformation, x, bottom, t);
@@ -48,17 +62,23 @@ export function drawAvatar(c, gear, x, bottom, t) {
   // A ghost tail has no feet, so whatever shoes are equipped are ignored (owner's call, 2026-10-24).
   const shoes = pants?.ghost ? null : gear?.shoes;
   const lift = shoes?.lift ?? 0;
+  const look = gear?.look ?? DEFAULT_LOOK;
+  const rows = look.avatar === 2 ? BODY_2 : BODY;
+  const tone = SKIN_TONES[look.skin - 1] ?? SKIN_TONES[DEFAULT_LOOK.skin - 1];
+  // Skin is drawn in the original skin color everywhere (the body, bare
+  // arms, and any item that shows skin), then swapped for the chosen one.
+  const skin = (col) => (col === SKIN ? tone.s : col === SKIN_D ? tone.S : col);
   const left = Math.round(x - AVATAR_WIDTH / 2);
   const groundTop = bottom - BODY.length;
   const top = groundTop - lift;
   // pants and shirt also get groundTop (ignores shoe lift) for anything drawn on the floor
   for (const it of [pants, shirt]) if (it?.under) it.under(c, left, top, t, groundTop);
   if (shoes?.under) shoes.under(c, left, groundTop, t);
-  BODY.forEach((row, j) => {
+  rows.forEach((row, j) => {
     for (let i = 0; i < row.length; i++) {
       const z = row[i];
       if (z === ".") continue;
-      let col = BASE[z];
+      let col = look.avatar === 2 && z === "m" ? "#b0566b" : BASE[z];
       if (pants?.ghost && "pPqQkwfF".includes(z)) continue;
       if (shirt && "tTul".includes(z)) col = z === "l" && shirt.sleeve !== "long" ? SKIN : (shirt.px(i, j, z, t) ?? (z === "u" || z === "l" ? SKIN : col));
       if (pants) {
@@ -67,7 +87,7 @@ export function drawAvatar(c, gear, x, bottom, t) {
         else if (z === "w" && pants.socks) col = pants.px(i, j, z, t);
       }
       if (shoes && (z === "f" || z === "F" || (z === "w" && shoes.high))) col = shoes.px(i, j, z, t);
-      if (col) R(c, left + i, top + j, 1, 1, col);
+      if (col) R(c, left + i, top + j, 1, 1, skin(col));
     }
   });
   for (const it of [pants, shirt]) if (it?.over) it.over(c, left, top, t, groundTop);
@@ -75,7 +95,7 @@ export function drawAvatar(c, gear, x, bottom, t) {
   if (head) {
     const hTop = top - (head.float ? head.float(t) : 0);
     if (head.under) head.under(c, left, hTop, t);
-    for (const { x: px, y: py, c: col } of head.build(t).m.values()) R(c, left + px, hTop + py, 1, 1, col);
+    for (const { x: px, y: py, c: col } of head.build(t).m.values()) R(c, left + px, hTop + py, 1, 1, skin(col));
     if (head.over) head.over(c, left, hTop, t);
   }
 }

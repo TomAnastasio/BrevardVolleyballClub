@@ -18,6 +18,7 @@ import { stagger } from "../lib/motion.js";
 import { useCountUp } from "../hooks/useCountUp.js";
 import { sanitizeName } from "../lib/sanitizeName.js";
 import { playerPhoto } from "../themes/playerPhoto.js";
+import AvatarCard from "./loot/AvatarCard.jsx";
 
 function PlayerAvatar({ src }) {
   if (!src) {
@@ -254,6 +255,7 @@ export default function PlayerProfileView({
   onOpenGame,
   onOpenPlayer,
   onOpenTournament,
+  onOpenLocker,
 }) {
   const { games, loading } = usePlayerGames(player?.id, refreshKey);
   const tournaments = usePlayerTournaments(player?.id);
@@ -360,6 +362,8 @@ export default function PlayerProfileView({
             </div>
           )}
         </div>
+
+        <AvatarCard playerId={player.id} name={displayName} isOwnProfile={isOwnProfile} onOpenLocker={onOpenLocker} />
 
         {hasRanked &&
           (user ? (

@@ -71,21 +71,45 @@ the odd spike that knocks a player over. Signed in, it's you (left) vs your
 rival (right): your toughest opponent (see "Partners & rivals" below), or,
 until you have one, the #1 ranked player (#2 if you're #1). Signed out, it's
 #1 vs #2. Each player is their pixel avatar (`src/avatar/engine.js`), with
-their first name underneath. Everyone is plain grey for now: avatar gear
-and monster transformations aren't in the app yet. On short screens (small
+their first name underneath, in the avatar, skin color and outfit (or
+monster) they picked in the Locker; plain grey clothes if they wear nothing. The item art only downloads
+when one of the two wears something. On short screens (small
 phones, landscape) the avatars and net are drawn a bit smaller so tall
 headgear and jumps fit.
 
-### Tokens (earning now, nothing to spend them on yet)
+### Tokens, the Cauldron and the Locker
 
 Every ranked game saved since 2026-10-24 earns tokens for each player in it
 who signs in: 2 for a win, 1 otherwise, at most 10 a day (Eastern time, by
 when the game was saved). Casual games, placeholder players and older games
 earn nothing; games a placeholder brings into an account through a merge
 never pay. Tokens are counted about a minute after a game is saved and are
-never taken back. They'll buy Cauldron pulls for pixel-avatar items; the
-screens for that aren't built yet. The database side (balances, the item
-list, pulls and outfits) is migration `20261024200000_tokens_items_and_pulls.sql`.
+never taken back.
+
+- **Profile card:** every profile shows the player's pixel avatar on a
+  little stage, with what they wear (head, shirt, pants, shoes, and a
+  monster if they're transformed). Your own adds your token count and
+  **Change outfit**, which opens the Locker.
+- **Avatar and skin color:** free for everyone from the start, picked at
+  the top of the Locker: **Avatar 1** or **Avatar 2** (the same body and
+  gear zones, so every item fits both; Avatar 2 has longer hair) and one of
+  four skin colors (default: Avatar 1, skin color 2). Saved by `set_look()`
+  (migration `20261024230000_avatar_and_skin_color.sql`).
+- **Locker:** your avatar big on top, a tab per slot plus Monsters, and a
+  tile for each item you own (rarest first; nothing you don't own shows).
+  Tapping a tile wears it and saves at once; **Plain** takes a slot off. A
+  monster covers your whole outfit; **Back to my outfit** (or wearing any
+  clothing) switches it off. NEW badges clear when you leave the Locker.
+- **Cauldron** (from the Locker): 1 token = 1 brew. The database rolls the
+  prize, always something you don't own yet (odds in `pull_odds`). The token
+  drops in, the brew climbs through the tier colors, a geyser carries the
+  prize up, then **Wear it** puts it on.
+
+Code: screens in `src/components/loot/`, data calls in `src/avatar/loot.js`,
+item art in `src/avatar/art/` (loaded on demand, keyed by the database's
+item keys; `art.test.js` checks every catalog item has art). The database
+side is migration `20261024200000_tokens_items_and_pulls.sql`. Halloween
+items stop dropping on Dec 1.
 
 ### Profile stats
 
