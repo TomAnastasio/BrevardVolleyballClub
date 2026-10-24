@@ -137,8 +137,6 @@ canvas { image-rendering: pixelated; display: block; }
   position: absolute; top: 2px; left: 2px; font: 9px var(--tag); color: #1a0d00; background: var(--legendary);
   border-radius: 4px; padding: 3px 4px 2px;
 }
-.tile.locked { cursor: default; opacity: 0.55; }
-.tile.locked .art { display: grid; place-items: center; font: 700 26px var(--display); color: var(--line); }
 .found { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 
 /* B: profile-style card + shelves */
@@ -202,17 +200,16 @@ canvas { image-rendering: pixelated; display: block; }
         <li>Monsters are their own tab. <span>Tapping one transforms you; "Back to my outfit" (or tapping any clothing) switches it off. Your outfit is kept underneath.</span></li>
         <li>Items you just brewed say NEW <span>until you've looked at them; a dot on the tab shows where they are.</span></li>
         <li>Rarer items are sorted first, <span>with the rarity color on the border.</span></li>
-        <li>Items you don't own yet show as "?" <span>with a "9 of 90 found" count, so there's something to chase. Their names stay hidden.</span></li>
+        <li>Only items you own show up. <span>Nothing you haven't brewed yet appears, not even as a blank tile.</span></li>
         <li>"Brew" at the bottom goes to the Cauldron. <span>With no tokens it says how to earn one.</span></li>
       </ul>
     </section>
     <section>
-      <h2>For you to pick</h2>
-      <ol>
-        <li>Which layout: <b>A</b>, <b>B</b> or <b>C</b>? <span>Or a mix, e.g. "B's top card with A's tabs".</span></li>
-        <li>Show unowned items as "?" tiles, or only show what you own?</li>
-        <li>Anything to add, e.g. a "Random outfit" button?</li>
-      </ol>
+      <h2>Picked</h2>
+      <ul>
+        <li><b>Option A</b>, mirror and drawers. <span>B and C stay here for reference.</span></li>
+        <li>Only items you own show up. <span>No "?" tiles for things you haven't brewed.</span></li>
+      </ul>
     </section>
   </div>
 </div>
@@ -6482,7 +6479,7 @@ for (const s of LSLOTS) {
     } catch (err) { console.error(s.key, th.name, err); }
   });
   items.sort((a, b) => b.tier - a.tier);
-  INV[s.key] = { items, total: themes.length * 9 };
+  INV[s.key] = { items };
 }
 const MON = [
   { skin: SKINS2.legendary[1], tier: 3, isNew: true, fresh: true },
@@ -6490,7 +6487,6 @@ const MON = [
   { skin: SKINS2.epic[6], tier: 2 },
   { skin: SKINS2.epic[9], tier: 2 },
 ].filter((m) => m.skin).map((m, i) => ({ ...m, id: `mon${i}`, name: m.skin.name }));
-const MON_TOTAL = SKINS2.legendary.length + SKINS2.epic.length;
 const TOKENS = 7;
 
 // ---------- painting ----------
@@ -6545,21 +6541,15 @@ function tileFor(kind, entry, isOn, onPick) {
   b.addEventListener("click", onPick);
   return b;
 }
-function lockedTiles(n, label) {
-  const frag = document.createDocumentFragment();
-  for (let i = 0; i < n; i++) frag.appendChild(el(`<div class="tile locked t0" aria-label="${label} not found yet"><div class="art">?</div><span class="nm">???</span><span class="tr">Not found</span></div>`));
-  return frag;
-}
 function grid(phone, st, kind, cols) {
   const wrap = document.createDocumentFragment();
   const isMon = kind === "mon";
-  const inv = isMon ? { items: MON, total: MON_TOTAL } : INV[kind.key];
-  wrap.appendChild(el(`<div class="found"><span class="label">${isMon ? "Monsters" : kind.label}</span><span class="muted small">${inv.items.length} of ${inv.total} found</span></div>`));
+  const inv = isMon ? { items: MON } : INV[kind.key];
+  wrap.appendChild(el(`<div class="found"><span class="label">${isMon ? "Monsters" : kind.label}</span><span class="muted small">${inv.items.length} owned</span></div>`));
   const g = el(`<div class="tiles"${cols ? ` style="grid-template-columns:repeat(${cols},minmax(0,1fr))"` : ""}></div>`);
   const cur = isMon ? st.monster : st.gear[kind.key];
   g.appendChild(tileFor(kind, null, !cur, () => phone.pick(kind, null)));
   for (const it of inv.items) g.appendChild(tileFor(kind, it, cur === it, () => phone.pick(kind, it)));
-  g.appendChild(lockedTiles(isMon ? 2 : 3, isMon ? "Monster" : kind.label));
   wrap.appendChild(g);
   if (isMon) wrap.appendChild(el(`<p class="muted small">A monster covers your whole outfit. Your clothes stay saved underneath.</p>`));
   return wrap;
@@ -6640,13 +6630,12 @@ function optionB() {
     bslot.replaceChildren(banner(st, () => p.pick("mon", null)));
     shelves.replaceChildren(...[...LSLOTS, "mon"].map((kind, i) => {
       const isMon = kind === "mon";
-      const inv = isMon ? { items: MON, total: MON_TOTAL } : INV[kind.key];
+      const inv = isMon ? { items: MON } : INV[kind.key];
       const cur = isMon ? st.monster : st.gear[kind.key];
-      const sh = el(`<div class="shelf"><div class="found"><span class="label">${isMon ? "Monsters" : kind.label}</span><span class="muted small">${inv.items.length} of ${inv.total} found</span></div><div class="shelf-row"></div></div>`);
+      const sh = el(`<div class="shelf"><div class="found"><span class="label">${isMon ? "Monsters" : kind.label}</span><span class="muted small">${inv.items.length} owned</span></div><div class="shelf-row"></div></div>`);
       const row = sh.querySelector(".shelf-row");
       row.appendChild(tileFor(kind, null, !cur, () => p.pick(kind, null)));
       for (const it of inv.items) row.appendChild(tileFor(kind, it, cur === it, () => p.pick(kind, it)));
-      row.appendChild(lockedTiles(2, isMon ? "Monster" : kind.label));
       requestAnimationFrame(() => { row.scrollLeft = scrolls[i] || 0; });
       return sh;
     }));
@@ -6691,7 +6680,7 @@ function optionC() {
     const mb = slotBtn("mon");
     mb.style.flexDirection = "row"; mb.style.width = "100%"; mb.style.gap = "10px"; mb.style.textAlign = "left";
     mb.querySelector("canvas").style.width = "44px";
-    mb.insertAdjacentHTML("beforeend", `<span class="muted small" style="margin-left:auto">${MON.length} of ${MON_TOTAL} ›</span>`);
+    mb.insertAdjacentHTML("beforeend", `<span class="muted small" style="margin-left:auto">${MON.length} owned ›</span>`);
     monBtnSlot.replaceChildren(mb);
     dropPainters(fresh);
     const freshRow = fresh.querySelector(".shelf-row");

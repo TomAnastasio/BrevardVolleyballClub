@@ -25,7 +25,7 @@ for (const s of LSLOTS) {
     } catch (err) { console.error(s.key, th.name, err); }
   });
   items.sort((a, b) => b.tier - a.tier);
-  INV[s.key] = { items, total: themes.length * 9 };
+  INV[s.key] = { items };
 }
 const MON = [
   { skin: SKINS2.legendary[1], tier: 3, isNew: true, fresh: true },
@@ -33,7 +33,6 @@ const MON = [
   { skin: SKINS2.epic[6], tier: 2 },
   { skin: SKINS2.epic[9], tier: 2 },
 ].filter((m) => m.skin).map((m, i) => ({ ...m, id: `mon${i}`, name: m.skin.name }));
-const MON_TOTAL = SKINS2.legendary.length + SKINS2.epic.length;
 const TOKENS = 7;
 
 // ---------- painting ----------
@@ -88,21 +87,15 @@ function tileFor(kind, entry, isOn, onPick) {
   b.addEventListener("click", onPick);
   return b;
 }
-function lockedTiles(n, label) {
-  const frag = document.createDocumentFragment();
-  for (let i = 0; i < n; i++) frag.appendChild(el(`<div class="tile locked t0" aria-label="${label} not found yet"><div class="art">?</div><span class="nm">???</span><span class="tr">Not found</span></div>`));
-  return frag;
-}
 function grid(phone, st, kind, cols) {
   const wrap = document.createDocumentFragment();
   const isMon = kind === "mon";
-  const inv = isMon ? { items: MON, total: MON_TOTAL } : INV[kind.key];
-  wrap.appendChild(el(`<div class="found"><span class="label">${isMon ? "Monsters" : kind.label}</span><span class="muted small">${inv.items.length} of ${inv.total} found</span></div>`));
+  const inv = isMon ? { items: MON } : INV[kind.key];
+  wrap.appendChild(el(`<div class="found"><span class="label">${isMon ? "Monsters" : kind.label}</span><span class="muted small">${inv.items.length} owned</span></div>`));
   const g = el(`<div class="tiles"${cols ? ` style="grid-template-columns:repeat(${cols},minmax(0,1fr))"` : ""}></div>`);
   const cur = isMon ? st.monster : st.gear[kind.key];
   g.appendChild(tileFor(kind, null, !cur, () => phone.pick(kind, null)));
   for (const it of inv.items) g.appendChild(tileFor(kind, it, cur === it, () => phone.pick(kind, it)));
-  g.appendChild(lockedTiles(isMon ? 2 : 3, isMon ? "Monster" : kind.label));
   wrap.appendChild(g);
   if (isMon) wrap.appendChild(el(`<p class="muted small">A monster covers your whole outfit. Your clothes stay saved underneath.</p>`));
   return wrap;
@@ -183,13 +176,12 @@ function optionB() {
     bslot.replaceChildren(banner(st, () => p.pick("mon", null)));
     shelves.replaceChildren(...[...LSLOTS, "mon"].map((kind, i) => {
       const isMon = kind === "mon";
-      const inv = isMon ? { items: MON, total: MON_TOTAL } : INV[kind.key];
+      const inv = isMon ? { items: MON } : INV[kind.key];
       const cur = isMon ? st.monster : st.gear[kind.key];
-      const sh = el(`<div class="shelf"><div class="found"><span class="label">${isMon ? "Monsters" : kind.label}</span><span class="muted small">${inv.items.length} of ${inv.total} found</span></div><div class="shelf-row"></div></div>`);
+      const sh = el(`<div class="shelf"><div class="found"><span class="label">${isMon ? "Monsters" : kind.label}</span><span class="muted small">${inv.items.length} owned</span></div><div class="shelf-row"></div></div>`);
       const row = sh.querySelector(".shelf-row");
       row.appendChild(tileFor(kind, null, !cur, () => p.pick(kind, null)));
       for (const it of inv.items) row.appendChild(tileFor(kind, it, cur === it, () => p.pick(kind, it)));
-      row.appendChild(lockedTiles(2, isMon ? "Monster" : kind.label));
       requestAnimationFrame(() => { row.scrollLeft = scrolls[i] || 0; });
       return sh;
     }));
@@ -234,7 +226,7 @@ function optionC() {
     const mb = slotBtn("mon");
     mb.style.flexDirection = "row"; mb.style.width = "100%"; mb.style.gap = "10px"; mb.style.textAlign = "left";
     mb.querySelector("canvas").style.width = "44px";
-    mb.insertAdjacentHTML("beforeend", `<span class="muted small" style="margin-left:auto">${MON.length} of ${MON_TOTAL} ›</span>`);
+    mb.insertAdjacentHTML("beforeend", `<span class="muted small" style="margin-left:auto">${MON.length} owned ›</span>`);
     monBtnSlot.replaceChildren(mb);
     dropPainters(fresh);
     const freshRow = fresh.querySelector(".shelf-row");

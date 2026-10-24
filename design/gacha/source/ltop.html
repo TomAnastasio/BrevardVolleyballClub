@@ -137,8 +137,6 @@ canvas { image-rendering: pixelated; display: block; }
   position: absolute; top: 2px; left: 2px; font: 9px var(--tag); color: #1a0d00; background: var(--legendary);
   border-radius: 4px; padding: 3px 4px 2px;
 }
-.tile.locked { cursor: default; opacity: 0.55; }
-.tile.locked .art { display: grid; place-items: center; font: 700 26px var(--display); color: var(--line); }
 .found { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 
 /* B: profile-style card + shelves */
@@ -202,17 +200,16 @@ canvas { image-rendering: pixelated; display: block; }
         <li>Monsters are their own tab. <span>Tapping one transforms you; "Back to my outfit" (or tapping any clothing) switches it off. Your outfit is kept underneath.</span></li>
         <li>Items you just brewed say NEW <span>until you've looked at them; a dot on the tab shows where they are.</span></li>
         <li>Rarer items are sorted first, <span>with the rarity color on the border.</span></li>
-        <li>Items you don't own yet show as "?" <span>with a "9 of 90 found" count, so there's something to chase. Their names stay hidden.</span></li>
+        <li>Only items you own show up. <span>Nothing you haven't brewed yet appears, not even as a blank tile.</span></li>
         <li>"Brew" at the bottom goes to the Cauldron. <span>With no tokens it says how to earn one.</span></li>
       </ul>
     </section>
     <section>
-      <h2>For you to pick</h2>
-      <ol>
-        <li>Which layout: <b>A</b>, <b>B</b> or <b>C</b>? <span>Or a mix, e.g. "B's top card with A's tabs".</span></li>
-        <li>Show unowned items as "?" tiles, or only show what you own?</li>
-        <li>Anything to add, e.g. a "Random outfit" button?</li>
-      </ol>
+      <h2>Picked</h2>
+      <ul>
+        <li><b>Option A</b>, mirror and drawers. <span>B and C stay here for reference.</span></li>
+        <li>Only items you own show up. <span>No "?" tiles for things you haven't brewed.</span></li>
+      </ul>
     </section>
   </div>
 </div>

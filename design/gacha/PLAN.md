@@ -55,8 +55,9 @@ home-screen rally. Purely cosmetic: nothing touches Elo, nothing is sold.
   avatar on top, tabs for Head, Shirt, Pants, Shoes and Monsters, a grid of
   item tiles. Tapping wears an item and saves straight away; "Plain" takes a
   slot off; tapping a monster transforms you and "Back to my outfit" (or any
-  clothing) switches it off; NEW badges on fresh items; rarest first; items
-  not owned yet show as "?" tiles with an "x of y found" count; a "Brew"
+  clothing) switches it off; NEW badges on fresh items; rarest first; only
+  items the player owns appear (nothing unowned, not even a blank tile),
+  with an "x owned" count per tab; a "Brew"
   button at the bottom. Screenshots are in `locker-mock/` (A-*.png).
 - **Past games:** victory and defeat poses (winners celebrate on one side,
   losers slump on the other). Not designed yet.
