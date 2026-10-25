@@ -4,6 +4,7 @@ import LoadingMeteor from "./LoadingMeteor.jsx";
 import TournamentGameTag from "./TournamentGameTag.jsx";
 import { useAuth } from "../hooks/useAuth.js";
 import { fetchGameRecord } from "../hooks/useGameHistory.js";
+import LoadError from "./LoadError.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 import { formatPlayedAt, rosterForSide } from "../lib/gameDetail.js";
 import { playerPhoto } from "../themes/playerPhoto.js";
@@ -88,6 +89,7 @@ export default function GameDetailView({ gameId, refreshKey, onBack, onOpenPlaye
   const [game, setGame] = useState(null);
   const [deltas, setDeltas] = useState({});
   const [status, setStatus] = useState("loading");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,7 +115,7 @@ export default function GameDetailView({ gameId, refreshKey, onBack, onOpenPlaye
     return () => {
       cancelled = true;
     };
-  }, [gameId, refreshKey, signedIn]);
+  }, [gameId, refreshKey, signedIn, attempt]);
 
   return (
     <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">
@@ -140,7 +142,7 @@ export default function GameDetailView({ gameId, refreshKey, onBack, onOpenPlaye
           </div>
         )}
         {status === "missing" && <p className="p-6 text-center text-muted">This game no longer exists.</p>}
-        {status === "error" && <p className="p-6 text-center text-red-400">Couldn't load this game. Check your connection and try again.</p>}
+        {status === "error" && <LoadError what="this game" onRetry={() => setAttempt((n) => n + 1)} />}
 
         {status === "ready" && game && (
           <>

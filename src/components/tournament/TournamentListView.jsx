@@ -1,5 +1,6 @@
 import { Button } from "@heroui/react";
 import LoadingMeteor from "../LoadingMeteor.jsx";
+import LoadError from "../LoadError.jsx";
 import MenuCard from "../game/MenuCard.jsx";
 import { useTournamentList } from "../../hooks/useTournament.js";
 import { formatEventDate, STATUS_LABELS } from "./tournamentFormat.js";
@@ -7,7 +8,7 @@ import { formatEventDate, STATUS_LABELS } from "./tournamentFormat.js";
 const STATUS_ICONS = { draft: "📝", published: "📋", live: "🔴", complete: "👑" };
 
 export default function TournamentListView({ isAdmin, onOpen, onCreate }) {
-  const { tournaments, loading } = useTournamentList();
+  const { tournaments, loading, failed, retry } = useTournamentList();
 
   return (
     <div className="flex flex-col gap-2 px-3 pb-6">
@@ -21,6 +22,8 @@ export default function TournamentListView({ isAdmin, onOpen, onCreate }) {
           <LoadingMeteor />
           <p className="m-0 text-center text-muted">Loading tournaments…</p>
         </div>
+      ) : failed && tournaments.length === 0 ? (
+        <LoadError what="tournaments" onRetry={retry} />
       ) : tournaments.length === 0 ? (
         <p className="p-6 text-center text-muted">No tournaments yet. Check back soon!</p>
       ) : (

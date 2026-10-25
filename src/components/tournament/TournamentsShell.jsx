@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth.js";
+import { useBackLayer } from "../../hooks/useBackLayer.js";
 import { setTournamentParam } from "../../lib/tournamentLink.js";
 import TournamentListView from "./TournamentListView.jsx";
 import TournamentView from "./TournamentView.jsx";
@@ -42,6 +43,9 @@ export default function TournamentsShell({ initialTournamentId, onBack }) {
     else if (screen === "view" || screen === "new") setScreen("list");
     else setScreen("view");
   }
+  // The phone's Back walks the same path: Keep Score / Manage -> the
+  // tournament -> the list (src/lib/backNavigation.js).
+  useBackLayer(1, screen === "list" ? 0 : screen === "view" || screen === "new" ? 1 : 2, goBack);
 
   return (
     <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">

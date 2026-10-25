@@ -155,6 +155,8 @@ export function useTournament(id, { pollMs = 0 } = {}) {
   const [model, setModel] = useState(null);
   const [loading, setLoading] = useState(Boolean(id));
   const [error, setError] = useState("");
+  // The last load failed (no signal), vs. the tournament not existing.
+  const [failed, setFailed] = useState(false);
   const requestRef = useRef(0);
 
   const reload = useCallback(async () => {
@@ -167,10 +169,14 @@ export function useTournament(id, { pollMs = 0 } = {}) {
       const next = await fetchTournament(id);
       if (request !== requestRef.current) return;
       setModel(next);
+      setFailed(false);
       setError(next ? "" : "This tournament isn't available.");
     } catch (e) {
       console.error("Failed to load tournament:", e);
-      if (request === requestRef.current) setError("Couldn't load this tournament. Check your connection and try again.");
+      if (request === requestRef.current) {
+        setError("Couldn't load this tournament. Check your connection and try again.");
+        setFailed(true);
+      }
     } finally {
       if (request === requestRef.current) setLoading(false);
     }
@@ -189,12 +195,19 @@ export function useTournament(id, { pollMs = 0 } = {}) {
     return () => clearInterval(timer);
   }, [pollMs, reload]);
 
-  return { model, loading, error, reload };
+  // Retry after a failed load, showing the loading state meanwhile.
+  const retry = useCallback(() => {
+    setLoading(true);
+    reload();
+  }, [reload]);
+
+  return { model, loading, error, failed, reload, retry };
 }
 
 export function useTournamentList() {
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [failed, setFailed] = useState(false);
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
@@ -207,7 +220,9 @@ export function useTournamentList() {
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) console.error("Failed to load tournaments:", error);
-        setTournaments(data || []);
+        // A failed refresh keeps the list already on screen.
+        if (!error) setTournaments(data || []);
+        setFailed(Boolean(error));
         setLoading(false);
       });
     return () => {
@@ -215,17 +230,30 @@ export function useTournamentList() {
     };
   }, [version]);
 
-  return { tournaments, loading, reload: () => setVersion((v) => v + 1) };
+  return {
+    tournaments,
+    loading,
+    failed,
+    reload: () => setVersion((v) => v + 1),
+    retry: () => {
+      setLoading(true);
+      setVersion((v) => v + 1);
+    },
+  };
 }
 
 // A player's tournament history for their profile page. Drafts are hidden
-// by RLS, so this only ever shows published tournaments.
+// by RLS, so this only ever shows published tournaments. `failed`: the
+// load failed (not "no tournaments"); `retry` tries again.
 export function usePlayerTournaments(profileId) {
   const [entries, setEntries] = useState([]);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!profileId || !isSupabaseConfigured) return;
     let cancelled = false;
+    setFailed(false);
     supabase
       .from("tournament_entrants")
       .select("id, final_place, title, division:tournament_divisions(name), tournament:tournaments(id, name, event_date, status)")
@@ -233,6 +261,7 @@ export function usePlayerTournaments(profileId) {
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) console.error("Failed to load player tournaments:", error);
+        setFailed(Boolean(error));
         setEntries(
           (data || [])
             .filter((e) => e.tournament)
@@ -242,7 +271,8 @@ export function usePlayerTournaments(profileId) {
     return () => {
       cancelled = true;
     };
-  }, [profileId]);
+  }, [profileId, attempt]);
 
-  return entries;
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+  return { entries, failed, retry };
 }

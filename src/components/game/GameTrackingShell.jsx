@@ -3,6 +3,8 @@ import { useScoreboardState } from "../../hooks/useScoreboardState.js";
 import { useGameHistory } from "../../hooks/useGameHistory.js";
 import { useViewport } from "../../hooks/useViewport.js";
 import { useAuth } from "../../hooks/useAuth.js";
+import { useBackLayer } from "../../hooks/useBackLayer.js";
+import { useWakeLock } from "../../hooks/useWakeLock.js";
 import GameMenu from "./GameMenu.jsx";
 import GameFormatMenu from "./GameFormatMenu.jsx";
 import BeachSizeMenu from "./BeachSizeMenu.jsx";
@@ -16,6 +18,7 @@ import FinalScoreScreen from "./FinalScoreScreen.jsx";
 import GameEntryMenu from "./GameEntryMenu.jsx";
 import { consumePendingGameTracking, setPendingGameTracking } from "../../lib/pendingGameTracking.js";
 import { queueSummary } from "../../lib/gameUploadQueue.js";
+import { previousScreen, screenDepth } from "../../lib/gameScreens.js";
 
 const SCREEN_META = {
   menu: { title: "Beach Volleyball Scoreboard", subtitle: "Brevard Volleyball Club" },
@@ -30,23 +33,13 @@ const SCREEN_META = {
   "final-score": { title: "Final Score", subtitle: null },
 };
 
-const BACK_MAP = {
-  signin: "menu",
-  entry: "menu",
-  format: "entry",
-  "beach-size": "format",
-  new: "mode",
-  active: "menu",
-  history: "menu",
-  "final-score": "new",
-};
-
 export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament, gamesVersion }) {
   const scoreboard = useScoreboardState();
   const {
     history,
     addGame,
     historyLoading,
+    historyError,
     refreshHistory,
     saveError,
     dismissSaveError,
@@ -196,6 +189,14 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
     setScreen("menu");
   }
 
+  const goBackOneScreen = () => setScreen(previousScreen(screen, pendingFormat));
+  // The phone's Back steps through these screens like "‹ Back" does. From
+  // the live scoreboard it goes to the game menu (the game stays saved on
+  // the phone and "Resume" brings it back), never out of the app.
+  useBackLayer(1, screenDepth(screen, pendingFormat), goBackOneScreen);
+  // Keep the phone from dimming and locking while scoring.
+  useWakeLock(screen === "active" && Boolean(scoreboard.state));
+
   const meta = SCREEN_META[screen];
   const isMenu = screen === "menu";
   const { isPortrait, width: effectiveWidth, height: effectiveHeight } = useViewport();
@@ -211,11 +212,7 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
       >
         <button
           type="button"
-          onClick={() =>
-            isMenu
-              ? onBack()
-              : setScreen(screen === "mode" ? (pendingFormat === "beach" ? "beach-size" : "format") : BACK_MAP[screen] || "menu")
-          }
+          onClick={() => (isMenu ? onBack() : goBackOneScreen())}
           aria-label={isMenu ? "Back to main menu" : "Back to game tracking menu"}
           className="rounded-lg px-2 py-2 font-bold phone-landscape:px-1.5 phone-landscape:py-1 phone-landscape:text-sm focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
         >
@@ -327,6 +324,8 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
           <HistoryView
             history={history}
             historyLoading={historyLoading}
+            historyError={historyError}
+            onRetryLoad={refreshHistory}
             onRetryUpload={retryUploads}
             onRemoveUpload={removeQueuedGame}
             onOpenGame={onOpenGame}

@@ -60,7 +60,12 @@ only on the scorekeeper's phone. It isn't saved with the game.
 
 In either layout, when a team reaches the winning score (21 beach, 25
 indoor) with a 2-point lead, a green banner offers **Save Game** or
-**Keep Playing**.
+**Keep Playing** (big, full-width buttons in the upright layout, like the
+switch-sides **Done**).
+
+The screen stays on while the scoreboard (or a tournament's **Keep score**
+screen) is open, so the phone doesn't dim and lock between rallies
+(`src/hooks/useWakeLock.js`; browsers without it just behave as before).
 
 ### Game details
 
@@ -73,6 +78,31 @@ each player's Elo change (e.g. +12 / −11). Elo history isn't public, so
 signed-out visitors don't. Admins edit or delete a game with the **✏️ Edit
 game** button on this screen. Back always returns to the previous screen
 (`App.jsx` stacks these screens on top of the current view).
+
+### Getting around
+
+- **The phone's Back button** (or back swipe, or the browser's back) does
+  exactly what the screen's own **‹ Back** does: game details → profile →
+  Rankings → home, the game-tracking setup screens one by one, the admin
+  panel's tools, and Tournaments (Keep Score / Manage → the tournament →
+  the list). From the live scoreboard it goes to the game menu, where
+  **In Progress** picks the game back up; it never leaves the app mid-game.
+  Only from the home screen does Back leave the site. A reload opens home
+  (or the tournament in the address bar); a game in progress is still
+  kept. How it works: `src/lib/backNavigation.js`.
+- **Opening splash:** the BVC splash plays on the first open of the day
+  only; later opens that day go straight in (`src/lib/splashOncePerDay.js`).
+- **When something can't load** (no signal), Rankings, Past Games,
+  profiles (games and tournaments), game details, the Locker, the
+  Cauldron, the tournament list, a tournament, Keep score, Manage and the
+  player search (New Game, Merge Profiles, tournament entrants) say
+  "Couldn't load … Check your connection" with a **Retry** button,
+  instead of looking empty.
+  Past Games still lists the games kept on the phone underneath. Loading
+  gives up after about 7 seconds (the database client retries first).
+- **If a screen crashes**, a "Something went wrong" screen offers **Back to
+  home** and **Reload** instead of a blank page
+  (`src/components/ErrorBoundary.jsx`). A game in progress survives either.
 
 ### My profile
 

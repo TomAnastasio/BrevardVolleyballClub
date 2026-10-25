@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import LootHeader from "./LootHeader.jsx";
+import LoadError from "../LoadError.jsx";
 import PixelCanvas from "../../avatar/PixelCanvas.jsx";
 import { createCauldron, H, W } from "../../avatar/cauldron.js";
 import { paintCloseUp, CLOSE_UP } from "../../avatar/stage.js";
@@ -15,7 +16,7 @@ const ART_WAIT_MS = 8000;
 // (brew()); this screen plays the animation and shows what came out.
 export default function CauldronView({ onBack, onOpenLocker }) {
   const { user } = useAuth();
-  const { tokens, loading, outfit } = useMyLoot(user?.id);
+  const { tokens, loading, outfit, error, retry } = useMyLoot(user?.id);
   // The prize is shown on your own avatar and skin color.
   const look = { avatar: outfit?.avatar ?? DEFAULT_LOOK.avatar, skin: outfit?.skin ?? DEFAULT_LOOK.skin };
   const canvasRef = useRef(null);
@@ -139,11 +140,12 @@ export default function CauldronView({ onBack, onOpenLocker }) {
           </div>
         )}
 
+        {error && phase === "idle" && <LoadError what="your tokens" onRetry={retry} className="py-2" />}
         {phase !== "brewing" && (
           <button
             type="button"
             onClick={startBrew}
-            disabled={noTokens || loading}
+            disabled={noTokens || loading || Boolean(error)}
             className="rounded-xl bg-accent px-4 py-3 font-bold text-accent-foreground transition-transform active:scale-[0.98] disabled:opacity-50 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             {phase === "revealed" ? "Brew again · 1 token" : "Brew · 1 token"}

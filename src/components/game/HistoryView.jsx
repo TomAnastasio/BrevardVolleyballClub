@@ -1,6 +1,7 @@
 import { Card } from "@heroui/react";
 import { useAuth } from "../../hooks/useAuth.js";
 import TournamentGameTag from "../TournamentGameTag.jsx";
+import LoadError from "../LoadError.jsx";
 import { stagger } from "../../lib/motion.js";
 import { playerPhoto } from "../../themes/playerPhoto.js";
 
@@ -140,6 +141,8 @@ function UploadStatus({ game, onRetry, onRemove }) {
 export default function HistoryView({
   history,
   historyLoading,
+  historyError,
+  onRetryLoad,
   onOpenGame,
   onOpenTournament,
   onRetryUpload,
@@ -149,10 +152,22 @@ export default function HistoryView({
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto px-3 pt-3 pb-6">
+      {/* The club's games didn't load: say so, and still list the games
+          kept on this phone (e.g. ones waiting to upload) below. */}
+      {historyError && !historyLoading && (
+        <>
+          <LoadError what="Past Games" onRetry={onRetryLoad} className="py-4" />
+          {history.length > 0 && (
+            <p className="m-0 mb-2 text-center text-xs font-semibold text-muted">Games kept on this phone:</p>
+          )}
+        </>
+      )}
       {historyLoading ? (
         <p className="p-6 text-center text-muted">Loading your games…</p>
       ) : history.length === 0 ? (
-        <p className="p-6 text-center text-muted">No games saved yet. Finish a game to see it here.</p>
+        !historyError && (
+          <p className="p-6 text-center text-muted">No games saved yet. Finish a game to see it here.</p>
+        )
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {history.map((game, index) => (

@@ -59,6 +59,11 @@ label per pool).
 After the event: collapse README "Tournaments" and this section once the
 assumptions above are settled.
 
+## Open from the app-wide UX batch (2026-10-25)
+
+- Back doesn't close an open dialog or sheet yet (it goes back a screen
+  behind it).
+
 ## Next up (owner picks; one item at a time)
 
 - **Past Games:** filters (All/Ranked/Casual/Tournaments), a "Mine" toggle,

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@heroui/react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { usePlayerDirectory } from "../../hooks/usePlayerDirectory.js";
+import LoadError from "../LoadError.jsx";
 import PlayerSearchField from "../game/PlayerSearchField.jsx";
 import { fuzzyFilter } from "../../lib/fuzzyMatch.js";
 import { sanitizeName } from "../../lib/sanitizeName.js";
@@ -145,7 +146,11 @@ export default function MergeProfilesView() {
   // Reloaded after each merge. Until the reload lands, profiles added here
   // are listed from memory and merged-away ones are hidden.
   const [reloadKey, setReloadKey] = useState(0);
-  const fetchedDirectory = usePlayerDirectory(true, reloadKey);
+  const {
+    players: fetchedDirectory,
+    failed: directoryFailed,
+    retry: retryDirectory,
+  } = usePlayerDirectory(true, reloadKey);
   const [addedProfiles, setAddedProfiles] = useState([]);
   const [mergedAwayIds, setMergedAwayIds] = useState([]);
   const directory = useMemo(() => {
@@ -209,6 +214,8 @@ export default function MergeProfilesView() {
           Use this when the same person ended up with two profiles. Pick the manual profile to remove and the
           profile to keep (Google or manual). Their game history moves onto the kept profile and the manual one is deleted.
         </p>
+
+        {directoryFailed && <LoadError what="the player list" onRetry={retryDirectory} className="py-3" />}
 
         <PlayerLookup directory={directory} onAdded={(p) => setAddedProfiles((prev) => [...prev, p])} />
 

@@ -43,7 +43,11 @@ function SwitchSidesBanner({ totalPoints, onDone }) {
         <p className="m-0 font-extrabold">Switch sides</p>
         <p className="m-0 text-sm font-semibold opacity-75">{totalPoints} points played</p>
       </div>
-      <Button size="sm" onPress={onDone} className="rounded-full bg-black px-4 font-extrabold text-accent">
+      <Button
+        size="lg"
+        onPress={onDone}
+        className="h-12 min-w-24 flex-none rounded-full bg-black px-6 text-base font-extrabold text-accent"
+      >
         Done
       </Button>
     </div>
@@ -175,7 +179,13 @@ export default function PortraitGameView({ scoreboard, onSaveGame }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col" style={{ paddingBottom: "calc(0.75rem + var(--safe-bottom))" }}>
       {showBanner && (
-        <WinBanner winnerName={winnerName} onSaveGame={onSaveGame} onKeepPlaying={dismissBanner} className="mx-3 mb-2" />
+        <WinBanner
+          winnerName={winnerName}
+          onSaveGame={onSaveGame}
+          onKeepPlaying={dismissBanner}
+          large
+          className="mx-3 mb-2"
+        />
       )}
       {showSwitchBanner && <SwitchSidesBanner totalPoints={totalPoints} onDone={dismissSwitch} />}
 

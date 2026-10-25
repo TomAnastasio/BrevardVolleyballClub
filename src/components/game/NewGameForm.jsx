@@ -3,6 +3,7 @@ import { Button } from "@heroui/react";
 import { sanitizeName } from "../../lib/sanitizeName.js";
 import { TEAM_COLORS, DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../../lib/teamColors.js";
 import { usePlayerDirectory } from "../../hooks/usePlayerDirectory.js";
+import LoadError from "../LoadError.jsx";
 import PlayerSearchField from "./PlayerSearchField.jsx";
 import TeamRosterPicker from "./TeamRosterPicker.jsx";
 import { playerPhoto } from "../../themes/playerPhoto.js";
@@ -203,7 +204,7 @@ export default function NewGameForm({
   // "enteringFinalScore" only still matter for things unrelated to player
   // selection (hiding colors, which button/callback to use).
   const isPastOrEdit = editing || enteringFinalScore;
-  const directory = usePlayerDirectory(true);
+  const { players: directory, failed: directoryFailed, retry: retryDirectory } = usePlayerDirectory(true);
 
   const [nameA1, setNameA1] = useState(editing ? initialGame?.a1?.name ?? "" : "");
   const [nameA2, setNameA2] = useState(editing ? initialGame?.a2?.name ?? "" : "");
@@ -334,6 +335,7 @@ export default function NewGameForm({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3">
+        {directoryFailed && <LoadError what="the player list" onRetry={retryDirectory} className="py-3" />}
         <SideFields
           label="First side"
           color={colorA}

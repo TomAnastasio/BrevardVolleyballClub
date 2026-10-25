@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Card } from "@heroui/react";
 import LoadingMeteor from "../../LoadingMeteor.jsx";
+import LoadError from "../../LoadError.jsx";
 import MenuCard from "../../game/MenuCard.jsx";
 import { useTournament } from "../../../hooks/useTournament.js";
 import { deleteDraftTournament, friendlyError, updateTournament } from "../../../lib/tournamentApi.js";
@@ -42,7 +43,7 @@ export function poolProblems(model) {
 }
 
 export default function TournamentManageView({ tournamentId, onDeleted }) {
-  const { model, loading, error, reload } = useTournament(tournamentId);
+  const { model, loading, error, failed, reload, retry } = useTournament(tournamentId);
   const [section, setSection] = useState("menu");
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -55,6 +56,7 @@ export default function TournamentManageView({ tournamentId, onDeleted }) {
       </div>
     );
   }
+  if (!model && failed) return <LoadError what="this tournament" onRetry={retry} />;
   if (!model) return <p className="p-6 text-center text-muted">{error}</p>;
 
   const t = model.tournament;

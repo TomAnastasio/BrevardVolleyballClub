@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, Card } from "@heroui/react";
 import LoadingMeteor from "../LoadingMeteor.jsx";
+import LoadError from "../LoadError.jsx";
 import { useTournament } from "../../hooks/useTournament.js";
 import { updatedElsewhere as isUpdatedElsewhere } from "../../lib/liveScoreSync.js";
 import { isGameOver, rulesLabel } from "../../lib/queenOfCourt.js";
 import { fetchLiveScore, friendlyError, pushLiveScore, submitMatchScore } from "../../lib/tournamentApi.js";
 import { DEFAULT_COLOR_A, DEFAULT_COLOR_B, colorForeground } from "../../lib/teamColors.js";
 import { teamNames } from "./tournamentFormat.js";
+import { useWakeLock } from "../../hooks/useWakeLock.js";
 
 const LIVE_PUSH_DELAY_MS = 800;
 // How often an open scoring screen checks the game's live score, to follow
@@ -92,7 +94,8 @@ function TeamScorer({ names, score, color, onInc, onDec, label, winning }) {
 // newer score. If two phones score the same game, each follows the other's
 // taps while it's idle; the latest tap wins.
 export default function TournamentScoreScreen({ tournamentId, matchId, onDone }) {
-  const { model, loading, reload } = useTournament(tournamentId);
+  useWakeLock(true); // keep the screen on while keeping score
+  const { model, loading, failed, reload, retry } = useTournament(tournamentId);
   const [saved] = useState(() => loadLocal(matchId));
   const [score, setScore] = useState(() => (saved ? { a: saved.a, b: saved.b } : { a: 0, b: 0 }));
   const [synced, setSynced] = useState(false);
@@ -210,6 +213,7 @@ export default function TournamentScoreScreen({ tournamentId, matchId, onDone })
       </div>
     );
   }
+  if (!model && failed) return <LoadError what="this game" onRetry={retry} />;
   if (!model || !match) return <p className="p-6 text-center text-muted">This game couldn't be found.</p>;
 
   const rules = match.rules;

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useBackLayer } from "../../hooks/useBackLayer.js";
 import MenuCard from "../game/MenuCard.jsx";
 import AddManualProfileView from "./AddManualProfileView.jsx";
 import RecomputeEloView from "./RecomputeEloView.jsx";
@@ -18,6 +19,8 @@ const BACK_MAP = { "signup-qr": "menu","add-profile": "menu", "recompute-elo": "
 export default function AdminPanelView({ onBack }) {
   const [screen, setScreen] = useState("menu");
   const isMenu = screen === "menu";
+  // The phone's Back returns to the admin menu first (src/lib/backNavigation.js).
+  useBackLayer(1, isMenu ? 0 : 1, () => setScreen("menu"));
 
   return (
     <main className="animate-view-in flex flex-1 flex-col overflow-y-auto">

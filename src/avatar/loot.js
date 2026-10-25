@@ -87,17 +87,22 @@ export function useMyLoot(userId) {
     let cancelled = false;
     const seq = ++fetchCount.current;
     (async () => {
-      const [tokens, items, outfit] = await Promise.all([
-        supabase.rpc("my_tokens"),
-        supabase
-          .from("player_items")
-          .select("item_key, obtained_at, seen_at, cosmetic_items(name, slot, tier)")
-          .eq("player_id", userId)
-          .order("obtained_at", { ascending: false }),
-        supabase.from("player_outfits").select(OUTFIT_COLUMNS).eq("player_id", userId).maybeSingle(),
-      ]);
+      let tokens, items, outfit, thrown;
+      try {
+        [tokens, items, outfit] = await Promise.all([
+          supabase.rpc("my_tokens"),
+          supabase
+            .from("player_items")
+            .select("item_key, obtained_at, seen_at, cosmetic_items(name, slot, tier)")
+            .eq("player_id", userId)
+            .order("obtained_at", { ascending: false }),
+          supabase.from("player_outfits").select(OUTFIT_COLUMNS).eq("player_id", userId).maybeSingle(),
+        ]);
+      } catch (err) {
+        thrown = err;
+      }
       if (cancelled) return;
-      const failed = tokens.error || items.error || outfit.error;
+      const failed = thrown || tokens.error || items.error || outfit.error;
       if (failed) {
         console.error("Failed to load tokens/items:", failed);
         // A failed refresh keeps what's already on screen.
@@ -158,9 +163,11 @@ export function useMyLoot(userId) {
     [current, state.outfit, saves, userId],
   );
 
-  if (!isSupabaseConfigured || !userId) return { tokens: null, items: [], outfit: null, loading: false, error: "", wear, changeLook };
-  if (!current) return { tokens: null, items: [], outfit: null, loading: true, error: "", wear, changeLook };
-  return { tokens: state.tokens, items: state.items, outfit, loading: false, error: state.error, wear, changeLook };
+  // retry: fetch again after a failed load.
+  const retry = lootChanged;
+  if (!isSupabaseConfigured || !userId) return { tokens: null, items: [], outfit: null, loading: false, error: "", wear, changeLook, retry };
+  if (!current) return { tokens: null, items: [], outfit: null, loading: true, error: "", wear, changeLook, retry };
+  return { tokens: state.tokens, items: state.items, outfit, loading: false, error: state.error, wear, changeLook, retry };
 }
 
 async function call(fn, args) {

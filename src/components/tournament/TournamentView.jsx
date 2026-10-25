@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, Card } from "@heroui/react";
 import CopyableText from "../CopyableText.jsx";
 import LoadingMeteor from "../LoadingMeteor.jsx";
+import LoadError from "../LoadError.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useTournament } from "../../hooks/useTournament.js";
 import { buildTournamentUrl, setPendingTournament } from "../../lib/tournamentLink.js";
@@ -142,7 +143,7 @@ function StandingsTable({ standings, profilesById, highlightId }) {
 
 export default function TournamentView({ tournamentId, notice, onDismissNotice, onScoreMatch, onManage }) {
   const { user, isAdmin, signInWithGoogle } = useAuth();
-  const { model, loading, error, reload } = useTournament(tournamentId, { pollMs: POLL_MS });
+  const { model, loading, error, failed, reload, retry } = useTournament(tournamentId, { pollMs: POLL_MS });
   const [divisionId, setDivisionId] = useState(null);
   const [signInPrompt, setSignInPrompt] = useState(false);
 
@@ -154,6 +155,7 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
       </div>
     );
   }
+  if (!model && failed) return <LoadError what="this tournament" onRetry={retry} />;
   if (!model) return <p className="p-6 text-center text-muted">{error || "This tournament isn't available."}</p>;
 
   const { tournament: t, divisions, profilesById } = model;

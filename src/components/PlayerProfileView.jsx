@@ -8,6 +8,7 @@ import { partnerStats, usePlayerGames, winLossRecords } from "../hooks/usePlayer
 import { usePlayerElo } from "../hooks/usePlayerElo.js";
 import EloChart from "./EloChart.jsx";
 import PartnersAndRivals from "./PartnersAndRivals.jsx";
+import LoadError from "./LoadError.jsx";
 import { usePlayerTournaments } from "../hooks/useTournament.js";
 import { formatEventDate, placeLabel, TITLE_LABELS } from "./tournament/tournamentFormat.js";
 import { useAuth } from "../hooks/useAuth.js";
@@ -257,8 +258,8 @@ export default function PlayerProfileView({
   onOpenTournament,
   onOpenLocker,
 }) {
-  const { games, loading } = usePlayerGames(player?.id, refreshKey);
-  const tournaments = usePlayerTournaments(player?.id);
+  const { games, loading, error: gamesError, retry: retryGames } = usePlayerGames(player?.id, refreshKey);
+  const { entries: tournaments, failed: tournamentsFailed, retry: retryTournaments } = usePlayerTournaments(player?.id);
   const titles = tournaments.filter((e) => e.title);
   const { user, isAdmin, refreshProfile } = useAuth();
   const { series: eloSeries } = usePlayerElo(player?.id, Boolean(user), refreshKey);
@@ -372,7 +373,7 @@ export default function PlayerProfileView({
             <p className="m-0 text-xs text-muted">Sign in to see Elo over time.</p>
           ))}
 
-        {!loading && <PartnersAndRivals stats={partnerStats(games)} onOpenPlayer={onOpenPlayer} />}
+        {!loading && !gamesError && <PartnersAndRivals stats={partnerStats(games)} onOpenPlayer={onOpenPlayer} />}
 
         {isAdmin && (
           <AdminDetails
@@ -385,6 +386,12 @@ export default function PlayerProfileView({
           />
         )}
 
+        {tournamentsFailed && tournaments.length === 0 && (
+          <section className="flex flex-col gap-2">
+            <h3 className="m-0 text-sm font-bold uppercase tracking-wide text-muted">Tournaments</h3>
+            <LoadError what="their tournaments" onRetry={retryTournaments} className="py-3" />
+          </section>
+        )}
         {tournaments.length > 0 && (
           <section className="flex flex-col gap-2">
             <h3 className="m-0 text-sm font-bold uppercase tracking-wide text-muted">Tournaments</h3>
@@ -414,6 +421,8 @@ export default function PlayerProfileView({
             <LoadingMeteor />
             <p className="m-0 text-center text-muted">Loading games…</p>
           </div>
+        ) : gamesError ? (
+          <LoadError what="this player's games" onRetry={retryGames} />
         ) : games.length === 0 ? (
           <p className="p-6 text-center text-muted">No games played yet.</p>
         ) : (

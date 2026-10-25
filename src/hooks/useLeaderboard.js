@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient.js";
 
 // Percentile tier among ranked players only (players with 0 games never
@@ -58,11 +58,19 @@ export function assignTiers(ranked) {
 // tier depends on everyone else's rating, so even opening one player's
 // profile (e.g. from a game's details) loads the whole list. Null on error.
 export async function fetchRankedProfiles() {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, display_name, avatar_url, elo_rating, elo_games_played")
-    .order("elo_rating", { ascending: false });
-  if (error || !data) return null;
+  let data, error;
+  try {
+    ({ data, error } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url, elo_rating, elo_games_played")
+      .order("elo_rating", { ascending: false }));
+  } catch (err) {
+    error = err;
+  }
+  if (error || !data) {
+    if (error) console.error("Failed to load profiles:", error);
+    return null;
+  }
   const valid = data.filter((p) => p.display_name && p.display_name.trim());
   const ranked = valid.filter((p) => p.elo_games_played > 0);
   const tiers = assignTiers(ranked);
@@ -74,10 +82,13 @@ export async function fetchRankedProfiles() {
 
 // County-wide Elo leaderboard, ranked games only. `profiles`
 // is readable by anyone, signed in or not (migration 0008), so this only
-// waits on `enabled` for Supabase being configured at all.
+// waits on `enabled` for Supabase being configured at all. `error` is
+// set when the fetch failed (vs. an empty list); `retry` tries again.
 export function useLeaderboard(enabled) {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(enabled);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!enabled || !supabase) {
@@ -86,17 +97,19 @@ export function useLeaderboard(enabled) {
     }
     let cancelled = false;
     setLoading(true);
+    setError(false);
 
     fetchRankedProfiles().then((withTiers) => {
       if (cancelled) return;
       if (withTiers) setPlayers(withTiers);
+      else setError(true);
       setLoading(false);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, attempt]);
 
-  return { players, loading };
+  return { players, loading, error, retry: useCallback(() => setAttempt((n) => n + 1), []) };
 }

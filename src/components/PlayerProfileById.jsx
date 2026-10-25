@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
+import LoadError from "./LoadError.jsx";
 import PlayerProfileView from "./PlayerProfileView.jsx";
 import { fetchRankedProfiles } from "../hooks/useLeaderboard.js";
 import { supabase } from "../lib/supabaseClient.js";
@@ -22,6 +23,7 @@ async function fetchProfileRow(playerId) {
 export default function PlayerProfileById({ playerId, onBack, backLabel = "Back", ...profileProps }) {
   const [player, setPlayer] = useState(null);
   const [status, setStatus] = useState("loading");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +38,7 @@ export default function PlayerProfileById({ playerId, onBack, backLabel = "Back"
     return () => {
       cancelled = true;
     };
-  }, [playerId]);
+  }, [playerId, attempt]);
 
   if (status === "ready") return <PlayerProfileView player={player} onBack={onBack} backLabel={backLabel} {...profileProps} />;
 
@@ -60,10 +62,10 @@ export default function PlayerProfileById({ playerId, onBack, backLabel = "Back"
           <LoadingMeteor />
           <p className="m-0 text-center text-muted">Loading player…</p>
         </div>
+      ) : status === "missing" ? (
+        <p className="p-6 text-center text-muted">This player&apos;s profile isn&apos;t available.</p>
       ) : (
-        <p className="p-6 text-center text-muted">
-          {status === "missing" ? "This player's profile isn't available." : "Couldn't load this player. Try again."}
-        </p>
+        <LoadError what="this player" onRetry={() => setAttempt((n) => n + 1)} />
       )}
     </main>
   );

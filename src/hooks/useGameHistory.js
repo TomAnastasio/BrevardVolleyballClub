@@ -144,6 +144,9 @@ export function useGameHistory() {
   // localHistory (which may be stale/pre-signin) and then replacing it with
   // the real remote list a moment later.
   const [remoteLoading, setRemoteLoading] = useState(false);
+  // The latest server fetch failed, so Past Games can say so (and offer
+  // Retry) instead of quietly showing only this phone's games.
+  const [remoteFailed, setRemoteFailed] = useState(false);
   // Set when addGame() couldn't keep the game safe on the phone, so the UI
   // can say so instead of only logging to console. Upload trouble itself
   // shows through the upload queue (`uploads` below), not here.
@@ -166,6 +169,7 @@ export function useGameHistory() {
   const fetchRemoteHistory = useCallback(async () => {
     const requestId = ++latestRequestRef.current;
     setRemoteLoading(true);
+    setRemoteFailed(false);
     try {
       // No .eq("user_id", ...) filter — `games` is publicly readable
       // (migration 0009), a club-wide history, not a per-user one. Still
@@ -212,6 +216,7 @@ export function useGameHistory() {
       confirmQueuedGames(confirmedIds(getUploadSnapshot().queue, fetched));
     } catch (e) {
       console.error("Failed to fetch game history from Supabase:", e);
+      if (requestId === latestRequestRef.current) setRemoteFailed(true);
       // Leave remoteHistory as null (not []) so `history` falls back to
       // localHistory instead of appearing as a definitive "zero games".
     } finally {
@@ -332,6 +337,9 @@ export function useGameHistory() {
   const base = fromServer ? [...remoteHistory, ...localHistory.filter((g) => g.synced === false)] : localHistory;
   const history = mergeQueuedIntoHistory(base, uploadQueue, fromServer, user?.id ?? null);
   const historyLoading = isSupabaseConfigured && remoteLoading;
+  // Only while the server list never loaded; a failed refresh keeps
+  // showing the last good list.
+  const historyError = isSupabaseConfigured && remoteFailed && remoteHistory === null;
   const dismissSaveError = useCallback(() => setSaveError(null), []);
   const retryUploads = useCallback(() => flushQueue({ includeRejected: true }), []);
 
@@ -339,6 +347,7 @@ export function useGameHistory() {
     history,
     addGame,
     historyLoading,
+    historyError,
     refreshHistory: fetchRemoteHistory,
     saveError,
     dismissSaveError,

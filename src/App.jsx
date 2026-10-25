@@ -18,14 +18,16 @@ import CauldronView from "./components/loot/CauldronView.jsx";
 import HalloweenDecor from "./themes/halloween/HalloweenDecor.jsx";
 import { activeTheme } from "./themes/activeTheme.js";
 import { letterPhotoChecksVersion, subscribeLetterPhotoChecks } from "./themes/halloween/googleLetterPhotos.js";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { AuthProvider } from "./hooks/AuthContext.jsx";
+import { useBackLayer } from "./hooks/useBackLayer.js";
 import { hasPendingGameTracking } from "./lib/pendingGameTracking.js";
 
 let nextPageKey = 1;
 
-export default function App({ joinRequested, justJoined, tournamentId, myProfileRequested }) {
-  // A sign-up QR scan skips the splash so the visitor goes straight to Google.
-  const [appReady, setAppReady] = useState(joinRequested);
+export default function App({ joinRequested, justJoined, tournamentId, myProfileRequested, showSplash }) {
+  // The splash plays on the day's first open only (decided in main.jsx).
+  const [appReady, setAppReady] = useState(!showSplash);
   // The Google OAuth sign-in redirect reloads the page from scratch, which
   // would otherwise always reset to "landing". Jump straight back into game
   // tracking so a signed-in user lands right back where they asked to sign
@@ -69,6 +71,26 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
   const openPlayer = (playerId) => pushPage({ type: "player", playerId });
   const openLocker = () => pushPage({ type: "locker" });
 
+  // The phone's Back button does what each screen's own Back does
+  // (src/lib/backNavigation.js): stacked pages first, then the view.
+  // Game tracking and the admin panel add their own sub-screens in between.
+  function viewBack() {
+    if (view === "profile") setView("leaderboard");
+    else {
+      if (view === "tournaments") setLinkedTournamentId(null);
+      setView("landing");
+    }
+  }
+  useBackLayer(0, view === "landing" ? 0 : view === "profile" ? 2 : 1, viewBack);
+  useBackLayer(2, pages.length, () => popPages());
+
+  // "Back to home" from a crashed screen (ErrorBoundary).
+  function goHome() {
+    setPages([]);
+    setLinkedTournamentId(null);
+    setView("landing");
+  }
+
   // A tournament game's 👑 tag (Past Games, profiles, game details) opens that tournament.
   function openTournament(id) {
     setPages([]);
@@ -78,125 +100,140 @@ export default function App({ joinRequested, justJoined, tournamentId, myProfile
 
   return (
     <AuthProvider>
-      {!joinRequested && <SplashScreen onReveal={() => setAppReady(true)} />}
+      {showSplash && <SplashScreen onReveal={() => setAppReady(true)} />}
       {appReady && (
-        <div data-app-shell className="flex min-h-dvh flex-col bg-background text-foreground [font-family:system-ui,-apple-system,'Segoe_UI',Roboto,sans-serif]">
+        <div
+          data-app-shell
+          className="flex min-h-dvh flex-col bg-background text-foreground [font-family:system-ui,-apple-system,'Segoe_UI',Roboto,sans-serif]"
+        >
           {activeTheme === "halloween" && <HalloweenDecor />}
           <div className={topPage ? "hidden" : "contents"}>
-            {view === "landing" && (
-              <LandingView
-                onPlayToday={() => setView("play")}
-                onGameTracking={() => setView("game")}
-                onLeaderboard={() => setView("leaderboard")}
-                onTournaments={() => setView("tournaments")}
-                onAdminPanel={() => setView("admin")}
-                onMyProfile={() => setView("my-profile")}
-              />
-            )}
-            {view === "my-profile" && (
-              <MyProfileView
-                onBack={() => setView("landing")}
-                refreshKey={gamesVersion}
-                onOpenGame={openGame}
-                onOpenPlayer={openPlayer}
-                onOpenTournament={openTournament}
-                onOpenLocker={openLocker}
-              />
-            )}
-            {view === "welcome" && (
-              <WelcomeView
-                joinRequested={joinRequested}
-                onProfileReady={(player) => {
-                  setSelectedPlayer(player);
-                  setView("profile");
-                }}
-                onRankings={() => setView("leaderboard")}
-                onHome={() => setView("landing")}
-              />
-            )}
-            {view === "play" && <PlayTodayView onBack={() => setView("landing")} />}
-            {view === "leaderboard" && (
-              <LeaderboardView
-                onBack={() => setView("landing")}
-                onSelectPlayer={(player) => {
-                  setSelectedPlayer(player);
-                  setView("profile");
-                }}
-              />
-            )}
-            {view === "profile" && selectedPlayer && (
-              <PlayerProfileView
-                player={selectedPlayer}
-                onBack={() => setView("leaderboard")}
-                refreshKey={gamesVersion}
-                onOpenGame={openGame}
-                onOpenPlayer={openPlayer}
-                onOpenTournament={openTournament}
-                onOpenLocker={openLocker}
-              />
-            )}
-            {view === "game" && (
-              <GameTrackingShell
-                onBack={() => setView("landing")}
-                onOpenGame={openGame}
-                onOpenTournament={openTournament}
-                gamesVersion={gamesVersion}
-              />
-            )}
-            {view === "admin" && <AdminPanelView onBack={() => setView("landing")} />}
-            {view === "tournaments" && (
-              <TournamentsShell
-                initialTournamentId={linkedTournamentId}
-                onBack={() => {
-                  setLinkedTournamentId(null);
-                  setView("landing");
-                }}
-              />
-            )}
+            <ErrorBoundary key={view} onHome={goHome}>
+              {view === "landing" && (
+                <LandingView
+                  onPlayToday={() => setView("play")}
+                  onGameTracking={() => setView("game")}
+                  onLeaderboard={() => setView("leaderboard")}
+                  onTournaments={() => setView("tournaments")}
+                  onAdminPanel={() => setView("admin")}
+                  onMyProfile={() => setView("my-profile")}
+                />
+              )}
+              {view === "my-profile" && (
+                <MyProfileView
+                  onBack={() => setView("landing")}
+                  refreshKey={gamesVersion}
+                  onOpenGame={openGame}
+                  onOpenPlayer={openPlayer}
+                  onOpenTournament={openTournament}
+                  onOpenLocker={openLocker}
+                />
+              )}
+              {view === "welcome" && (
+                <WelcomeView
+                  joinRequested={joinRequested}
+                  onProfileReady={(player) => {
+                    setSelectedPlayer(player);
+                    setView("profile");
+                  }}
+                  onRankings={() => setView("leaderboard")}
+                  onHome={() => setView("landing")}
+                />
+              )}
+              {view === "play" && <PlayTodayView onBack={() => setView("landing")} />}
+              {view === "leaderboard" && (
+                <LeaderboardView
+                  onBack={() => setView("landing")}
+                  onSelectPlayer={(player) => {
+                    setSelectedPlayer(player);
+                    setView("profile");
+                  }}
+                />
+              )}
+              {view === "profile" && selectedPlayer && (
+                <PlayerProfileView
+                  player={selectedPlayer}
+                  onBack={() => setView("leaderboard")}
+                  refreshKey={gamesVersion}
+                  onOpenGame={openGame}
+                  onOpenPlayer={openPlayer}
+                  onOpenTournament={openTournament}
+                  onOpenLocker={openLocker}
+                />
+              )}
+              {view === "game" && (
+                <GameTrackingShell
+                  onBack={() => setView("landing")}
+                  onOpenGame={openGame}
+                  onOpenTournament={openTournament}
+                  gamesVersion={gamesVersion}
+                />
+              )}
+              {view === "admin" && <AdminPanelView onBack={() => setView("landing")} />}
+              {view === "tournaments" && (
+                <TournamentsShell
+                  initialTournamentId={linkedTournamentId}
+                  onBack={() => {
+                    setLinkedTournamentId(null);
+                    setView("landing");
+                  }}
+                />
+              )}
+            </ErrorBoundary>
           </div>
 
-          {topPage?.type === "game" && (
-            <GameDetailView
-              key={topPage.key}
-              gameId={topPage.gameId}
-              refreshKey={gamesVersion}
-              onBack={() => popPages()}
-              onOpenPlayer={openPlayer}
-              onOpenTournament={openTournament}
-              onEdit={(gameId) => pushPage({ type: "edit", gameId })}
-            />
-          )}
-          {topPage?.type === "player" && (
-            <PlayerProfileById
-              key={topPage.key}
-              playerId={topPage.playerId}
-              onBack={() => popPages()}
-              refreshKey={gamesVersion}
-              onOpenGame={openGame}
-              onOpenPlayer={openPlayer}
-              onOpenTournament={openTournament}
-              onOpenLocker={openLocker}
-            />
-          )}
-          {topPage?.type === "locker" && (
-            <LockerView key={topPage.key} onBack={() => popPages()} onOpenCauldron={() => pushPage({ type: "cauldron" })} />
-          )}
-          {topPage?.type === "cauldron" && <CauldronView key={topPage.key} onBack={() => popPages()} onOpenLocker={() => popPages()} />}
-          {topPage?.type === "edit" && (
-            <EditGamePage
-              key={topPage.key}
-              gameId={topPage.gameId}
-              onBack={() => popPages()}
-              onSaved={() => {
-                setGamesVersion((v) => v + 1);
-                popPages();
-              }}
-              // The game is gone, so skip its details page too.
-              onDeleted={() => {
-                setGamesVersion((v) => v + 1);
-                popPages(2);
-              }}
-            />
+          {topPage && (
+            <ErrorBoundary key={topPage.key} onHome={goHome}>
+              {topPage?.type === "game" && (
+                <GameDetailView
+                  key={topPage.key}
+                  gameId={topPage.gameId}
+                  refreshKey={gamesVersion}
+                  onBack={() => popPages()}
+                  onOpenPlayer={openPlayer}
+                  onOpenTournament={openTournament}
+                  onEdit={(gameId) => pushPage({ type: "edit", gameId })}
+                />
+              )}
+              {topPage?.type === "player" && (
+                <PlayerProfileById
+                  key={topPage.key}
+                  playerId={topPage.playerId}
+                  onBack={() => popPages()}
+                  refreshKey={gamesVersion}
+                  onOpenGame={openGame}
+                  onOpenPlayer={openPlayer}
+                  onOpenTournament={openTournament}
+                  onOpenLocker={openLocker}
+                />
+              )}
+              {topPage?.type === "locker" && (
+                <LockerView
+                  key={topPage.key}
+                  onBack={() => popPages()}
+                  onOpenCauldron={() => pushPage({ type: "cauldron" })}
+                />
+              )}
+              {topPage?.type === "cauldron" && (
+                <CauldronView key={topPage.key} onBack={() => popPages()} onOpenLocker={() => popPages()} />
+              )}
+              {topPage?.type === "edit" && (
+                <EditGamePage
+                  key={topPage.key}
+                  gameId={topPage.gameId}
+                  onBack={() => popPages()}
+                  onSaved={() => {
+                    setGamesVersion((v) => v + 1);
+                    popPages();
+                  }}
+                  // The game is gone, so skip its details page too.
+                  onDeleted={() => {
+                    setGamesVersion((v) => v + 1);
+                    popPages(2);
+                  }}
+                />
+              )}
+            </ErrorBoundary>
           )}
           <VersionBadge />
         </div>

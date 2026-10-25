@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 import { TOURNAMENT_MATCH_EMBED, tournamentTagFor } from "../lib/tournamentGameTag.js";
 
@@ -121,9 +121,12 @@ export function partnerStats(games) {
 // are both fully public (migrations 20261002151652/20261002204815), so this
 // works for any player, not just the signed-in user, and needs no auth.
 // `refreshKey` changing (e.g. after an admin edits or deletes a game) refetches.
+// `error` means the fetch failed (not "no games"); `retry` tries again.
 export function usePlayerGames(playerId, refreshKey) {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(Boolean(playerId));
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!playerId || !isSupabaseConfigured) {
@@ -133,6 +136,7 @@ export function usePlayerGames(playerId, refreshKey) {
     }
     let cancelled = false;
     setLoading(true);
+    setError(false);
 
     (async () => {
       try {
@@ -183,7 +187,10 @@ export function usePlayerGames(playerId, refreshKey) {
         setGames(mapped);
       } catch (e) {
         console.error("Failed to fetch player game history from Supabase:", e);
-        if (!cancelled) setGames([]);
+        if (!cancelled) {
+          setGames([]);
+          setError(true);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -192,7 +199,8 @@ export function usePlayerGames(playerId, refreshKey) {
     return () => {
       cancelled = true;
     };
-  }, [playerId, refreshKey]);
+  }, [playerId, refreshKey, attempt]);
 
-  return { games, loading };
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+  return { games, loading, error, retry };
 }

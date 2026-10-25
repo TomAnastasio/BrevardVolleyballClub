@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card } from "@heroui/react";
 import LoadingMeteor from "./LoadingMeteor.jsx";
+import LoadError from "./LoadError.jsx";
 import RankBadge from "./RankBadge.jsx";
 import { rankTitle } from "../lib/rankTitle.js";
 import { useAuth } from "../hooks/useAuth.js";
@@ -17,7 +18,7 @@ function PlayerAvatar({ src }) {
 
 export default function LeaderboardView({ onBack, onSelectPlayer }) {
   const { user, isConfigured } = useAuth();
-  const { players, loading } = useLeaderboard(isConfigured);
+  const { players, loading, error, retry } = useLeaderboard(isConfigured);
   const [showUnranked, setShowUnranked] = useState(false);
 
   const ranked = players.filter((p) => p.elo_games_played > 0);
@@ -50,6 +51,8 @@ export default function LeaderboardView({ onBack, onSelectPlayer }) {
             <LoadingMeteor />
             <p className="m-0 text-center text-muted">Loading rankings…</p>
           </div>
+        ) : error && players.length === 0 ? (
+          <LoadError what="the rankings" onRetry={retry} />
         ) : players.length === 0 ? (
           <p className="p-6 text-center text-muted">No ranked games played yet.</p>
         ) : (

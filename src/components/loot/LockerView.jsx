@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LoadingMeteor from "../LoadingMeteor.jsx";
 import LootHeader from "./LootHeader.jsx";
+import LoadError from "../LoadError.jsx";
 import ArtLoadError from "./ArtLoadError.jsx";
 import PixelCanvas from "../../avatar/PixelCanvas.jsx";
 import { CLOSE_UP, paintCloseUp, paintStage } from "../../avatar/stage.js";
@@ -22,7 +23,7 @@ const TABS = [
 // that slot. Tapping a tile wears it and saves straight away.
 export default function LockerView({ onBack, onOpenCauldron }) {
   const { user } = useAuth();
-  const { tokens, items, outfit, loading, error, wear: saveWear, changeLook: saveLook } = useMyLoot(user?.id);
+  const { tokens, items, outfit, loading, error, retry, wear: saveWear, changeLook: saveLook } = useMyLoot(user?.id);
   const { art, error: artError, retry: retryArt } = useItemArtStatus();
   const [tab, setTab] = useState(null);
   const [saveError, setSaveError] = useState("");
@@ -81,7 +82,7 @@ export default function LockerView({ onBack, onOpenCauldron }) {
         <h1 className="m-0 text-2xl font-bold">Locker</h1>
 
         {error ? (
-          <p className="p-6 text-center text-muted">{error}</p>
+          <LoadError what="your items" onRetry={retry} />
         ) : artError ? (
           <ArtLoadError onRetry={retryArt} />
         ) : loading || !art ? (

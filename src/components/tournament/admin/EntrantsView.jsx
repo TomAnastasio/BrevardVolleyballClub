@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, Card } from "@heroui/react";
 import PlayerSearchField from "../../game/PlayerSearchField.jsx";
 import { usePlayerDirectory } from "../../../hooks/usePlayerDirectory.js";
+import LoadError from "../../LoadError.jsx";
 import {
   addDivision,
   deleteDivision,
@@ -231,7 +232,7 @@ function MergeDivision({ division, divisions, reload, setError }) {
 
 export default function EntrantsView({ model, reload, onImport }) {
   const { divisions, profilesById } = model;
-  const directory = usePlayerDirectory(true);
+  const { players: directory, failed: directoryFailed, retry: retryDirectory } = usePlayerDirectory(true);
   const [contacts, setContacts] = useState(new Map());
   const [filter, setFilter] = useState("");
   const [error, setError] = useState("");
@@ -359,6 +360,7 @@ export default function EntrantsView({ model, reload, onImport }) {
 
       <Card className="gap-2 p-3">
         <p className="m-0 font-bold">Add a walk-up player</p>
+        {directoryFailed && <LoadError what="the player list" onRetry={retryDirectory} className="py-3" />}
         <PlayerSearchField
           value={addName}
           onChange={(name, _avatar, id) => {
