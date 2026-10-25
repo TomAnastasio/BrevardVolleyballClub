@@ -142,9 +142,16 @@ function PlayerLookup({ directory, onAdded }) {
 // runs the existing "Recompute Elo Ratings" button, same as that
 // migration's reasoning.
 export default function MergeProfilesView() {
-  const fetchedDirectory = usePlayerDirectory(true);
+  // Reloaded after each merge. Until the reload lands, profiles added here
+  // are listed from memory and merged-away ones are hidden.
+  const [reloadKey, setReloadKey] = useState(0);
+  const fetchedDirectory = usePlayerDirectory(true, reloadKey);
   const [addedProfiles, setAddedProfiles] = useState([]);
-  const directory = useMemo(() => [...fetchedDirectory, ...addedProfiles], [fetchedDirectory, addedProfiles]);
+  const [mergedAwayIds, setMergedAwayIds] = useState([]);
+  const directory = useMemo(() => {
+    const byId = new Map([...addedProfiles, ...fetchedDirectory].map((p) => [p.id, p]));
+    return [...byId.values()].filter((p) => !mergedAwayIds.includes(p.id));
+  }, [fetchedDirectory, addedProfiles, mergedAwayIds]);
   const manualDirectory = useMemo(() => directory.filter((p) => p.is_manual), [directory]);
   const keepDirectory = directory;
 
@@ -182,6 +189,8 @@ export default function MergeProfilesView() {
         p_remove_id: removeProfile.id,
       });
       if (error) throw error;
+      setMergedAwayIds((prev) => [...prev, removeProfile.id]);
+      setReloadKey((k) => k + 1);
       setStatus("done");
       reset();
     } catch (e) {

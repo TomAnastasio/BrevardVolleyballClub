@@ -26,25 +26,37 @@ export default function ProfilePhotoEditor({ avatarUrl, onSaved }) {
   useEffect(() => () => photo && URL.revokeObjectURL(photo.previewUrl), [photo]);
 
   // Each time the sheet closes (saved, cancelled, or swiped away), start
-  // fresh next time it opens.
+  // fresh next time it opens. Closing means "never mind", so a photo still
+  // being prepared when it closed is thrown away (`session` moves on).
+  const session = useRef(0);
   useEffect(() => {
     if (sheet.isOpen) return;
+    session.current += 1;
     setPhoto(null);
     setStatus("idle");
     setError("");
   }, [sheet.isOpen]);
+  useEffect(
+    () => () => {
+      session.current += 1; // left the page mid-way: no preview (or object URL) after that
+    },
+    [],
+  );
 
   async function handleFileChosen(e) {
     const file = e.target.files?.[0];
     // Clear so choosing the same file again still fires a change event.
     e.target.value = "";
     if (!file) return;
+    const started = session.current;
     setError("");
     setStatus("processing");
     try {
       const blob = await prepareProfilePhoto(file);
+      if (session.current !== started) return;
       setPhoto({ blob, previewUrl: URL.createObjectURL(blob) });
     } catch (err) {
+      if (session.current !== started) return;
       if (!(err instanceof ProfilePhotoError)) console.error("Failed to prepare profile photo:", err);
       setError(err instanceof ProfilePhotoError ? err.message : "Couldn't use that photo. Please try another.");
     }

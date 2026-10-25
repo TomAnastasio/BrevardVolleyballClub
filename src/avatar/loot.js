@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient.js";
+import { addSave, applySaves, confirmSave, dropSave, settleSaves } from "./outfitSaves.js";
 
 // Tokens, owned items and outfits (migration 20261024200000; how they work
 // is in README "Tokens"). Everything that changes them goes through the
@@ -33,15 +34,16 @@ const outfitKeys = (o) => (o ? [o.head, o.shirt, o.pants, o.shoes, o.transformat
 
 // Anyone's outfit (outfits are public) with the names of what they wear:
 // { outfit: { head, shirt, ... } | null, names: Map key -> { name, tier }, loading }.
+// What's loaded is kept with the id it belongs to, so switching players
+// shows "loading" rather than the previous player's outfit.
+const NO_OUTFIT = { outfit: null, names: new Map(), loading: false };
+const LOADING_OUTFIT = { outfit: null, names: new Map(), loading: true };
 export function usePlayerOutfit(playerId) {
   const v = useLootVersion();
-  const [state, setState] = useState({ outfit: null, names: new Map(), loading: true });
+  const [state, setState] = useState({ forId: null, outfit: null, names: new Map() });
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !playerId) {
-      setState({ outfit: null, names: new Map(), loading: false });
-      return undefined;
-    }
+    if (!isSupabaseConfigured || !playerId) return undefined;
     let cancelled = false;
     (async () => {
       const { data: outfit, error } = await supabase.from("player_outfits").select(OUTFIT_COLUMNS).eq("player_id", playerId).maybeSingle();
@@ -53,28 +55,37 @@ export function usePlayerOutfit(playerId) {
         if (namesError) console.error("Failed to load item names:", namesError);
         names = new Map((rows || []).map((r) => [r.key, r]));
       }
-      if (!cancelled) setState({ outfit: outfit || null, names, loading: false });
+      if (!cancelled) setState({ forId: playerId, outfit: outfit || null, names });
     })();
     return () => {
       cancelled = true;
     };
   }, [playerId, v]);
 
-  return state;
+  if (!isSupabaseConfigured || !playerId) return NO_OUTFIT;
+  if (state.forId !== playerId) return LOADING_OUTFIT;
+  return { outfit: state.outfit, names: state.names, loading: false };
 }
 
 // The signed-in player's own tokens, items and outfit.
 // items: [{ key, name, slot, tier, isNew }], newest first.
+// The outfit is what was last fetched with the Locker's unconfirmed changes
+// on top (see outfitSaves.js); wear() and changeLook() make a change, show
+// it at once and save it, one save after another so the last tap wins. They
+// reject if that save failed (its change is then undone on screen).
 export function useMyLoot(userId) {
   const v = useLootVersion();
-  const [state, setState] = useState({ tokens: null, items: [], outfit: null, loading: true, error: "" });
+  // What's loaded is kept with the id it belongs to (see usePlayerOutfit).
+  const [state, setState] = useState({ forId: null, tokens: null, items: [], outfit: null, error: "" });
+  const [saves, setSaves] = useState([]);
+  const fetchCount = useRef(0);
+  const saveCount = useRef(0);
+  const queue = useRef(Promise.resolve());
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !userId) {
-      setState({ tokens: null, items: [], outfit: null, loading: false, error: "" });
-      return undefined;
-    }
+    if (!isSupabaseConfigured || !userId) return undefined;
     let cancelled = false;
+    const seq = ++fetchCount.current;
     (async () => {
       const [tokens, items, outfit] = await Promise.all([
         supabase.rpc("my_tokens"),
@@ -87,23 +98,69 @@ export function useMyLoot(userId) {
       ]);
       if (cancelled) return;
       const failed = tokens.error || items.error || outfit.error;
-      if (failed) console.error("Failed to load tokens/items:", failed);
+      if (failed) {
+        console.error("Failed to load tokens/items:", failed);
+        // A failed refresh keeps what's already on screen.
+        setState((s) => (s.forId === userId ? s : { forId: userId, tokens: null, items: [], outfit: null, error: "Couldn't load your items. Try again." }));
+        return;
+      }
       setState({
+        forId: userId,
         tokens: tokens.data?.balance ?? null,
         items: (items.data || []).map((r) => ({ key: r.item_key, ...r.cosmetic_items, isNew: !r.seen_at })),
         outfit: outfit.data || null,
-        loading: false,
-        error: failed ? "Couldn't load your items. Try again." : "",
+        error: "",
       });
+      setSaves((list) => settleSaves(list, seq));
     })();
     return () => {
       cancelled = true;
     };
   }, [userId, v]);
 
-  // For instant feedback before the database confirms (the Locker).
-  const setOutfit = useCallback((outfit) => setState((s) => ({ ...s, outfit })), []);
-  return { ...state, setOutfit };
+  const save = useCallback(
+    (change, fn, args) => {
+      const id = ++saveCount.current;
+      setSaves((list) => addSave(list, id, change, userId));
+      const run = queue.current.then(() => call(fn, args));
+      queue.current = run.catch(() => {});
+      return run.then(
+        () => {
+          // The next fetch to start includes this change.
+          const from = fetchCount.current + 1;
+          setSaves((list) => confirmSave(list, id, from));
+          lootChanged();
+        },
+        (err) => {
+          setSaves((list) => dropSave(list, id));
+          lootChanged();
+          throw err;
+        },
+      );
+    },
+    [userId],
+  );
+  // Wear something (key) or take the slot off (null; slot "transformation"
+  // means "Back to my outfit").
+  const wear = useCallback(
+    (slot, key) => save((o) => outfitAfter(o, slot, key), key ? "equip_item" : "unequip", key ? { p_key: key } : { p_slot: slot }),
+    [save],
+  );
+  // Avatar 1 or 2 and skin color 1-4 (free, migration 20261024230000).
+  const changeLook = useCallback(
+    (avatar, skin) => save((o) => ({ ...o, avatar, skin }), "set_look", { p_avatar: avatar, p_skin: skin }),
+    [save],
+  );
+
+  const current = state.forId === userId;
+  const outfit = useMemo(
+    () => (current ? applySaves(state.outfit, saves.filter((s) => s.userId === userId)) : null),
+    [current, state.outfit, saves, userId],
+  );
+
+  if (!isSupabaseConfigured || !userId) return { tokens: null, items: [], outfit: null, loading: false, error: "", wear, changeLook };
+  if (!current) return { tokens: null, items: [], outfit: null, loading: true, error: "", wear, changeLook };
+  return { tokens: state.tokens, items: state.items, outfit, loading: false, error: state.error, wear, changeLook };
 }
 
 async function call(fn, args) {
@@ -119,18 +176,9 @@ export async function brew() {
   lootChanged();
   return result;
 }
+// The Cauldron's "Wear it" (the Locker uses useMyLoot's wear()).
 export async function equipItem(key) {
   await call("equip_item", { p_key: key });
-  lootChanged();
-}
-// slot "transformation" means "Back to my outfit".
-export async function unequip(slot) {
-  await call("unequip", { p_slot: slot });
-  lootChanged();
-}
-// Avatar 1 or 2 and skin color 1-4 (free, migration 20261024230000).
-export async function setLook(avatar, skin) {
-  await call("set_look", { p_avatar: avatar, p_skin: skin });
   lootChanged();
 }
 export async function markItemsSeen() {

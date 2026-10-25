@@ -9,6 +9,8 @@ import { DEFAULT_LOOK } from "../../avatar/engine.js";
 import { brew, equipItem, TIER_COLOR, TIER_LABEL, useMyLoot } from "../../avatar/loot.js";
 import { useAuth } from "../../hooks/useAuth.js";
 
+const ART_WAIT_MS = 8000;
+
 // The Cauldron: spend 1 token on one pull. The database rolls the prize
 // (brew()); this screen plays the animation and shows what came out.
 export default function CauldronView({ onBack, onOpenLocker }) {
@@ -29,7 +31,7 @@ export default function CauldronView({ onBack, onOpenLocker }) {
   const shownTokens = balance ?? tokens;
 
   useEffect(() => {
-    loadItemArt(); // start fetching the art before the first brew needs it
+    loadItemArt().catch(() => {}); // start fetching the art before the first brew needs it (a brew retries if this fails)
     const ctx = canvasRef.current.getContext("2d");
     let raf;
     let last = performance.now();
@@ -53,18 +55,32 @@ export default function CauldronView({ onBack, onOpenLocker }) {
     setPhase("brewing");
     const c = cauldron.current;
     c.start();
+    // On a crawling connection the picture may never arrive; after a few
+    // seconds, reveal the prize plain rather than brew forever.
+    const art = Promise.race([
+      loadItemArt(),
+      new Promise((resolve) => setTimeout(() => resolve(null), ART_WAIT_MS)),
+    ]).catch((err) => {
+      console.error("Failed to load item art:", err);
+      return null;
+    });
+    let result;
     try {
-      const [result, art] = await Promise.all([brew(), loadItemArt()]);
-      const item = art.get(result.key)?.item ?? null;
-      setBalance(result.balance);
-      setPrize({ ...result, item, look });
-      c.setPrize(result.tier, result.slot === "transformation" ? { transformation: item } : { [result.slot]: item, look }, reduced);
+      result = await brew();
     } catch (err) {
       console.error("Brew failed:", err);
       c.reset();
       setPhase("idle");
       setMessage(err?.message || "Couldn't brew. Try again.");
+      return;
     }
+    // The token is spent and the item is yours from here on, so always show
+    // it, even if its picture couldn't load (it's drawn plain, with its name
+    // and tier on the card).
+    setBalance(result.balance);
+    const item = (await art)?.get(result.key)?.item ?? null;
+    setPrize({ ...result, item, look, noArt: !item });
+    c.setPrize(result.tier, result.slot === "transformation" ? { transformation: item, look } : { [result.slot]: item, look }, reduced);
   }
 
   async function wearIt() {
@@ -159,7 +175,9 @@ function PrizeCard({ prize }) {
           {TIER_LABEL[prize.tier]}
         </span>
         <span className="font-bold">{prize.name}</span>
-        <span className="text-xs text-muted">New in your Locker</span>
+        <span className="text-xs text-muted">
+          {prize.noArt ? "New in your Locker (its picture didn't load; reload the app to see it)" : "New in your Locker"}
+        </span>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { STUB } from "./harness.mjs";
 let pass = 0, fail = 0;
 const ok = (c, w) => { if (c) pass++; else { fail++; console.log("FAIL:", w); } };
 const eq = (a, b, w) => ok(JSON.stringify(a) === JSON.stringify(b), `${w}: got ${JSON.stringify(a)}, want ${JSON.stringify(b)}`);
-const dir = "/workspace/supabase/migrations";
+const dir = new URL("../migrations", import.meta.url).pathname;
 const GIFT = "20261024235000_gift_10_tokens.sql";
 const db = new PGlite();
 await db.exec(STUB);

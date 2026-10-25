@@ -5,8 +5,9 @@ import { supabase } from "../lib/supabaseClient.js";
 // account). Used to power the ranked-game player
 // search so ranked participants can be picked from known accounts instead
 // of free-typed. Only fetched when `enabled` (ranked beach games), since
-// `profiles` is only readable to signed-in users.
-export function usePlayerDirectory(enabled) {
+// `profiles` is only readable to signed-in users. Changing `reloadKey`
+// fetches the list again (e.g. after Merge Profiles deletes one).
+export function usePlayerDirectory(enabled, reloadKey = 0) {
   const [players, setPlayers] = useState([]);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export function usePlayerDirectory(enabled) {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, reloadKey]);
 
   return players;
 }

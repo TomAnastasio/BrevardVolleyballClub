@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LoadingMeteor from "../LoadingMeteor.jsx";
 import LootHeader from "./LootHeader.jsx";
+import ArtLoadError from "./ArtLoadError.jsx";
 import PixelCanvas from "../../avatar/PixelCanvas.jsx";
 import { CLOSE_UP, paintCloseUp, paintStage } from "../../avatar/stage.js";
-import { gearFor, useItemArt } from "../../avatar/itemArt.js";
-import { equipItem, markItemsSeen, outfitAfter, setLook, TIER_COLOR, TIER_LABEL, TIERS, unequip, useMyLoot } from "../../avatar/loot.js";
+import { gearFor, useItemArtStatus } from "../../avatar/itemArt.js";
+import { markItemsSeen, TIER_COLOR, TIER_LABEL, TIERS, useMyLoot } from "../../avatar/loot.js";
 import { DEFAULT_LOOK, SKIN_TONES } from "../../avatar/engine.js";
 import { useAuth } from "../../hooks/useAuth.js";
 
@@ -21,11 +22,10 @@ const TABS = [
 // that slot. Tapping a tile wears it and saves straight away.
 export default function LockerView({ onBack, onOpenCauldron }) {
   const { user } = useAuth();
-  const { tokens, items, outfit, loading, error, setOutfit } = useMyLoot(user?.id);
-  const art = useItemArt();
+  const { tokens, items, outfit, loading, error, wear: saveWear, changeLook: saveLook } = useMyLoot(user?.id);
+  const { art, error: artError, retry: retryArt } = useItemArtStatus();
   const [tab, setTab] = useState(null);
   const [saveError, setSaveError] = useState("");
-  const queue = useRef(Promise.resolve());
 
   // Open on the tab of the newest NEW item, if there is one.
   const shownTab = tab ?? items.find((i) => i.isNew)?.slot ?? "head";
@@ -48,23 +48,24 @@ export default function LockerView({ onBack, onOpenCauldron }) {
   const skin = outfit?.skin ?? DEFAULT_LOOK.skin;
   const look = useMemo(() => ({ avatar, skin }), [avatar, skin]);
 
-  // The picture changes at once; saves run one after another so the last
-  // tap wins.
-  function save(next, request) {
-    const before = outfit;
+  // The picture changes at once and the last tap wins (useMyLoot). A save
+  // that fails undoes only its own change, and says which one.
+  function save(request, failMessage) {
     setSaveError("");
-    setOutfit(next);
-    queue.current = queue.current.then(request).catch((err) => {
+    request.catch((err) => {
       console.error("Failed to change outfit:", err);
-      setOutfit(before);
-      setSaveError("Couldn't save that change. Try again.");
+      setSaveError(`${failMessage} Try again.`);
     });
   }
   // Wear something (key) or take the slot off (null).
-  const wear = (slot, key) => save(outfitAfter(outfit, slot, key), () => (key ? equipItem(key) : unequip(slot)));
+  const wear = (slot, key) => {
+    const name = key && items.find((i) => i.key === key)?.name;
+    const what = name ? `Couldn't put on ${name}.` : slot === "transformation" ? "Couldn't change back to your outfit." : "Couldn't take that off.";
+    save(saveWear(slot, key), what);
+  };
   const changeLook = (change) => {
     const next = { ...look, ...change };
-    save({ ...outfit, ...next }, () => setLook(next.avatar, next.skin));
+    save(saveLook(next.avatar, next.skin), change.skin ? "Couldn't change your skin color." : "Couldn't change your avatar.");
   };
 
   const monster = outfit?.transformation ? items.find((i) => i.key === outfit.transformation) : null;
@@ -79,13 +80,15 @@ export default function LockerView({ onBack, onOpenCauldron }) {
       <div className="flex flex-col gap-3 px-3 pb-6">
         <h1 className="m-0 text-2xl font-bold">Locker</h1>
 
-        {loading || !art ? (
+        {error ? (
+          <p className="p-6 text-center text-muted">{error}</p>
+        ) : artError ? (
+          <ArtLoadError onRetry={retryArt} />
+        ) : loading || !art ? (
           <div className="flex flex-col items-center gap-3 p-6">
             <LoadingMeteor />
             <p className="m-0 text-center text-muted">Opening your locker…</p>
           </div>
-        ) : error ? (
-          <p className="p-6 text-center text-muted">{error}</p>
         ) : (
           <>
             <PixelCanvas width={56} height={38} paint={paint} label="Your avatar" className="w-full rounded-2xl border border-white/10" />

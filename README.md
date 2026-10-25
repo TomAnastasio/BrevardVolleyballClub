@@ -102,10 +102,15 @@ a one-time gift of 10 tokens (`token_gifts`, migration
   Tapping a tile wears it and saves at once; **Plain** takes a slot off. A
   monster covers your whole outfit; **Back to my outfit** (or wearing any
   clothing) switches it off. NEW badges clear when you leave the Locker.
+  Quick taps always end on the last one; if a save fails, just that change
+  is undone and a message says which. If the item pictures can't download
+  (a bad connection, or the app was updated while open), the Locker offers
+  **Try again** and **Reload app** instead of loading forever.
 - **Cauldron** (from the Locker): 1 token = 1 brew. The database rolls the
   prize, always something you don't own yet (odds in `pull_odds`). The token
   drops in, the brew climbs through the tier colors, a geyser carries the
-  prize up, then **Wear it** puts it on.
+  prize up, then **Wear it** puts it on. Once the token is spent the prize
+  is always shown, with its name and tier even if its picture didn't load.
 
 Code: screens in `src/components/loot/`, data calls in `src/avatar/loot.js`,
 item art in `src/avatar/art/` (loaded on demand, keyed by the database's
@@ -230,7 +235,21 @@ then preview and save it. The phone center-crops it to a square, shrinks it
 to 512px, and strips its metadata (e.g. GPS location) before uploading to
 their own folder in the `profile-photos` storage bucket. Players can only
 ever change their own photo, never anyone else's — see migration
-`20261022120000_players_set_own_profile_photo.sql`.
+`20261022120000_players_set_own_profile_photo.sql`. Closing the sheet
+means "never mind": a photo still being prepared is dropped. Admin
+**Add Manual Profile** photos get the same crop, shrink and metadata strip.
+The bucket only accepts JPEG, PNG or WebP images up to 2 MB (a prepared
+photo is a few hundred KB at most), and a player's photo link must point at
+this app's own Supabase project
+(`20261025030000_profile_names_and_photo_limits.sql`).
+
+### Player names
+
+Every profile has a name; the database refuses a blank one. A new Google
+account takes its Google name, or **New player** if Google gives none (never
+the email address, since profiles are public); older nameless profiles were
+given it too. An admin can rename anyone from their profile page. Even so, your own profile, Locker and Cauldron never depend on having
+a name.
 
 ### Admin tools
 
@@ -261,7 +280,7 @@ contains:
   already exists: matching players show up tagged Google or Manual, and if
   nobody has exactly that name, **+ Add "Name" as a new player** creates them
   as a manual profile on the spot (name only; use Add Manual Profile for a
-  photo).
+  photo). After a merge the lists reload, so the removed profile is gone.
 
 Admins also see an **Admin only** box on every player's profile (open a
 player from Rankings): their sign-in email, how they sign in, when they

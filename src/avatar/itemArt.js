@@ -1,29 +1,56 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_LOOK } from "./engine.js";
+
+// Runs load() once and shares the result, but forgets a failure so the next
+// call tries again (a network blip shouldn't break a screen until reload).
+export function shareUntilFailure(load) {
+  let promise = null;
+  return () => {
+    promise ??= load().catch((err) => {
+      promise = null;
+      throw err;
+    });
+    return promise;
+  };
+}
 
 // The item art (./art) is a few hundred KB of drawing code, so it's loaded
 // on demand the first time a screen needs it, then shared.
-let artPromise = null;
-export function loadItemArt() {
-  artPromise ??= import("./art/index.js").then((m) => m.ART);
-  return artPromise;
-}
+export const loadItemArt = shareUntilFailure(() => import("./art/index.js").then((m) => m.ART));
 
-// The art map once it has loaded (null until then). Pass false to hold off
-// loading it (e.g. nobody on screen wears anything).
-export function useItemArt(enabled = true) {
-  const [art, setArt] = useState(null);
+// { art, error, retry }: the art map once it has loaded (null until then),
+// the error if loading failed, and a way to try again. Pass false to hold
+// off loading it (e.g. nobody on screen wears anything).
+export function useItemArtStatus(enabled = true) {
+  const [state, setState] = useState({ art: null, error: null });
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     if (!enabled) return undefined;
     let cancelled = false;
-    loadItemArt().then((a) => {
-      if (!cancelled) setArt(a);
-    });
+    loadItemArt().then(
+      (art) => {
+        if (!cancelled) setState({ art, error: null });
+      },
+      (error) => {
+        console.error("Failed to load item art:", error);
+        if (!cancelled) setState((s) => ({ ...s, error }));
+      },
+    );
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
-  return art;
+  }, [enabled, attempt]);
+  const retry = useCallback(() => {
+    setState((s) => ({ ...s, error: null }));
+    setAttempt((n) => n + 1);
+  }, []);
+  return { ...state, retry };
+}
+
+// Just the art map, for screens that only show avatars: until it loads (or
+// if it can't), items are drawn plain.
+export function useItemArt(enabled = true) {
+  return useItemArtStatus(enabled).art;
 }
 
 export const SLOTS = ["head", "shirt", "pants", "shoes"];

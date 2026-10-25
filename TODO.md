@@ -91,6 +91,8 @@ assumptions above are settled.
   10-token gift was one time only; another gift is the owner's call (how:
   `supabase/README.md` "Tokens and items"). The design branch
   `claude/gacha-avatars-design` stays separate from `main`, not merged.
+- A profile can't be created or saved without a name (2026-10-25); the
+  fallback is "New player", never the email address.
 
 ## Testing gaps
 
@@ -103,6 +105,10 @@ covered, most valuable first:
 3. **Delete Game** (admin, in `EditGameScreen.jsx`).
 4. Indoor 6v6 games; the admin-only contact box on profiles (checked by
    hand 2026-10-22).
+5. Not yet checked on staging (20261025030000): an upload over 2 MB or of a
+   non-image is refused by the bucket; saving a profile photo still works
+   (the link must match the sign-in token's project); any "New player"
+   profiles the backfill created want a real name from an admin.
 
 CI: the Tests workflow's e2e step has failed on every push since
 2026-10-20, because the staging URL/key and bot logins live only in

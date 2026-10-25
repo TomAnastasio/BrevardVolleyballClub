@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@heroui/react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { sanitizeName } from "../../lib/sanitizeName.js";
-
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+import { ProfilePhotoError, prepareProfilePhoto } from "../../lib/profilePhoto.js";
 
 function nameInputClass(hasError) {
   const base =
@@ -15,12 +14,23 @@ function nameInputClass(hasError) {
 
 export default function AddManualProfileView({ onDone }) {
   const [name, setName] = useState("");
+  // The photo as it will be uploaded: cropped, resized JPEG with the
+  // camera's GPS/EXIF data stripped (same prep as a player's own photo).
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [photoError, setPhotoError] = useState("");
+  const [preparing, setPreparing] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
+  // Only the latest photo choice counts (and none after leaving the screen).
+  const choice = useRef(0);
+  useEffect(
+    () => () => {
+      choice.current += 1;
+    },
+    [],
+  );
 
   // The object URL is only valid for the lifetime of this component/file
   // selection — revoke the old one whenever it's replaced or on unmount so
@@ -32,38 +42,35 @@ export default function AddManualProfileView({ onDone }) {
   }, [previewUrl]);
 
   const trimmedName = sanitizeName(name, "");
-  const canSave = Boolean(trimmedName) && !photoError && !saving;
+  const canSave = Boolean(trimmedName) && !photoError && !preparing && !saving;
 
-  function handlePhotoChange(e) {
+  function showPhoto(blob) {
+    setFile(blob);
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return blob ? URL.createObjectURL(blob) : null;
+    });
+  }
+
+  async function handlePhotoChange(e) {
     const selected = e.target.files?.[0] || null;
     e.target.value = "";
     if (!selected) return;
 
-    if (!selected.type.startsWith("image/")) {
-      setPhotoError("Please choose an image file.");
-      setFile(null);
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
-      return;
-    }
-    if (selected.size > MAX_PHOTO_BYTES) {
-      setPhotoError("Photo must be smaller than 5MB.");
-      setFile(null);
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
-      return;
-    }
-
+    const mine = ++choice.current;
     setPhotoError("");
-    setFile(selected);
-    setPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(selected);
-    });
+    setPreparing(true);
+    showPhoto(null);
+    try {
+      const blob = await prepareProfilePhoto(selected);
+      if (choice.current !== mine) return;
+      showPhoto(blob);
+    } catch (err) {
+      if (choice.current !== mine) return;
+      if (!(err instanceof ProfilePhotoError)) console.error("Failed to prepare photo:", err);
+      setPhotoError(err instanceof ProfilePhotoError ? err.message : "Couldn't use that photo. Please try another.");
+    }
+    setPreparing(false);
   }
 
   async function handleSave() {
@@ -77,8 +84,11 @@ export default function AddManualProfileView({ onDone }) {
     // same as it does for any other profile with no photo.
     let avatarUrl = null;
     if (file) {
-      const path = `manual/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-      const { error: uploadError } = await supabase.storage.from("profile-photos").upload(path, file);
+      const path = `manual/${crypto.randomUUID()}.jpg`;
+      const { error: uploadError } = await supabase.storage.from("profile-photos").upload(path, file, {
+        contentType: "image/jpeg",
+        cacheControl: "31536000",
+      });
       if (uploadError) {
         setSaveError("Couldn't upload photo. Please try again.");
         setSaving(false);
@@ -136,6 +146,7 @@ export default function AddManualProfileView({ onDone }) {
           >
             {file ? "Choose a different photo" : "Choose photo (optional)"}
           </button>
+          {preparing && <p className="text-center text-xs text-muted">Preparing photo…</p>}
           {photoError && (
             <p role="alert" className="text-center text-xs font-semibold text-red-400">
               {photoError}
