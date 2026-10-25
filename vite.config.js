@@ -22,7 +22,8 @@ export default defineConfig({
       VITE_SUPABASE_URL: "",
       VITE_SUPABASE_ANON_KEY: "",
     },
-    // e2e/ holds Playwright specs, run via `npm run test:e2e`, not Vitest.
-    exclude: ["**/node_modules/**", "**/e2e/**"],
+    // e2e/ holds Playwright specs (`npm run test:e2e`) and supabase/tests/
+    // the database scenario tests (`npm run test:db`), not Vitest.
+    exclude: ["**/node_modules/**", "**/e2e/**", "**/supabase/tests/**", "**/.claude/**"],
   },
 });
