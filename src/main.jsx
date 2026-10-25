@@ -7,6 +7,7 @@ import { activeTheme, applyTheme } from "./themes/activeTheme.js";
 import { clearJoinParam, consumeJustJoined, isJoinRequested } from "./lib/joinLink.js";
 import { consumePendingTournament, readTournamentParam } from "./lib/tournamentLink.js";
 import { consumePendingMyProfile } from "./lib/pendingMyProfile.js";
+import { startGameUploader } from "./lib/gameUploader.js";
 
 // Read once, outside React, since both are one-shot: `?join` is stripped from
 // the address bar and the post-sign-in breadcrumb is consumed.
@@ -21,6 +22,10 @@ const myProfileRequested = consumePendingMyProfile();
 
 // Seasonal skin, if one is on today (see src/themes/activeTheme.js).
 applyTheme(activeTheme);
+
+// Uploads games saved on this phone that haven't reached the server yet,
+// whichever screen is open (see src/lib/gameUploader.js).
+startGameUploader();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

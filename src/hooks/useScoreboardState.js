@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_COLOR_A, DEFAULT_COLOR_B } from "../lib/teamColors.js";
 import { normalizeMode } from "../lib/gameMode.js";
+import { MAX_NAME_LENGTH } from "../lib/sanitizeName.js";
 import {
   addPoint,
   isSwitchPoint,
@@ -65,7 +66,8 @@ function loadState() {
       state.teamBPlayers = sanitizeRoster(saved.teamBPlayers);
     } else {
       for (const key of Object.keys(NAME_FIELDS)) {
-        state[key] = typeof saved[key] === "string" && saved[key].trim() ? saved[key] : NAME_FIELDS[key];
+        state[key] =
+          typeof saved[key] === "string" && saved[key].trim() ? saved[key].slice(0, MAX_NAME_LENGTH) : NAME_FIELDS[key];
       }
       state.playerIdA1 = typeof saved.playerIdA1 === "string" ? saved.playerIdA1 : null;
       state.playerIdA2 = typeof saved.playerIdA2 === "string" ? saved.playerIdA2 : null;
@@ -128,7 +130,8 @@ export function useScoreboardState() {
     setState((prev) => {
       if (usesRosterFor(prev.format, prev.teamSize)) return prev; // rosters replace editable team names
       const key = `name${team === "a" ? "A" : "B"}${slot}`;
-      return { ...prev, [key]: name };
+      // Same cap as typing (EditableTeamName), in case a caller skips it.
+      return { ...prev, [key]: String(name).slice(0, MAX_NAME_LENGTH) };
     });
   }, []);
 

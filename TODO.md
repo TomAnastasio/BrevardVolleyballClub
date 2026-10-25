@@ -109,6 +109,18 @@ covered, most valuable first:
    non-image is refused by the bucket; saving a profile photo still works
    (the link must match the sign-in token's project); any "New player"
    profiles the backfill created want a real name from an admin.
+6. **Saving with no signal** (upload queue, `src/lib/gameUploader.js`):
+   Playwright's `context.setOffline(true)`, save a game, check it shows
+   "Waiting to upload", go back online, check it uploads exactly once. The
+   queue logic and `record_game` have unit/database tests, and the browser
+   side (reload, online event, Retry) was checked once against a local
+   stand-in server, not staging.
+
+Known gap, saving games: a game waiting on a phone that includes a
+placeholder player whom an admin merges away before it uploads is refused
+for good ("every player must be a known profile"); the phone shows it as
+not uploaded with Remove. Fix if it ever happens: have merge_profiles note
+old→new ids and record_game follow them.
 
 CI: the Tests workflow's e2e step has failed on every push since
 2026-10-20, because the staging URL/key and bot logins live only in

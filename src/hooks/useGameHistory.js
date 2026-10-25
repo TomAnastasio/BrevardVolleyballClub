@@ -1,8 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "./useAuth.js";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 import { normalizeMode } from "../lib/gameMode.js";
 import { TOURNAMENT_MATCH_EMBED, tournamentTagFor } from "../lib/tournamentGameTag.js";
+import { buildRecordGameArgs, confirmedIds, mergeQueuedIntoHistory, newGameId } from "../lib/gameUploadQueue.js";
+import {
+  confirmQueuedGames,
+  flushQueue,
+  getSnapshot as getUploadSnapshot,
+  queueGame,
+  removeQueuedGame,
+  subscribe as subscribeUploads,
+} from "../lib/gameUploader.js";
 
 const HISTORY_KEY = "bvc-game-history-v1";
 
@@ -84,7 +93,10 @@ function mapRowToRecord(row, submitterProfilesById = {}) {
     date: row.played_date,
     time: row.played_time,
     mode: row.mode,
-    submittedByUserId: row.user_id,
+    // Games saved through record_game record who pressed Save separately
+    // (submitted_by), since a 2v2 beach game's user_id is Player 1, who may
+    // be someone else. Older games only have user_id.
+    submittedByUserId: row.submitted_by ?? row.user_id,
     submittedByName: row.submitted_by_name,
     format: row.format,
     teamSize: row.team_size ?? null,
@@ -132,13 +144,15 @@ export function useGameHistory() {
   // localHistory (which may be stale/pre-signin) and then replacing it with
   // the real remote list a moment later.
   const [remoteLoading, setRemoteLoading] = useState(false);
-  // Set when a background Supabase write in addGame() fails, so the UI can
-  // surface it instead of only logging to console (the pre-0007 outage went
-  // unnoticed for exactly this reason).
+  // Set when addGame() couldn't keep the game safe on the phone, so the UI
+  // can say so instead of only logging to console. Upload trouble itself
+  // shows through the upload queue (`uploads` below), not here.
   const [saveError, setSaveError] = useState(null);
-  // Games inserted via addGame() while a fetch is still in flight, keyed by
-  // id. A fetch that was already in flight when the insert happened can read
-  // a pre-insert snapshot and resolve afterward; without this, its result
+  // Games saved but not yet confirmed by the server (gameUploader.js).
+  const { queue: uploadQueue, uploaded } = useSyncExternalStore(subscribeUploads, getUploadSnapshot);
+  // Games uploaded while a fetch is still in flight, keyed by id. A fetch
+  // that was already in flight when the upload happened can read a
+  // pre-upload snapshot and resolve afterward; without this, its result
   // would blindly replace remoteHistory and silently drop the new game.
   const pendingInsertsRef = useRef(new Map());
 
@@ -193,6 +207,9 @@ export function useGameHistory() {
         }
       }
       setRemoteHistory([...stillPending, ...fetched]);
+      // A queued game the server already has got through even if the phone
+      // never heard back, so it can leave the queue.
+      confirmQueuedGames(confirmedIds(getUploadSnapshot().queue, fetched));
     } catch (e) {
       console.error("Failed to fetch game history from Supabase:", e);
       // Leave remoteHistory as null (not []) so `history` falls back to
@@ -214,6 +231,29 @@ export function useGameHistory() {
     fetchRemoteHistory();
   }, [user?.id, fetchRemoteHistory]);
 
+  // A queued game just uploaded: show it as a normal server game right away
+  // (optimistically, like a fresh save always was) and reload the list so it
+  // picks up player photos and anything else saved meanwhile.
+  const lastUploadedRef = useRef(uploaded[0]);
+  useEffect(() => {
+    if (!uploaded.length || uploaded[0] === lastUploadedRef.current) return;
+    const fresh = [];
+    for (const g of uploaded) {
+      if (g === lastUploadedRef.current) break;
+      fresh.push(g);
+    }
+    lastUploadedRef.current = uploaded[0];
+    for (const g of fresh) pendingInsertsRef.current.set(g.id, g);
+    // (Not when the server list never loaded: Past Games is showing this
+    // phone's own list then, which already has the game.)
+    setRemoteHistory((prev) => {
+      if (prev === null) return prev;
+      const ids = new Set(prev.map((g) => g.id));
+      return [...fresh.filter((g) => !ids.has(g.id)), ...prev];
+    });
+    if (isSupabaseConfigured) fetchRemoteHistory();
+  }, [uploaded, fetchRemoteHistory]);
+
   const addGame = useCallback(
     (game) => {
       const now = new Date();
@@ -228,10 +268,16 @@ export function useGameHistory() {
       // Older cached records predate this field (`synced === undefined`)
       // and are deliberately left out of that merge, since there's no way
       // to tell whether they were already synced before this existed.
+      // A signed-in save instead goes into the upload queue, which keeps it
+      // in Past Games, marked, until the server confirms it.
       const format = game.format || "beach";
       const usesRoster = format === "indoor" || Boolean(game.teamSize);
+      const goesToServer = Boolean(isSupabaseConfigured && user);
+      // Picked once, here: every upload attempt sends this same id, which is
+      // what lets record_game recognize a retry instead of saving it twice.
+      const id = newGameId();
       const record = {
-        id: "game-" + now.getTime(),
+        id,
         nameA: game.nameA,
         nameB: game.nameB,
         a: game.a,
@@ -243,7 +289,9 @@ export function useGameHistory() {
         teamSize: format === "beach" ? game.teamSize ?? null : null,
         teamAPlayers: usesRoster ? game.teamAPlayers || [] : [],
         teamBPlayers: usesRoster ? game.teamBPlayers || [] : [],
-        synced: Boolean(isSupabaseConfigured && user),
+        submittedByUserId: user?.id ?? null,
+        submittedByName: displayName || user?.user_metadata?.full_name || user?.user_metadata?.name || null,
+        synced: goesToServer,
       };
 
       setLocalHistory((prev) => {
@@ -252,142 +300,40 @@ export function useGameHistory() {
         return next;
       });
 
-      if (isSupabaseConfigured && user) {
+      if (goesToServer) {
         setSaveError(null);
-        (async () => {
-          try {
-            const submittedByName =
-              displayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email || "A player";
-
-            const { data, error } = await supabase
-              .from("games")
-              .insert({
-                name_a: game.nameA,
-                name_b: game.nameB,
-                score_a: game.a,
-                score_b: game.b,
-                mode,
-                played_date: date,
-                played_time: time,
-                user_id: user.id,
-                submitted_by_name: submittedByName,
-                format,
-                team_size: format === "beach" ? game.teamSize ?? null : null,
-              })
-              .select()
-              .single();
-            if (error) throw error;
-
-            // Link whichever other-player slots were picked from the known-
-            // player search (not free-typed) to their real profiles, so they
-            // can see this game in their own history too, and so a ranked
-            // game's Elo trigger (migration 0006) knows which team each
-            // linked player was on. A failure here must not undo or block
-            // the game save above — it's a separate insert, logged on its
-            // own.
-            let insertedPlayers = null;
-            if (data && game.participants?.length) {
-              try {
-                const { data: linkData, error: linkError } = await supabase
-                  .from("game_players")
-                  .insert(
-                    game.participants.map((p) => ({
-                      game_id: data.id,
-                      user_id: p.userId,
-                      slot: p.slot ?? null,
-                      team: p.team ?? null,
-                    })),
-                  )
-                  .select("user_id, slot, team, profiles(id, display_name, avatar_url)");
-                if (linkError) throw linkError;
-                insertedPlayers = linkData;
-              } catch (linkErr) {
-                console.error("Failed to link game participants in Supabase:", linkErr);
-                setSaveError(
-                  "This game saved, but one or more players couldn't be linked — their stats may not update.",
-                );
-              }
-            }
-
-            // Classic 2v2 beach has no game_players row for A1 — that slot's
-            // identity is implicit via games.user_id, which the insert above
-            // always sets to the submitter. If a different real player was
-            // actually picked for A1 — the submitter can be in any other
-            // slot, or not playing at all — reassign it here so the real A1
-            // gets Elo/history credit instead of the submitter (only the
-            // submitter may, and only to someone not already in another
-            // slot — see migration 20261023120000).
-            let reassignedA1 = false;
-            if (data && !usesRoster && game.playerIdA1 && game.playerIdA1 !== user.id) {
-              try {
-                const { error: a1Error } = await supabase.rpc("assign_beach_game_a1", {
-                  p_game_id: data.id,
-                  p_a1_user_id: game.playerIdA1,
-                });
-                if (a1Error) throw a1Error;
-                reassignedA1 = true;
-              } catch (a1Err) {
-                console.error("Failed to assign beach game A1:", a1Err);
-                setSaveError(
-                  "This game saved, but Player 1 couldn't be linked correctly — their stats may not update.",
-                );
-              }
-            }
-            if (reassignedA1) {
-              await fetchRemoteHistory();
-              return;
-            }
-
-            // Optimistically (and asynchronously) merge the saved game into
-            // remoteHistory so it shows up immediately, without waiting for
-            // user?.id to change and re-trigger the fetch effect. Prefer the
-            // DB-returned row (has real id/created_at); fall back to the
-            // locally-generated record if the insert didn't return one.
-            // The submitter is always the current user, so their profile for
-            // beach's implicit A1 slot (see mapBeachTeamPlayers) is already
-            // on hand here — no extra round trip needed like the bulk fetch
-            // above.
-            const newRecord = data
-              ? mapRowToRecord(
-                  { ...data, game_players: insertedPlayers },
-                  {
-                    [user.id]: {
-                      display_name: displayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email,
-                      avatar_url: user.user_metadata?.avatar_url || null,
-                    },
-                  },
-                )
-              : record;
-            pendingInsertsRef.current.set(newRecord.id, newRecord);
-            setRemoteHistory((prev) => {
-              const base = prev ?? [];
-              if (base.some((g) => g.id === newRecord.id)) return base;
-              return [newRecord, ...base];
-            });
-          } catch (e) {
-            console.error("Failed to save game to Supabase:", e);
-            setSaveError(
-              "This game didn't sync to the server — it's only saved on this device for now. Check your connection and try again.",
-            );
-          }
-        })();
+        // One request (record_game, migration 20261025040000) saves the game
+        // and every player link together, with the right Player 1, so the
+        // Elo triggers rate it once and correctly; it either all lands or
+        // none of it does.
+        const stored = queueGame({
+          id,
+          userId: user.id,
+          queuedAt: now.toISOString(),
+          args: buildRecordGameArgs(game, { id, date, time, mode }),
+          record,
+        });
+        if (!stored) {
+          setSaveError(
+            "This phone won't let the app keep the game for later, so it's only held while the app stays open. Keep it open until the game shows in Past Games without “waiting to upload”.",
+          );
+        }
       }
     },
-    [user, displayName, fetchRemoteHistory],
+    [user, displayName],
   );
 
   // Local games saved while signed out never reach `games` (its insert
   // policy requires auth.uid() = user_id), so they'd otherwise vanish from
-  // Past Games the moment remoteHistory loads. Merge them back in, sorted
-  // alongside the remote (public) history by when they were played.
-  const history =
-    isSupabaseConfigured && remoteHistory !== null
-      ? [...remoteHistory, ...localHistory.filter((g) => g.synced === false)].sort((a, b) =>
-          `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`),
-        )
-      : localHistory;
+  // Past Games the moment remoteHistory loads. Merge them back in, along
+  // with every game still waiting in the upload queue, sorted alongside the
+  // remote (public) history by when they were played.
+  const fromServer = isSupabaseConfigured && remoteHistory !== null;
+  const base = fromServer ? [...remoteHistory, ...localHistory.filter((g) => g.synced === false)] : localHistory;
+  const history = mergeQueuedIntoHistory(base, uploadQueue, fromServer, user?.id ?? null);
   const historyLoading = isSupabaseConfigured && remoteLoading;
   const dismissSaveError = useCallback(() => setSaveError(null), []);
+  const retryUploads = useCallback(() => flushQueue({ includeRejected: true }), []);
 
   return {
     history,
@@ -396,5 +342,8 @@ export function useGameHistory() {
     refreshHistory: fetchRemoteHistory,
     saveError,
     dismissSaveError,
+    uploadQueue,
+    retryUploads,
+    removeQueuedGame,
   };
 }

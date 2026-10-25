@@ -15,6 +15,7 @@ import HistoryView from "./HistoryView.jsx";
 import FinalScoreScreen from "./FinalScoreScreen.jsx";
 import GameEntryMenu from "./GameEntryMenu.jsx";
 import { consumePendingGameTracking, setPendingGameTracking } from "../../lib/pendingGameTracking.js";
+import { queueSummary } from "../../lib/gameUploadQueue.js";
 
 const SCREEN_META = {
   menu: { title: "Beach Volleyball Scoreboard", subtitle: "Brevard Volleyball Club" },
@@ -42,9 +43,19 @@ const BACK_MAP = {
 
 export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament, gamesVersion }) {
   const scoreboard = useScoreboardState();
-  const { history, addGame, historyLoading, refreshHistory, saveError, dismissSaveError } =
-    useGameHistory();
+  const {
+    history,
+    addGame,
+    historyLoading,
+    refreshHistory,
+    saveError,
+    dismissSaveError,
+    uploadQueue,
+    retryUploads,
+    removeQueuedGame,
+  } = useGameHistory();
   const { user, loading, isConfigured, signInWithGoogle } = useAuth();
+  const uploadNote = queueSummary(uploadQueue, user?.id ?? null);
   const [screen, setScreen] = useState("menu");
   const [pendingFormat, setPendingFormat] = useState(null);
   const [pendingTeamSize, setPendingTeamSize] = useState(null);
@@ -237,6 +248,39 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
         </p>
       )}
 
+      {/* Games saved on this phone that the server hasn't confirmed yet.
+          Hidden on the live scoreboard, which needs all the room it can get. */}
+      {uploadNote && screen !== "active" && (
+        <div
+          role="status"
+          className={`mx-2 mb-1 flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs font-semibold ${
+            uploadNote.tone === "error"
+              ? "border-red-500 bg-red-500/10 text-red-400"
+              : "border-amber-400/60 bg-amber-400/10 text-amber-300"
+          }`}
+        >
+          <span>{uploadNote.text}</span>
+          <span className="flex shrink-0 gap-2">
+            {uploadNote.tone === "error" && screen !== "history" && (
+              <button
+                type="button"
+                onClick={() => setScreen("history")}
+                className="rounded-md border border-current px-2 py-1 font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+              >
+                Past Games
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={retryUploads}
+              className="rounded-md border border-current px-2 py-1 font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+            >
+              Retry
+            </button>
+          </span>
+        </div>
+      )}
+
       <main className="animate-view-in flex min-h-0 flex-1 flex-col">
         {screen === "menu" && (
           <GameMenu
@@ -283,6 +327,8 @@ export default function GameTrackingShell({ onBack, onOpenGame, onOpenTournament
           <HistoryView
             history={history}
             historyLoading={historyLoading}
+            onRetryUpload={retryUploads}
+            onRemoveUpload={removeQueuedGame}
             onOpenGame={onOpenGame}
             onOpenTournament={onOpenTournament}
           />

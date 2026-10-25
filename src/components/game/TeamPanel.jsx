@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@heroui/react";
-import { sanitizeName } from "../../lib/sanitizeName.js";
+import { MAX_NAME_LENGTH, sanitizeName } from "../../lib/sanitizeName.js";
 import { colorForeground } from "../../lib/teamColors.js";
 import { playerPhoto } from "../../themes/playerPhoto.js";
 
@@ -43,7 +43,22 @@ export function EditableTeamName({ id, name, fallback, label, onCommit, fontSize
       onPaste={(e) => {
         e.preventDefault();
         const text = (e.clipboardData || window.clipboardData).getData("text");
-        document.execCommand("insertText", false, text);
+        document.execCommand("insertText", false, text.replace(/\s+/g, " ").slice(0, MAX_NAME_LENGTH));
+      }}
+      // A name stops at MAX_NAME_LENGTH while it's being typed, not only
+      // when it's committed, so nobody types a long name and watches it get
+      // cut off. Checked after the input (not before) because phone
+      // keyboards don't reliably let a page cancel a keystroke.
+      onInput={(e) => {
+        const el = e.currentTarget;
+        if (el.textContent.length <= MAX_NAME_LENGTH) return;
+        el.textContent = el.textContent.slice(0, MAX_NAME_LENGTH);
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
       }}
       onBlur={(e) => {
         const cleaned = sanitizeName(e.currentTarget.textContent, fallback);

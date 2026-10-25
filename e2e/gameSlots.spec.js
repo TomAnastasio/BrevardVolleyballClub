@@ -7,8 +7,8 @@ import { ADMIN_NAME, getAdminSession, PLAYER_NAME, signInAsPlayer } from "./sign
 // played.
 //
 // 2v2 beach is the risky one: Player 1 (A1) has no game_players row -- it's
-// games.user_id, which starts out as the logger and is moved to the real A1
-// by assign_beach_game_a1. Real bug (2026-10-23): a member who put
+// games.user_id, which record_game sets to the real A1 as it saves the
+// game. Real bug (2026-10-23): a member who put
 // themselves in slot 3 ended up as both player 1 and player 3, because that
 // function only accepted a new A1 who was already linked to the game, and
 // A1 never is. 3v3/4v4 beach and indoor store every player as a team row,

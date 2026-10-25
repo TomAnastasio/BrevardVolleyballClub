@@ -19,6 +19,24 @@ finished: pick the players, then type in the final score). Both save the
 same way, dated now, with the same Elo update. There's no way to backdate a
 game. Admins fix a game's details afterward with **✏️ Edit** (below).
 
+**No signal courtside is fine.** Pressing Save keeps the game on the phone
+first, then uploads it. The game and all its players go up together in one
+step, so a game is never half-saved (e.g. saved without its players, or
+rated against the wrong Player 1). Until the server confirms it, the game
+shows in Past Games with **⏳ Waiting to upload** and a **Retry** button,
+and a yellow note above the game screens counts what's waiting. The app
+retries by itself when it opens, when the phone gets a connection back,
+when you switch back to it, and every 30 seconds while it's open. Retrying
+never saves a game twice. If the server refuses a game outright (rare: e.g.
+a ranked game with a player who wasn't picked from the list), the note turns
+red, the game says why, and it stays on the phone until someone taps
+**Retry** or **Remove**. A game waits for the account that saved it: if
+someone else signs in on that phone, it stays put until that player signs
+back in.
+
+Team names you tap to edit on the scoreboard stop at 24 characters per
+player, like everywhere else names are typed.
+
 ### Live scoreboard
 
 The scoreboard picks its layout from how the phone is held:

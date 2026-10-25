@@ -1,7 +1,13 @@
+// Longest player name the app lets anyone type: the scoreboard's editable
+// names, the new-game player fields and admin renames all stop here. A
+// 2v2 team name is two of these joined with " & ", well inside the 100
+// characters record_game accepts (migration 20261025040000).
+export const MAX_NAME_LENGTH = 24;
+
 export function sanitizeName(text, fallback) {
   let cleaned = (text || "").replace(/\s+/g, " ").trim();
   if (!cleaned) cleaned = fallback;
-  if (cleaned.length > 24) cleaned = cleaned.slice(0, 24);
+  if (cleaned.length > MAX_NAME_LENGTH) cleaned = cleaned.slice(0, MAX_NAME_LENGTH);
   return cleaned;
 }
 

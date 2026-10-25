@@ -90,7 +90,61 @@ function GameCardBody({ game, user, onOpenTournament }) {
   );
 }
 
-export default function HistoryView({ history, historyLoading, onOpenGame, onOpenTournament }) {
+// Shown on a game that's saved on this phone but not on the server yet
+// (see gameUploadQueue.js). It sits above the card's details button, which
+// a not-yet-uploaded game doesn't have anyway.
+function UploadStatus({ game, onRetry, onRemove }) {
+  const rejected = game.upload.status === "rejected";
+  // First try still going (a normal save takes a moment): no alarm yet.
+  if (!rejected && !game.upload.tried) {
+    return <p className="m-0 mt-1 text-xs font-semibold text-muted">Uploading…</p>;
+  }
+  function handleRemove() {
+    if (window.confirm("Remove this game from this phone? It was never uploaded, so it will be gone for good.")) {
+      onRemove(game.id);
+    }
+  }
+  return (
+    <div
+      className={`mt-1 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-2 py-1.5 text-xs font-semibold ${
+        rejected ? "border-red-500 bg-red-500/10 text-red-400" : "border-amber-400/60 bg-amber-400/10 text-amber-300"
+      }`}
+    >
+      <span>
+        {rejected
+          ? `Not uploaded: ${game.upload.error || "the server refused it."} Only on this phone.`
+          : "⏳ Waiting to upload. Saved on this phone; it'll upload when you have signal."}
+      </span>
+      <span className="flex gap-2">
+        <button
+          type="button"
+          onClick={onRetry}
+          className="rounded-md border border-current px-2 py-0.5 font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+        >
+          Retry
+        </button>
+        {rejected && (
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="rounded-md border border-current px-2 py-0.5 font-bold focus-visible:outline-[3px] focus-visible:outline-accent focus-visible:outline-offset-2"
+          >
+            Remove
+          </button>
+        )}
+      </span>
+    </div>
+  );
+}
+
+export default function HistoryView({
+  history,
+  historyLoading,
+  onOpenGame,
+  onOpenTournament,
+  onRetryUpload,
+  onRemoveUpload,
+}) {
   const { user } = useAuth();
 
   return (
@@ -105,13 +159,15 @@ export default function HistoryView({ history, historyLoading, onOpenGame, onOpe
             // The details button is stretched over the whole card rather than
             // wrapping it, so the card's own tournament tag button isn't a
             // (invalid) button inside a button; the tag sits above it. A
-            // game saved only on this device ("game-…" id, never synced)
-            // has no server copy to show, so it isn't tappable.
+            // game saved only on this device (signed out, an old "game-…"
+            // id, or still waiting to upload) has no server copy to show,
+            // so it isn't tappable.
             <li key={game.id} className={`animate-rise-in relative transition-transform duration-150 has-[>button:active]:scale-[0.98]`} style={stagger(index)}>
               <Card className="gap-1 p-3">
                 <GameCardBody game={game} user={user} onOpenTournament={onOpenTournament} />
+                {game.upload && <UploadStatus game={game} onRetry={onRetryUpload} onRemove={onRemoveUpload} />}
               </Card>
-              {!String(game.id).startsWith("game-") && (
+              {!game.upload && game.synced !== false && !String(game.id).startsWith("game-") && (
                 <button
                   type="button"
                   onClick={() => onOpenGame(game.id)}

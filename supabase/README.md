@@ -180,6 +180,29 @@ If this is happening for real, it's worth getting a second pair of eyes
 a live project — restoring is meant to guarantee you're never stuck with
 zero options, not to be a casual undo button.
 
+## Saving games
+
+The app saves every game through one database function, `record_game()`
+(migration `20261025040000`): the game and all its players in one step, so
+it's either fully saved and rated once, or not saved at all. Worth knowing
+when looking at the `games` table by hand:
+
+- **`user_id` is Player 1** of a 2v2 beach game (Elo, tokens and every
+  screen read it that way), not necessarily whoever saved it. For 3v3/4v4
+  and indoor it's whoever saved it.
+- **`submitted_by`** is the account that pressed Save, for games saved this
+  way. It's empty on older games, on tournament games, and on games from a
+  phone still running an older copy of the app (that older way of saving
+  still works).
+- **`id` is picked by the phone**, so a phone retrying after a bad
+  connection gets "already saved" back instead of making a second copy.
+- **`deleted_games`** lists the ids of games an admin deleted (just the id,
+  who and when), so a phone retrying late can't bring a deleted game back.
+  Nothing else reads it.
+
+Two games saved at the same moment that share players now take turns
+updating ratings, instead of one silently overwriting the other's change.
+
 ## Tokens and items
 
 How tokens, the Cauldron and the Locker work for players is in the main
@@ -199,7 +222,8 @@ How tokens, the Cauldron and the Locker work for players is in the main
   each time.
 - **Before any new migration**, run the database scenario tests: `npm run
   test:db`. They build a throwaway copy of the database from every file in
-  `supabase/migrations/` (in-memory PGlite, no real data) and check tokens,
-  outfits, the gift and who can call which function (`supabase/tests/`).
+  `supabase/migrations/` (in-memory PGlite, no real data) and check saving
+  games, tokens, outfits, the gift and who can call which function
+  (`supabase/tests/`).
   A migration reaches staging and production at the same moment, so this
   is the only place to try one first. Add a scenario for anything new.
