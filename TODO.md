@@ -37,6 +37,12 @@ the organizer:
   and the admin moves the winner (round 2 preview) or picks finalists.
 - 5+ round 1 pools in one division would make "Tier 5" pools (no rule
   given).
+- A pool where players end up with different numbers of games (a player
+  removed mid-pool, or a substitute via Edit Game) ranks by share of games
+  won, then points against per game. A substitute who isn't in the pool
+  gets no standings row. Our call, not the organizer's (2026-10-25).
+- Two phones keeping score on one game: the latest tap wins and the other
+  phone follows it. Untested on real phones on the sand.
 
 Known bugs, found on the demo tournaments 2026-10-23:
 - Tournament games are dated when the score is entered, not the
@@ -115,6 +121,9 @@ covered, most valuable first:
    queue logic and `record_game` have unit/database tests, and the browser
    side (reload, online event, Retry) was checked once against a local
    stand-in server, not staging.
+7. Tournaments: removing a player and roster import have database tests
+   (`supabase/tests/tournaments.test.mjs`) but no e2e; the scoring screen
+   following another phone has no automated test at all.
 
 Known gap, saving games: a game waiting on a phone that includes a
 placeholder player whom an admin merges away before it uploads is refused

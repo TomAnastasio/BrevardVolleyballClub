@@ -72,6 +72,12 @@ describe("matchToProfiles", () => {
     expect(sam.profileId).toBe("g1");
     expect(kim.profileId).toBeNull();
     expect(kim.suggestions.map((s) => s.id)).toEqual(["m2", "m3"]);
+    expect([sam.sameName, kim.sameName]).toEqual([2, 2]);
+  });
+
+  it("counts only exact same-name players in sameName, not suggestions", () => {
+    const [row] = matchToProfiles([{ name: "Jan Doe" }], profiles);
+    expect(row.sameName).toBe(0);
   });
 
   it("offers suggestions but defaults to a new profile when unsure", () => {

@@ -196,12 +196,16 @@ export function poolLabel(index) {
 
 // Per-player record from a pool's scored games. `matches` are
 // { a1, a2, b1, b2, scoreA, scoreB } with scoreA/scoreB null until scored.
+// Only `playerIds` (the pool's players) get a row: a game a substitute
+// played (admin Edit Game) or a removed player's scored game counts for
+// the pool players in it and nobody else. `scheduled` is how many of the
+// pool's games, scored or not, each player is in.
 export function computeStandings(playerIds, matches) {
   const rows = new Map(
-    playerIds.map((id) => [id, { id, played: 0, wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 }]),
+    playerIds.map((id) => [id, { id, played: 0, scheduled: 0, wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 }]),
   );
   for (const m of matches) {
-    if (m.scoreA == null || m.scoreB == null) continue;
+    const scored = m.scoreA != null && m.scoreB != null;
     const sides = [
       [[m.a1, m.a2], m.scoreA, m.scoreB],
       [[m.b1, m.b2], m.scoreB, m.scoreA],
@@ -210,6 +214,8 @@ export function computeStandings(playerIds, matches) {
       for (const id of ids) {
         const r = rows.get(id);
         if (!r) continue;
+        r.scheduled++;
+        if (!scored) continue;
         r.played++;
         r.pointsFor += own;
         r.pointsAgainst += opp;
@@ -227,11 +233,32 @@ export function compareStandings(a, b) {
   return b.wins - a.wins || a.pointsAgainst - b.pointsAgainst;
 }
 
+// Comparing players with different numbers of games: per-game rates, so a
+// pool of 5 (4 games each) and a pool of 4 (3 games) compare fairly.
+// With equal games this orders exactly like compareStandings.
+export function compareRates(a, b) {
+  const rate = (r, k) => (r.played ? r[k] / r.played : 0);
+  return rate(b, "wins") - rate(a, "wins") || rate(a, "pointsAgainst") - rate(b, "pointsAgainst");
+}
+
+// A pool's schedule normally gives everyone the same number of games.
+// After a player is removed mid-pool (their unplayed games go) or a game's
+// players are changed, it may not; then raw totals would favor whoever
+// had more games, so that pool ranks by per-game rates instead.
+export function unevenSchedule(rows) {
+  return rows.some((r) => r.scheduled !== undefined && r.scheduled !== rows[0].scheduled);
+}
+
+export function standingsComparator(rows) {
+  return unevenSchedule(rows) ? compareRates : compareStandings;
+}
+
 export function rankStandings(rows) {
-  const sorted = [...rows].sort(compareStandings);
+  const compare = standingsComparator(rows);
+  const sorted = [...rows].sort(compare);
   let place = 0;
   return sorted.map((r, i) => {
-    if (i === 0 || compareStandings(sorted[i - 1], r) !== 0) place = i + 1;
+    if (i === 0 || compare(sorted[i - 1], r) !== 0) place = i + 1;
     return { ...r, place };
   });
 }
@@ -249,14 +276,6 @@ export const TIER_NAMES = ["Gold", "Silver", "Bronze", "Copper"];
 
 export function tierName(index) {
   return TIER_NAMES[index] || `Tier ${index + 1}`;
-}
-
-// Comparing players across pools ("rank all players"): per-game rates, so
-// a pool of 5 (4 games each) and a pool of 4 (3 games) compare fairly.
-// With equal pools this orders exactly like compareStandings.
-function compareOverall(a, b) {
-  const rate = (r, k) => (r.played ? r[k] / r.played : 0);
-  return rate(b, "wins") - rate(a, "wins") || rate(a, "pointsAgainst") - rate(b, "pointsAgainst");
 }
 
 // Round 2 for a division, from its ranked round-1 pools ([{ standings }]).
@@ -285,14 +304,15 @@ export function planRound2(pools) {
     }
     for (let t = 0; t < tierCount - 1; t++) {
       for (const p of pools) {
+        const compare = standingsComparator(p.standings);
         const last = p.standings[(t + 1) * perPool - 1];
-        if (compareStandings(last, p.standings[(t + 1) * perPool]) === 0) {
-          ties.push({ tier: t, ids: p.standings.filter((r) => compareStandings(r, last) === 0).map((r) => r.id) });
+        if (compare(last, p.standings[(t + 1) * perPool]) === 0) {
+          ties.push({ tier: t, ids: p.standings.filter((r) => compare(r, last) === 0).map((r) => r.id) });
         }
       }
     }
   } else {
-    const all = pools.flatMap((p) => p.standings).sort(compareOverall);
+    const all = pools.flatMap((p) => p.standings).sort(compareRates);
     const sizes = Array.from(
       { length: tierCount },
       (_, i) => Math.floor(all.length / tierCount) + (i < all.length % tierCount ? 1 : 0),
@@ -302,8 +322,8 @@ export function planRound2(pools) {
       tiers.push(all.slice(edge, edge + size));
       edge += size;
       const last = all[edge - 1];
-      if (t < tierCount - 1 && compareOverall(last, all[edge]) === 0) {
-        ties.push({ tier: t, ids: all.filter((r) => compareOverall(r, last) === 0).map((r) => r.id) });
+      if (t < tierCount - 1 && compareRates(last, all[edge]) === 0) {
+        ties.push({ tier: t, ids: all.filter((r) => compareRates(r, last) === 0).map((r) => r.id) });
       }
     });
   }

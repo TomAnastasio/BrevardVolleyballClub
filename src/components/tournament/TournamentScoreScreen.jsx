@@ -2,22 +2,31 @@ import { useEffect, useRef, useState } from "react";
 import { Button, Card } from "@heroui/react";
 import LoadingMeteor from "../LoadingMeteor.jsx";
 import { useTournament } from "../../hooks/useTournament.js";
+import { updatedElsewhere as isUpdatedElsewhere } from "../../lib/liveScoreSync.js";
 import { isGameOver, rulesLabel } from "../../lib/queenOfCourt.js";
-import { friendlyError, pushLiveScore, submitMatchScore } from "../../lib/tournamentApi.js";
+import { fetchLiveScore, friendlyError, pushLiveScore, submitMatchScore } from "../../lib/tournamentApi.js";
 import { DEFAULT_COLOR_A, DEFAULT_COLOR_B, colorForeground } from "../../lib/teamColors.js";
 import { teamNames } from "./tournamentFormat.js";
 
 const LIVE_PUSH_DELAY_MS = 800;
+// How often an open scoring screen checks the game's live score, to follow
+// another phone scoring the same game and to retry a push that failed.
+const FOLLOW_POLL_MS = 4000;
 
 function storageKey(matchId) {
   return `bvc-tournament-score-${matchId}`;
 }
 
 // In-progress score survives a reload or the phone locking mid-game.
+// `pending`: changed on this phone but not yet confirmed by the server.
+// `tappedAt`: when this phone last changed it (ms).
 function loadLocal(matchId) {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey(matchId)));
-    if (saved && Number.isInteger(saved.a) && Number.isInteger(saved.b)) return saved;
+    if (saved && Number.isInteger(saved.a) && Number.isInteger(saved.b)) {
+      const known = Number.isInteger(saved.known?.a) && Number.isInteger(saved.known?.b) ? saved.known : null;
+      return { a: saved.a, b: saved.b, pending: saved.pending === true, tappedAt: Number(saved.tappedAt) || 0, known };
+    }
   } catch (e) {
     /* storage unavailable */
   }
@@ -74,9 +83,20 @@ function TeamScorer({ names, score, color, onInc, onDec, label, winning }) {
   );
 }
 
+// The live score shown on the public page belongs to whoever is actually
+// tapping. So a phone only sends a score after someone changes it on that
+// phone: opening this screen (say, on a second phone) starts from the
+// server's live score and never resets it. A phone with its own unsent
+// change (it lost signal mid-game) sends it only if nobody has updated the
+// server since that phone's last tap; otherwise it drops it and shows the
+// newer score. If two phones score the same game, each follows the other's
+// taps while it's idle; the latest tap wins.
 export default function TournamentScoreScreen({ tournamentId, matchId, onDone }) {
-  const { model, loading } = useTournament(tournamentId);
-  const [score, setScore] = useState(() => loadLocal(matchId) || { a: 0, b: 0 });
+  const { model, loading, reload } = useTournament(tournamentId);
+  const [saved] = useState(() => loadLocal(matchId));
+  const [score, setScore] = useState(() => (saved ? { a: saved.a, b: saved.b } : { a: 0, b: 0 }));
+  const [synced, setSynced] = useState(false);
+  const [followNote, setFollowNote] = useState("");
   const [typing, setTyping] = useState(false);
   const [typedA, setTypedA] = useState("");
   const [typedB, setTypedB] = useState("");
@@ -84,26 +104,112 @@ export default function TournamentScoreScreen({ tournamentId, matchId, onDone })
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const pushTimer = useRef(null);
+  const pendingRef = useRef(Boolean(saved?.pending));
+  const tappedAtRef = useRef(saved?.tappedAt || 0);
+  // The last score this phone knows is on the server (sent or seen there).
+  const knownRef = useRef(saved?.known ?? null);
+  // Bumped on every tap, so a server read or push that started before the
+  // latest tap can't overwrite it or mark it as sent.
+  const tapsRef = useRef(0);
+  const scoreRef = useRef(score);
+  scoreRef.current = score;
+
+  const match = model?.matches.find((m) => m.id === matchId);
+  const finished = match?.status === "final";
+
+  // Best effort: the public page shows this as the live score. A failed
+  // push (spotty beach signal) doesn't interrupt scoring; it's retried by
+  // the follow loop below.
+  function persist(next) {
+    saveLocal(matchId, { ...next, pending: pendingRef.current, tappedAt: tappedAtRef.current, known: knownRef.current });
+  }
+
+  function push() {
+    const sent = scoreRef.current;
+    const taps = tapsRef.current;
+    pushLiveScore(matchId, sent.a, sent.b)
+      .then(() => {
+        if (tapsRef.current !== taps) return;
+        pendingRef.current = false;
+        knownRef.current = { a: sent.a, b: sent.b };
+        persist(sent);
+      })
+      .catch((e) => console.warn("Live score push failed:", e));
+  }
+
+  function updatedElsewhere(a, b, updatedAt) {
+    return isUpdatedElsewhere({ known: knownRef.current, tappedAt: tappedAtRef.current }, a, b, updatedAt);
+  }
+
+  function adopt(a, b, note) {
+    pendingRef.current = false;
+    knownRef.current = { a, b };
+    setScore({ a, b });
+    if (note) setFollowNote(note);
+  }
+
+  // Starting point once the game has loaded: the server's live score,
+  // unless this phone has an unsent change newer than it.
+  useEffect(() => {
+    if (synced || !match) return;
+    if (!pendingRef.current) adopt(match.liveA, match.liveB);
+    else if (updatedElsewhere(match.liveA, match.liveB, match.liveUpdatedAt)) {
+      adopt(match.liveA, match.liveB, "Another phone updated this game while yours was offline, so this shows its score.");
+    }
+    setSynced(true);
+  }, [match, synced]);
 
   useEffect(() => {
-    saveLocal(matchId, score);
+    if (!synced) return undefined;
+    persist(score);
+    if (!pendingRef.current) return undefined;
     clearTimeout(pushTimer.current);
-    // Best effort: the public page shows this as the live score. A failed
-    // push (spotty beach signal) doesn't interrupt scoring.
-    pushTimer.current = setTimeout(() => {
-      pushLiveScore(matchId, score.a, score.b).catch((e) => console.warn("Live score push failed:", e));
-    }, LIVE_PUSH_DELAY_MS);
+    pushTimer.current = setTimeout(push, LIVE_PUSH_DELAY_MS);
     return () => clearTimeout(pushTimer.current);
-  }, [matchId, score]);
+  }, [matchId, score, synced]);
 
-  if (loading && !model) {
+  useEffect(() => {
+    if (!synced || finished) return undefined;
+    const timer = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
+      const taps = tapsRef.current;
+      try {
+        const row = await fetchLiveScore(matchId);
+        if (!row) return;
+        // Submitted from another phone: reloading shows the final score.
+        if (row.game_id) {
+          saveLocal(matchId, null);
+          reload();
+          return;
+        }
+        if (tapsRef.current !== taps) return;
+        const { live_score_a: a, live_score_b: b, live_updated_at: updatedAt } = row;
+        if (pendingRef.current) {
+          // An unsent change (a push failed): send it again, unless another
+          // phone has scored since, in which case its newer score wins.
+          if (updatedElsewhere(a, b, updatedAt)) {
+            adopt(a, b, "Another phone scored this game since your last tap, so this shows its score.");
+          } else push();
+          return;
+        }
+        const current = scoreRef.current;
+        if (a !== current.a || b !== current.b) {
+          adopt(a, b, "Updated from another phone keeping score on this game.");
+        }
+      } catch (e) {
+        console.warn("Couldn't check the live score:", e);
+      }
+    }, FOLLOW_POLL_MS);
+    return () => clearInterval(timer);
+  }, [matchId, synced, finished, reload]);
+
+  if ((loading && !model) || (match && !synced)) {
     return (
       <div className="flex flex-col items-center gap-3 p-6">
         <LoadingMeteor />
       </div>
     );
   }
-  const match = model?.matches.find((m) => m.id === matchId);
   if (!model || !match) return <p className="p-6 text-center text-muted">This game couldn't be found.</p>;
 
   const rules = match.rules;
@@ -132,7 +238,11 @@ export default function TournamentScoreScreen({ tournamentId, matchId, onDone })
   const over = isGameOver(score.a, score.b, rules);
 
   function change(side, delta) {
+    pendingRef.current = true;
+    tapsRef.current++;
+    tappedAtRef.current = Date.now();
     setError("");
+    setFollowNote("");
     setConfirming(null);
     setScore((prev) => ({ ...prev, [side]: Math.min(99, Math.max(0, prev[side] + delta)) }));
     vibrate(delta > 0 ? 15 : [10, 30, 10]);
@@ -171,6 +281,11 @@ export default function TournamentScoreScreen({ tournamentId, matchId, onDone })
       <p className="m-0 text-center text-sm font-bold text-muted">
         {heading} · {rulesLabel(rules)}
       </p>
+      {followNote && (
+        <p role="status" className="m-0 text-center text-xs font-semibold text-accent">
+          {followNote}
+        </p>
+      )}
 
       {typing ? (
         <Card className="gap-3 p-4">

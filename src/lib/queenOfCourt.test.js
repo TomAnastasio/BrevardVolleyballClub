@@ -10,6 +10,7 @@ import {
   poolCountFor,
   rankStandings,
   splitIntoPools,
+  unevenSchedule,
   unresolvedTies,
 } from "./queenOfCourt.js";
 
@@ -111,6 +112,46 @@ describe("standings", () => {
       ["p2", 2],
       ["p3", 3],
       ["p4", 4],
+    ]);
+  });
+
+  it("counts every scheduled game, scored or not", () => {
+    const rows = computeStandings(["p1", "p2", "p3", "p4"], matches);
+    expect(rows.map((r) => r.scheduled)).toEqual([3, 3, 3, 3]);
+  });
+
+  it("ignores players who aren't in the pool (a substitute)", () => {
+    const subbed = [{ a1: "sub", a2: "p2", b1: "p3", b2: "p4", scoreA: 21, scoreB: 15 }];
+    const rows = computeStandings(["p1", "p2", "p3", "p4"], subbed);
+    expect(rows.map((r) => r.id)).toEqual(["p1", "p2", "p3", "p4"]);
+    expect(rows.find((r) => r.id === "p1")).toMatchObject({ played: 0, scheduled: 0 });
+    expect(rows.find((r) => r.id === "p2")).toMatchObject({ played: 1, wins: 1 });
+  });
+
+  it("ranks by raw totals while everyone has the same number of games", () => {
+    // p1 2-1 with 40 against; p2 1-0 (one game played so far, same schedule).
+    const rows = [
+      { id: "p1", wins: 2, played: 3, pointsAgainst: 40, scheduled: 4 },
+      { id: "p2", wins: 1, played: 1, pointsAgainst: 5, scheduled: 4 },
+    ];
+    expect(unevenSchedule(rows)).toBe(false);
+    expect(rankStandings(rows).map((r) => r.id)).toEqual(["p1", "p2"]);
+  });
+
+  it("ranks by per-game rates once the schedule is uneven", () => {
+    // p2 lost games when a player left: 2 of 2 beats p1's 2 of 3.
+    const rows = [
+      { id: "p1", wins: 2, played: 3, pointsAgainst: 40, scheduled: 3 },
+      { id: "p2", wins: 2, played: 2, pointsAgainst: 30, scheduled: 2 },
+      { id: "p3", wins: 1, played: 2, pointsAgainst: 30, scheduled: 2 },
+      { id: "p4", wins: 1, played: 2, pointsAgainst: 30, scheduled: 2 },
+    ];
+    expect(unevenSchedule(rows)).toBe(true);
+    expect(rankStandings(rows).map((r) => [r.id, r.place])).toEqual([
+      ["p2", 1],
+      ["p1", 2],
+      ["p3", 3],
+      ["p4", 3],
     ]);
   });
 

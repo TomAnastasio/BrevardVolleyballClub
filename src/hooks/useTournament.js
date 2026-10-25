@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
-import { computeStandings, finalSeries, rankStandings, TIER_NAMES, unresolvedTies } from "../lib/queenOfCourt.js";
+import { computeStandings, finalSeries, rankStandings, TIER_NAMES, unevenSchedule, unresolvedTies } from "../lib/queenOfCourt.js";
 
 // A match counts as "live" on the public page if someone has been keeping
 // score on it recently.
@@ -25,6 +25,7 @@ function mapMatch(row, now, tournamentRules) {
     scoreB: scored ? row.game.score_b : null,
     liveA: row.live_score_a,
     liveB: row.live_score_b,
+    liveUpdatedAt: row.live_updated_at,
     // Games scheduled before per-game rules existed use the tournament's.
     rules: row.win_score
       ? { winScore: row.win_score, winByTwo: row.win_by_two ?? true, pointCap: row.point_cap }
@@ -83,6 +84,9 @@ export function buildTournamentModel({ tournament, divisions, entrants, pools, p
             players,
             matches: poolMatches,
             standings,
+            // Players have different numbers of games (someone left
+            // mid-pool, or a game's players were changed): ranked by rates.
+            byRate: unevenSchedule(standings),
             ties: unresolvedTies(standings, poolMatches),
             complete: poolMatches.length > 0 && poolMatches.every((m) => m.status === "final"),
             nextMatchId: poolMatches.find((m) => m.status !== "final")?.id ?? null,

@@ -4,6 +4,7 @@ import LoadingMeteor from "../../LoadingMeteor.jsx";
 import MenuCard from "../../game/MenuCard.jsx";
 import { useTournament } from "../../../hooks/useTournament.js";
 import { deleteDraftTournament, friendlyError, updateTournament } from "../../../lib/tournamentApi.js";
+import { scheduleProblems } from "../../../lib/tournamentRoster.js";
 import { STATUS_LABELS } from "../tournamentFormat.js";
 import TournamentDetailsForm from "./TournamentDetailsForm.jsx";
 import EntrantsView from "./EntrantsView.jsx";
@@ -21,8 +22,9 @@ const SECTION_TITLES = {
   results: "Crown the winners",
 };
 
-// Pooled players who haven't checked in, per division. Starting the
-// tournament is blocked until pools only contain checked-in players.
+// Pooled players who haven't checked in, per division, and unplayed games
+// listing someone who isn't in their pool (scheduleProblems). Starting the
+// tournament is blocked until there are none.
 export function poolProblems(model) {
   const problems = [];
   for (const d of model.divisions) {
@@ -36,7 +38,7 @@ export function poolProblems(model) {
     const unpooled = d.entrants.filter((e) => e.checked_in && !pooledIds.has(e.id)).length;
     if (unpooled && pooled.length) problems.push(`${d.name}: ${unpooled} checked-in player${unpooled === 1 ? " isn't" : "s aren't"} in a pool`);
   }
-  return problems;
+  return [...problems, ...scheduleProblems(model)];
 }
 
 export default function TournamentManageView({ tournamentId, onDeleted }) {
@@ -155,7 +157,7 @@ export default function TournamentManageView({ tournamentId, onDeleted }) {
         <p className="m-0 text-xs font-bold uppercase tracking-wide text-muted">Status</p>
         <p className="m-0 text-lg font-extrabold">{STATUS_LABELS[t.status]}</p>
         <p className="m-0 text-sm text-muted">{nextStep.text}</p>
-        {t.status === "published" && problems.length > 0 && (
+        {(t.status === "published" || t.status === "live") && problems.length > 0 && (
           <ul className="m-0 list-disc pl-5 text-sm text-warning">
             {problems.map((p) => (
               <li key={p}>{p}</li>

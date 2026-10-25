@@ -342,26 +342,59 @@ Queen of Paradise (2026-10-31):
    existing player, or a manual profile is created. You confirm every row
    first. Email and phone are kept in an admin-only table. Date of birth is
    never stored. If the sheet has AVP ranking, TruVolley score or junior
-   columns, those come in too.
+   columns, those come in too. The import goes in all at once or not at
+   all, so after an error just tap Import again: anyone already entered is
+   skipped and listed. A "new" name that exactly matches an existing player
+   (ignoring case and accents) reuses that player rather than making a
+   duplicate, unless you picked "New profile" for it on purpose (two people
+   with one name). Even then, if a player with that name is already
+   entered, the row is skipped, so a retry never adds them twice; to enter
+   a second person with the same name, create them with Add Manual Profile
+   and add them on Players. If the player list can't load, the review step
+   waits with a Retry button.
 3. **Players & check-in.** Tap a player for their details: AVP rank,
    TruVolley score (used for seeding), and a **Junior** box (juniors play in
    adult divisions but can't win cash prizes). A division under 5 players
    shows **Merge all into…** to move everyone to the next level up or down.
-   On the day, tap each player as they arrive.
+   On the day, tap each player as they arrive. **Remove from tournament**
+   (e.g. a no-show) says exactly what will happen before you confirm, and
+   does it all in one step: if nothing in their pool has been scored or
+   started, the pool gets a fresh schedule for the players left (a pool of
+   5 becomes a pool of 4 with its own rules); otherwise only their unplayed
+   games go, scored games stay (they're real, rated games), and the other
+   games keep their numbers. An unplayed final they're in goes too (set it
+   up again on Finals). Someone in a final that already has a scored set
+   can't be removed: undo that set's score first, or leave them in.
 4. **Pools & schedule, round 1.** Pools are 4s and 5s, snake-seeded by AVP
    rank, then TruVolley, then Elo. Pools of 4 play 3 games to 28 (cap 30);
    pools of 5 play 4 games to 21 (cap 23); always win by 2. Everyone
    partners everyone once. Preview, move players by hand if needed, save,
    then **Publish**. If anyone didn't show, rebuild with checked-in players
-   only; **Start tournament** stays locked until the pools match check-in.
+   only; **Start tournament** stays locked until the pools match check-in
+   and no unplayed game lists someone who isn't in its pool (the same
+   warnings stay visible while the tournament is live).
 5. **Scoring.** Any signed-in member taps a game on the live page and keeps
    score point by point (spectators see it live) or types the final score.
    Each scored game is saved as a normal 2v2 beach game, so Elo and game
    history work as usual. A wrong score: an admin taps **undo this score**
-   on the live page, and the game can be scored again. Players rank by
+   on the live page, and the game can be scored again. Opening a game to
+   keep score starts from its current live score and sends nothing until
+   someone taps a point on that phone, so a second phone can't reset it.
+   If two phones keep score on one game, each follows the other's taps
+   while it's idle (it says so), and the latest tap wins. A phone that
+   lost signal holds its unsent taps and sends them when it reconnects,
+   unless another phone has updated the game since, in which case it
+   shows that newer score instead. Players rank by
    games won, then fewest points against; a tie after that is settled by a
    mini game to 15 on the sand (the page flags it; it isn't scored in the
-   app).
+   app). If players in a pool end up with different numbers of games
+   (someone was removed mid-pool, or an admin changed a game's players),
+   that pool ranks by share of games won, then points against per game,
+   and says so under its table.
+   An admin changing a tournament game's players (Edit Game) also changes
+   them in the schedule and standings. A substitute who isn't in the pool
+   gets no standings row; the game still counts for the pool players in
+   it, and for everyone's Elo. Edit Game never changes "Submitted by".
 6. **Round 2.** Once every round 1 game is scored, **Preview round 2**
    re-pools each division into Gold, Silver, Bronze and Copper pools (one
    per round 1 pool). Two pools of 4: top 2 of each pool to Gold, bottom 2

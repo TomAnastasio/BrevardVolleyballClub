@@ -11,15 +11,27 @@ import {
   removeEntrant,
   updateEntrant,
 } from "../../../lib/tournamentApi.js";
+import { matchToProfiles } from "../../../lib/rosterImport.js";
+import { planEntrantRemoval } from "../../../lib/tournamentRoster.js";
 import { playerName } from "../tournamentFormat.js";
 import { inputClass } from "./TournamentDetailsForm.jsx";
 
-function EntrantRow({ entrant, name, contact, divisions, onChanged, setError }) {
+// What "Add player" will do with a typed name nobody picked from the list
+// (the database makes the same choice; see importEntrants).
+function walkUpHint(name, directory) {
+  const [{ profileId, sameName }] = matchToProfiles([{ name }], directory);
+  if (profileId) return `${name} already has a profile; that player will be added.`;
+  if (sameName) return `Several players are named ${name}: pick one from the list.`;
+  return `"${name}" will get a new manual profile.`;
+}
+
+function EntrantRow({ entrant, name, contact, model, onChanged, setError }) {
+  const { divisions } = model;
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
 
-  async function run(fn) {
+  async function run(fn, fallback = `Couldn't update ${name}. If they're already in pools, rebuild pools first.`) {
     setBusy(true);
     setError("");
     try {
@@ -27,11 +39,17 @@ function EntrantRow({ entrant, name, contact, divisions, onChanged, setError }) 
       await onChanged();
     } catch (e) {
       console.error("Entrant update failed:", e);
-      setError(friendlyError(e, `Couldn't update ${name}. If they're already in pools, rebuild pools first.`));
+      setError(friendlyError(e, fallback));
+      // e.g. a game started meanwhile: reload so the confirm box shows
+      // what removing them would do now.
+      await onChanged();
     } finally {
       setBusy(false);
     }
   }
+
+  // Worked out from the latest data each time the confirm box shows.
+  const removal = confirmRemove ? planEntrantRemoval(model, entrant, name) : null;
 
   return (
     <li className="rounded-xl border border-white/10 bg-white/5">
@@ -123,17 +141,46 @@ function EntrantRow({ entrant, name, contact, divisions, onChanged, setError }) 
             />
             Junior (can play, not eligible for cash prizes)
           </label>
-          {confirmRemove ? (
-            <div className="flex gap-2">
-              <Button variant="danger" size="sm" onPress={() => run(() => removeEntrant(entrant.id))} isDisabled={busy}>
-                Remove {name}
-              </Button>
-              <Button variant="outline" size="sm" onPress={() => setConfirmRemove(false)}>
-                Cancel
-              </Button>
+          {removal ? (
+            <div role="alertdialog" aria-label={`Remove ${name}?`} className="flex flex-col gap-2 rounded-xl border border-danger/50 p-3">
+              {removal.blocked ? (
+                <p className="m-0 font-semibold text-warning">{removal.blocked}</p>
+              ) : (
+                <>
+                  <p className="m-0 font-bold">Remove {name} from the tournament?</p>
+                  <ul className="m-0 flex list-disc flex-col gap-1 pl-5">
+                    {removal.lines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onPress={() =>
+                    run(() => removeEntrant(entrant.id, removal.rebuiltPools), `Couldn't remove ${name}. Nothing changed; try again.`)
+                  }
+                  isDisabled={busy || Boolean(removal.blocked)}
+                >
+                  {busy ? "Removing…" : `Remove ${name}`}
+                </Button>
+                <Button variant="outline" size="sm" onPress={() => setConfirmRemove(false)} isDisabled={busy}>
+                  Cancel
+                </Button>
+              </div>
             </div>
           ) : (
-            <button type="button" onClick={() => setConfirmRemove(true)} className="self-start font-bold text-danger underline">
+            <button
+              type="button"
+              onClick={() => {
+                // Fresh data first: scores may have come in from other phones.
+                onChanged();
+                setConfirmRemove(true);
+              }}
+              className="self-start font-bold text-danger underline"
+            >
               Remove from tournament
             </button>
           )}
@@ -205,17 +252,25 @@ export default function EntrantsView({ model, reload, onImport }) {
   const enteredIds = divisions.flatMap((d) => d.entrants.map((e) => e.profile_id));
   const query = filter.trim().toLowerCase();
 
+  // Same all-or-nothing database call as the roster import. A typed name
+  // that exactly matches one existing player adds that player.
   async function handleAdd() {
-    if (!addName.trim() || !addDivisionId) return;
+    const name = addName.trim();
+    if (!name || !addDivisionId) return;
     setBusy(true);
     setError("");
-    const { failures } = await importEntrants(model.tournament.id, [
-      { profileId: addProfileId, name: addName.trim(), divisionId: addDivisionId },
-    ]);
-    if (failures.length) setError(failures[0].reason);
-    else {
-      setAddName("");
-      setAddProfileId(null);
+    try {
+      const { added } = await importEntrants(model.tournament.id, [
+        { profileId: addProfileId, name, divisionId: addDivisionId },
+      ]);
+      if (!added) setError(`${name} is already entered.`);
+      else {
+        setAddName("");
+        setAddProfileId(null);
+      }
+    } catch (e) {
+      console.error("Failed to add walk-up player:", e);
+      setError(friendlyError(e, "Couldn't add this player. Check your connection and try again."));
     }
     await reload();
     setBusy(false);
@@ -292,7 +347,7 @@ export default function EntrantsView({ model, reload, onImport }) {
                   entrant={e}
                   name={playerName(profilesById, e.profile_id)}
                   contact={contacts.get(e.id)}
-                  divisions={divisions}
+                  model={model}
                   onChanged={reload}
                   setError={setError}
                 />
@@ -317,7 +372,7 @@ export default function EntrantsView({ model, reload, onImport }) {
           inputClassName={inputClass}
         />
         <p className="m-0 text-xs text-muted">
-          {addName.trim() && !addProfileId ? `"${addName.trim()}" will get a new manual profile.` : " "}
+          {addName.trim() && !addProfileId ? walkUpHint(addName.trim(), directory) : " "}
         </p>
         <select value={addDivisionId} onChange={(e) => setAddDivisionId(e.target.value)} aria-label="Division" className={inputClass}>
           {divisions.map((d) => (

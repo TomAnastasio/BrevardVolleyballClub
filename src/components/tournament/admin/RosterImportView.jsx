@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button, Card } from "@heroui/react";
 import { supabase } from "../../../lib/supabaseClient.js";
-import { importEntrants } from "../../../lib/tournamentApi.js";
+import { friendlyError, importEntrants } from "../../../lib/tournamentApi.js";
 import { matchDivision, matchToProfiles, parseRoster } from "../../../lib/rosterImport.js";
 import { inputClass } from "./TournamentDetailsForm.jsx";
 
@@ -11,29 +11,37 @@ const NEW_PROFILE = "__new__";
 // profile match and division. Step 3: import.
 export default function RosterImportView({ model, onDone }) {
   // Loaded here (not via usePlayerDirectory) to know when it's finished:
-  // matching against a not-yet-loaded list would make every player look new
-  // and create duplicate profiles.
+  // matching against a not-yet-loaded (or failed) list would make every
+  // player look new, so review stays locked until it has loaded.
   const [directory, setDirectory] = useState(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   useEffect(() => {
     let cancelled = false;
+    setLoadFailed(false);
     supabase
       .from("profiles")
       .select("id, display_name, avatar_url, is_manual")
       .then(({ data, error }) => {
         if (cancelled) return;
-        if (error) console.error("Failed to load profiles for import:", error);
-        setDirectory((data || []).filter((p) => p.display_name && p.display_name.trim()));
+        if (error || !data) {
+          console.error("Failed to load profiles for import:", error);
+          setLoadFailed(true);
+          return;
+        }
+        setDirectory(data.filter((p) => p.display_name && p.display_name.trim()));
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadAttempt]);
   const { divisions } = model;
   const enteredIds = new Set(divisions.flatMap((d) => d.entrants.map((e) => e.profile_id)));
   const [text, setText] = useState("");
   const [rows, setRows] = useState(null);
   const [parseError, setParseError] = useState("");
   const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState("");
   const [result, setResult] = useState(null);
 
   function handleReview() {
@@ -53,12 +61,30 @@ export default function RosterImportView({ model, onDone }) {
     setRows((prev) => prev.map((r, j) => (j === i ? { ...r, ...fields } : r)));
   }
 
+  // One all-or-nothing call: on an error nothing was saved, so the admin
+  // can fix the row it names (or just retry) and import again.
   async function handleImport() {
     setImporting(true);
-    const chosen = rows.filter((r) => r.include);
-    const res = await importEntrants(model.tournament.id, chosen);
-    setResult(res);
-    setImporting(false);
+    setImportError("");
+    try {
+      const chosen = rows
+        .filter((r) => r.include)
+        .map((r) => ({ ...r, newProfile: !r.profileId && r.sameName > 0 }));
+      setResult(await importEntrants(model.tournament.id, chosen));
+    } catch (e) {
+      console.error("Roster import failed:", e);
+      // A refused row (e.g. "Several players are named…") rolls everything
+      // back. A dropped connection might have landed anyway, but importing
+      // again skips anyone already entered, so retrying never duplicates.
+      const known = friendlyError(e, "");
+      setImportError(
+        known
+          ? `${known} Nothing was imported; fix that row and tap Import again.`
+          : "Couldn't import. Check your connection and tap Import again (nobody gets added twice).",
+      );
+    } finally {
+      setImporting(false);
+    }
   }
 
   if (result) {
@@ -66,16 +92,24 @@ export default function RosterImportView({ model, onDone }) {
       <div className="flex flex-col gap-3 px-3 pb-8">
         <Card className="gap-2 p-4">
           <p className="m-0 text-lg font-extrabold">✓ Added {result.added} player{result.added === 1 ? "" : "s"}</p>
-          {result.failures.length > 0 && (
+          {result.createdProfiles > 0 && (
+            <p className="m-0 text-sm text-muted">
+              {result.createdProfiles} of them {result.createdProfiles === 1 ? "is" : "are"} new to the app (manual profile
+              {result.createdProfiles === 1 ? "" : "s"}).
+            </p>
+          )}
+          {result.skipped.length > 0 && (
             <>
-              <p className="m-0 font-bold text-warning">These couldn't be added:</p>
+              <p className="m-0 font-bold text-warning">Skipped, already entered:</p>
               <ul className="m-0 pl-5 text-sm">
-                {result.failures.map((f) => (
-                  <li key={f.name}>
-                    {f.name} — {f.reason}
-                  </li>
+                {result.skipped.map((f, i) => (
+                  <li key={`${f.name}-${i}`}>{f.name}</li>
                 ))}
               </ul>
+              <p className="m-0 text-xs text-muted">
+                A name listed twice is entered once. If two different people share a name, create the second with Add
+                Manual Profile (Admin Panel), then pick them under "Add a walk-up player" on Players.
+              </p>
             </>
           )}
         </Card>
@@ -107,9 +141,18 @@ export default function RosterImportView({ model, onDone }) {
             {parseError}
           </p>
         )}
-        <Button variant="primary" onPress={handleReview} isDisabled={!text.trim() || !directory} className="font-bold">
-          {directory ? "Review players" : "Loading players…"}
-        </Button>
+        {loadFailed ? (
+          <div role="alert" className="flex items-center justify-between gap-2 rounded-xl border border-danger/50 p-3">
+            <span className="text-sm font-semibold text-red-400">Couldn't load players, so names can't be matched yet.</span>
+            <Button variant="outline" size="sm" onPress={() => setLoadAttempt((n) => n + 1)} className="font-bold">
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <Button variant="primary" onPress={handleReview} isDisabled={!text.trim() || !directory} className="font-bold">
+            {directory ? "Review players" : "Loading players…"}
+          </Button>
+        )}
       </div>
     );
   }
@@ -154,7 +197,13 @@ export default function RosterImportView({ model, onDone }) {
                   </option>
                 ))}
               </select>
-              {!r.profileId && r.suggestions.length > 0 && (
+              {!r.profileId && r.sameName > 0 && (
+                <p className="m-0 text-xs text-warning">
+                  A player named {r.name} already exists. Pick them if it's the same person; "New profile" adds another
+                  player with this name.
+                </p>
+              )}
+              {!r.profileId && !r.sameName && r.suggestions.length > 0 && (
                 <p className="m-0 text-xs text-warning">Similar names already exist. Pick one if it's the same person.</p>
               )}
               <select
@@ -175,6 +224,11 @@ export default function RosterImportView({ model, onDone }) {
         })}
       </ul>
       {missingDivision && <p className="m-0 text-sm font-semibold text-warning">Pick a division for every checked player.</p>}
+      {importError && (
+        <p role="alert" className="m-0 text-sm font-semibold text-red-400">
+          {importError}
+        </p>
+      )}
       <div className="flex gap-2">
         <Button variant="outline" onPress={() => setRows(null)} className="flex-1 font-bold">
           Back

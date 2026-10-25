@@ -107,6 +107,8 @@ export function parseRoster(text) {
   return { players, error: players.length ? "" : "No players found under the header row." };
 }
 
+// The database's normalized_player_name() (migration 20261025050000) does
+// the same, so the import's server-side duplicate check agrees with this.
 function normalize(name) {
   return name
     .toLowerCase()
@@ -136,7 +138,10 @@ export function matchToProfiles(players, profiles) {
     // choose rather than guess.
     const real = exact.filter((pr) => !pr.is_manual);
     const profileId = exact.length === 1 ? exact[0].id : real.length === 1 ? real[0].id : null;
-    return { ...p, suggestions: unique, profileId };
+    // `sameName`: how many players already have exactly this name. Keeping
+    // "New profile" then is a deliberate choice (two people, one name),
+    // which the import passes on so the database doesn't reuse one of them.
+    return { ...p, suggestions: unique, profileId, sameName: exact.length };
   });
 }
 

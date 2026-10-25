@@ -1,9 +1,11 @@
 import { supabase } from "./supabaseClient.js";
 import { buildPoolSchedule, poolLabel, poolRules } from "./queenOfCourt.js";
 
-// Every tournament write the app makes. Admin-only writes are plain table
-// writes gated by RLS (migration 20261022180000); score entry goes through
-// the two security-definer RPCs, since any signed-in user may enter scores.
+// Every tournament write the app makes. Most admin-only writes are plain
+// table writes gated by RLS (migration 20261022180000); importing players
+// and removing one are admin RPCs so each is all-or-nothing (migration
+// 20261025050000). Score entry goes through the two security-definer RPCs,
+// since any signed-in user may enter scores.
 
 function unwrap({ data, error }) {
   if (error) throw error;
@@ -23,6 +25,12 @@ export function friendlyError(e, fallback = "Something went wrong. Please try ag
     "delete its game first",
     "tournament game not found",
     "isn't in this tournament",
+    "has started since you opened this screen",
+    "doesn't match the pool's players",
+    "several players are named",
+    "pick a division for",
+    "every new player needs a name",
+    "player not found",
   ];
   if (known.some((k) => msg.includes(k))) return msg.charAt(0).toUpperCase() + msg.slice(1) + ".";
   if (msg.includes("duplicate key") && msg.includes("tournament_entrants")) return "That player is already entered.";
@@ -70,62 +78,45 @@ export async function deleteDivision(id) {
   unwrap(await supabase.from("tournament_divisions").delete().eq("id", id));
 }
 
-// Imports confirmed roster rows: creates manual profiles for new players,
-// enters everyone, and stores contact info in the admin-only table. Runs
-// row by row (a roster is tens of players) so one bad row doesn't sink the
-// rest; returns per-row failures for the screen to show.
+// Imports confirmed roster rows (or one walk-up player) in one database
+// call: it all goes in or nothing changes, so retrying after an error is
+// safe. The database reuses an existing player with the same name instead
+// of creating a duplicate profile, unless the admin deliberately chose
+// "New profile" over a same-name match (row.newProfile). Players already
+// entered are skipped and listed in `skipped`.
+// Returns { added, createdProfiles, skipped: [{ name, reason }] }.
 export async function importEntrants(tournamentId, rows) {
-  const failures = [];
-  let added = 0;
-  for (const row of rows) {
-    try {
-      let profileId = row.profileId;
-      if (!profileId) {
-        const profile = unwrap(
-          await supabase
-            .from("profiles")
-            .insert({ display_name: row.name.slice(0, 24), is_manual: true })
-            .select("id")
-            .single(),
-        );
-        profileId = profile.id;
-      }
-      const entrant = unwrap(
-        await supabase
-          .from("tournament_entrants")
-          .insert({
-            tournament_id: tournamentId,
-            division_id: row.divisionId,
-            profile_id: profileId,
-            avp_rank: row.avpRank ?? null,
-            truvolley_score: row.truvolley ?? null,
-            is_junior: Boolean(row.junior),
-          })
-          .select("id")
-          .single(),
-      );
-      if (row.email || row.phone) {
-        unwrap(
-          await supabase
-            .from("tournament_entrant_contacts")
-            .insert({ entrant_id: entrant.id, email: row.email || null, phone: row.phone || null }),
-        );
-      }
-      added++;
-    } catch (e) {
-      console.error("Failed to import roster row:", row.name, e);
-      failures.push({ name: row.name, reason: friendlyError(e, "Couldn't add this player.") });
-    }
-  }
-  return { added, failures };
+  const result = unwrap(
+    await supabase.rpc("admin_import_tournament_entrants", {
+      p_tournament_id: tournamentId,
+      p_rows: rows.map((row) => ({
+        name: row.name,
+        profile_id: row.profileId || null,
+        new_profile: Boolean(row.newProfile),
+        division_id: row.divisionId,
+        avp_rank: row.avpRank ?? null,
+        truvolley: row.truvolley ?? null,
+        junior: Boolean(row.junior),
+        email: row.email || null,
+        phone: row.phone || null,
+      })),
+    }),
+  );
+  return { added: result.added, createdProfiles: result.created_profiles, skipped: result.skipped || [] };
 }
 
 export async function updateEntrant(id, fields) {
   unwrap(await supabase.from("tournament_entrants").update(fields).eq("id", id));
 }
 
-export async function removeEntrant(id) {
-  unwrap(await supabase.from("tournament_entrants").delete().eq("id", id));
+// Removes a player and their unscored games in one database call; pools in
+// `rebuiltPools` ({ poolId: [game] }, from planEntrantRemoval in
+// src/lib/tournamentRoster.js) get a fresh schedule instead. Scored games
+// are kept.
+export async function removeEntrant(id, rebuiltPools = {}) {
+  return unwrap(
+    await supabase.rpc("admin_remove_tournament_entrant", { p_entrant_id: id, p_rebuilt_pools: rebuiltPools }),
+  );
 }
 
 export async function fetchContacts(entrantIds) {
@@ -252,6 +243,18 @@ export async function submitMatchScore(matchId, scoreA, scoreB) {
       p_score_a: scoreA,
       p_score_b: scoreB,
     }),
+  );
+}
+
+// One game's live score, so a scoring phone can follow another phone
+// scoring the same game (and notice once it's been submitted).
+export async function fetchLiveScore(matchId) {
+  return unwrap(
+    await supabase
+      .from("tournament_matches")
+      .select("live_score_a, live_score_b, live_updated_at, game_id")
+      .eq("id", matchId)
+      .maybeSingle(),
   );
 }
 

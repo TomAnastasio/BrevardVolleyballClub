@@ -345,6 +345,12 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
                 </h3>
                 <Card className="p-3">
                   <StandingsTable standings={pool.standings} profilesById={profilesById} highlightId={myId} />
+                  {pool.byRate && (
+                    <p className="m-0 mt-2 text-xs text-muted">
+                      Not everyone in this pool has the same number of games, so it's ranked by share of games won, then
+                      points against per game.
+                    </p>
+                  )}
                   {pool.ties.map((tie) => (
                     <p key={tie.place} className="m-0 mt-2 text-xs text-warning">
                       Tied for {placeLabel(tie.place)}: {tie.ids.map((id) => playerName(profilesById, id)).join(", ")}. A
