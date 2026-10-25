@@ -55,7 +55,8 @@ export function createBackNavigation(win) {
     pending = on;
     clearTimeout(pendingTimer);
     // Safety net: if our history.go() never reports landing, read where we
-    // are and carry on rather than stop syncing for good.
+    // are and carry on rather than stop syncing for good. Generous, since a
+    // second go() while a slow first one is still landing would pop twice.
     if (on) {
       pendingTimer = setTimeout(() => {
         pending = false;
@@ -67,7 +68,7 @@ export function createBackNavigation(win) {
           stampCurrentEntry();
         }
         scheduleSync();
-      }, 1500);
+      }, 4000);
     }
   }
 
