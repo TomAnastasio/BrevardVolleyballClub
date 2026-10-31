@@ -233,12 +233,18 @@ export function compareStandings(a, b) {
   return b.wins - a.wins || a.pointsAgainst - b.pointsAgainst;
 }
 
-// Comparing players with different numbers of games: per-game rates, so a
-// pool of 5 (4 games each) and a pool of 4 (3 games) compare fairly.
-// With equal games this orders exactly like compareStandings.
+// Comparing players with different numbers of games: share of games won,
+// then share of points won (points for / all points played), so a pool of
+// 5 (4 games to 21) and a pool of 4 (3 games to 28) compare fairly. Points
+// against per game wouldn't: games to 28 concede more points. Organizer
+// feedback, 2026-10-31.
 export function compareRates(a, b) {
-  const rate = (r, k) => (r.played ? r[k] / r.played : 0);
-  return rate(b, "wins") - rate(a, "wins") || rate(a, "pointsAgainst") - rate(b, "pointsAgainst");
+  const winShare = (r) => (r.played ? r.wins / r.played : 0);
+  const pointShare = (r) => {
+    const total = r.pointsFor + r.pointsAgainst;
+    return total ? r.pointsFor / total : 0;
+  };
+  return winShare(b) - winShare(a) || pointShare(b) - pointShare(a);
 }
 
 // A pool's schedule normally gives everyone the same number of games.

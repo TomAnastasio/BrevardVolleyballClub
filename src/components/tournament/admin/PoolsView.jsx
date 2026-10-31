@@ -312,7 +312,7 @@ function RoundTwo({ model, division, reload, nameOf }) {
       <p className="m-0 text-xs text-muted">
         {plan.method === "place"
           ? "Each round 1 pool sends the same places to each tier (e.g. top 2 of each pool to Gold)."
-          : "Everyone ranked together by games won, then fewest points against (per game)."}{" "}
+          : "Everyone ranked together by share of games won, then share of points won."}{" "}
         Round 1 results don't carry over.
       </p>
       {plan.ties.map((t) => (

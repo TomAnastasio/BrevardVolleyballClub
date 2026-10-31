@@ -39,7 +39,7 @@ the organizer:
   given).
 - A pool where players end up with different numbers of games (a player
   removed mid-pool, or a substitute via Edit Game) ranks by share of games
-  won, then points against per game. A substitute who isn't in the pool
+  won, then share of points won. A substitute who isn't in the pool
   gets no standings row. Our call, not the organizer's (2026-10-25).
 - Two phones keeping score on one game: the latest tap wins and the other
   phone follows it. Untested on real phones on the sand.

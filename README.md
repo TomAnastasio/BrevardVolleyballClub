@@ -419,7 +419,7 @@ Queen of Paradise (2026-10-31):
    mini game to 15 on the sand (the page flags it; it isn't scored in the
    app). If players in a pool end up with different numbers of games
    (someone was removed mid-pool, or an admin changed a game's players),
-   that pool ranks by share of games won, then points against per game,
+   that pool ranks by share of games won, then share of points won,
    and says so under its table.
    An admin changing a tournament game's players (Edit Game) also changes
    them in the schedule and standings. A substitute who isn't in the pool
@@ -430,7 +430,8 @@ Queen of Paradise (2026-10-31):
    per round 1 pool). Two pools of 4: top 2 of each pool to Gold, bottom 2
    to Silver. Four pools: 1st of each pool to Gold, 2nd to Silver, and so
    on. Two pools of 5, or three pools: everyone ranked together and split
-   top to bottom. Ties at a cut line are flagged so you can move the
+   top to bottom (share of games won, then share of points won, so pools
+   of 4 and 5 compare fairly). Ties at a cut line are flagged so you can move the
    mini-game winner. Round 1 results don't carry over. A division with one
    pool skips round 2.
 7. **Finals.** Each round 2 pool's top 2 play a final, each with a partner

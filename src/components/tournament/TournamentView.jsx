@@ -350,7 +350,7 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
                   {pool.byRate && (
                     <p className="m-0 mt-2 text-xs text-muted">
                       Not everyone in this pool has the same number of games, so it's ranked by share of games won, then
-                      points against per game.
+                      share of points won.
                     </p>
                   )}
                   {pool.ties.map((tie) => (

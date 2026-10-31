@@ -198,10 +198,13 @@ describe("compareSeeds", () => {
   });
 });
 
-// A finished pool's ranked standings, from a list of [id, wins, pointsAgainst].
+// A finished pool's ranked standings, from a list of
+// [id, wins, pointsAgainst, pointsFor (default 60)].
 function pool(rows, played = 3) {
   return {
-    standings: rankStandings(rows.map(([id, wins, pointsAgainst]) => ({ id, wins, pointsAgainst, played }))),
+    standings: rankStandings(
+      rows.map(([id, wins, pointsAgainst, pointsFor = 60]) => ({ id, wins, pointsAgainst, pointsFor, played })),
+    ),
   };
 }
 
@@ -272,6 +275,16 @@ describe("planRound2", () => {
     const plan = planRound2([
       pool([["a1", 4, 60], ["a2", 2, 80], ["a3", 2, 84], ["a4", 1, 90], ["a5", 1, 92]], 4),
       pool([["b1", 3, 40], ["b2", 2, 60], ["b3", 1, 70], ["b4", 0, 80]], 3),
+    ]);
+    expect(plan.tiers[0].map((r) => r.id)).toEqual(["b1", "a1", "b2", "a2", "a3"]);
+  });
+
+  it("breaks equal win shares across pool sizes by share of points won", () => {
+    // a1 went 4-0 in games to 21 (84-48: 12 against per game, 64% of
+    // points); b1 went 3-0 in games to 28 (84-40: 13.3 per game, 68%).
+    const plan = planRound2([
+      pool([["a1", 4, 48, 84], ["a2", 2, 70], ["a3", 2, 74], ["a4", 1, 80], ["a5", 0, 84]], 4),
+      pool([["b1", 3, 40, 84], ["b2", 2, 60], ["b3", 1, 70], ["b4", 0, 84]], 3),
     ]);
     expect(plan.tiers[0].map((r) => r.id)).toEqual(["b1", "a1", "b2", "a2", "a3"]);
   });
