@@ -141,6 +141,15 @@ CI: the Tests workflow's e2e step has failed on every push since
 `.env.local`, not GitHub secrets. It doesn't block deploys. Fix: add them as
 secrets in a GitHub environment and pass them to that step.
 
+## Open: staging is paused (Supabase, 2026-10-31)
+
+Supabase paused staging for inactivity; its migrations job fails until it's
+restored. Owner: follow "If Supabase pauses staging for inactivity" in
+`supabase/README.md` (deadline ~2027-01-29). Then, if wanted: a scheduled
+keep-alive workflow that reads staging every few days with the anon key, so
+it doesn't pause again (needs the staging URL/anon key as GitHub secrets,
+same as the CI item above).
+
 ## Risk: staging test setup lives only in this container's `.env.local`
 
 The staging URL/anon key and both bots' logins (`E2E_ADMIN_EMAIL`/

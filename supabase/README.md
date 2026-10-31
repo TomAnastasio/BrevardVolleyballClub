@@ -63,6 +63,33 @@ connection string (see "Getting a connection string" below, in the
 Environments → `staging` → update that secret. Actions tab → "Apply
 database migrations (staging)" → **Run workflow** catches it up.
 
+### If Supabase pauses staging for inactivity
+
+Supabase pauses a free project after 7 days with no activity and emails
+"Your project bvc-staging … has been paused." Production doesn't get paused
+because players and the nightly backup use it every day. While staging is
+paused, "Apply database migrations (staging)" fails at "Push pending
+migrations to staging Supabase" and the e2e tests can't run. The live site
+and real data are unaffected, and staging's data is kept.
+
+You have **90 days** from the pause to restore it; after that it can't be
+restored (only downloaded). To fix:
+
+1. Sign in at supabase.com and open the **bvc-staging** project
+   (ref `cbgismbfbfvovxhvhtor`). Don't touch the production project.
+2. Click **Restore project** (some screens call it "Unpause"). If it asks
+   about a plan, stay on Free.
+3. Wait until the project dashboard shows it as healthy, usually a few
+   minutes.
+4. On github.com: this repo → **Actions** → "Apply database migrations
+   (staging)" → **Run workflow** (branch `main`). A green check means
+   staging has caught up on any migrations it missed while paused.
+5. Optionally, ask Claude to re-run the e2e tests against staging to
+   confirm it's all working.
+
+Nothing else needs changing: the URL, keys and `STAGING_SUPABASE_DB_URL`
+stay the same after a restore.
+
 ## How the nightly backup works
 
 A GitHub Action (`.github/workflows/backup-database.yml`) runs every night,
