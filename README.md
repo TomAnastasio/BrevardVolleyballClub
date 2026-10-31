@@ -421,6 +421,12 @@ Queen of Paradise (2026-10-31):
    (someone was removed mid-pool, or an admin changed a game's players),
    that pool ranks by share of games won, then share of points won,
    and says so under its table.
+   To fix who plays whom in a game that has no score yet (upcoming or
+   being scored), an admin taps **Admin: change players** under it on the
+   tournament page and picks the four players (this pool's players first,
+   then the rest of the division); no balancing is enforced. A live score
+   on it stays, and phones already keeping score should reopen the game to
+   see the new names.
    An admin changing a tournament game's players (Edit Game) also changes
    them in the schedule and standings. A substitute who isn't in the pool
    gets no standings row; the game still counts for the pool players in

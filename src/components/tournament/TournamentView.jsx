@@ -7,8 +7,9 @@ import LoadError from "../LoadError.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useTournament } from "../../hooks/useTournament.js";
 import { buildTournamentUrl, setPendingTournament } from "../../lib/tournamentLink.js";
-import { friendlyError, undoMatchScore } from "../../lib/tournamentApi.js";
+import { friendlyError, undoMatchScore, updateMatchPlayers } from "../../lib/tournamentApi.js";
 import { formatEventDate, placeLabel, playerName, STATUS_LABELS, teamNames, TITLE_LABELS } from "./tournamentFormat.js";
+import { inputClass } from "./admin/TournamentDetailsForm.jsx";
 
 const POLL_MS = 15000;
 
@@ -81,7 +82,101 @@ function UndoScore({ match, onUndone }) {
   );
 }
 
-function MatchRow({ match, label, profilesById, isNext, highlightId, canScore, onPress, isAdmin, onChanged }) {
+const SLOTS = [
+  ["a1", "Team 1, player 1"],
+  ["a2", "Team 1, player 2"],
+  ["b1", "Team 2, player 1"],
+  ["b2", "Team 2, player 2"],
+];
+
+// Admin: pick who plays in an unscored pool game, to match the paper sheet.
+// No balancing; the admin decides. Pool players are listed first, then the
+// rest of the division. A live score on the game stays.
+function ChangePlayers({ match, label, poolIds, divisionIds, profilesById, onChanged }) {
+  const [open, setOpen] = useState(false);
+  const [slots, setSlots] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const name = (id) => playerName(profilesById, id);
+  const others = divisionIds.filter((id) => !poolIds.includes(id));
+
+  function start() {
+    setSlots({ a1: match.a1, a2: match.a2, b1: match.b1, b2: match.b2 });
+    setError("");
+    setOpen(true);
+  }
+
+  async function handleSave() {
+    setBusy(true);
+    setError("");
+    try {
+      await updateMatchPlayers(match.id, slots);
+      await onChanged();
+      setOpen(false);
+    } catch (e) {
+      console.error("Failed to change players:", e);
+      setError(friendlyError(e, e.message || "Couldn't change the players."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" onClick={start} className="mt-1 text-xs font-bold text-muted underline">
+        Admin: change players
+      </button>
+    );
+  }
+  const chosen = SLOTS.map(([key]) => slots[key]);
+  const distinct = chosen.every(Boolean) && new Set(chosen).size === 4;
+  const unchanged = SLOTS.every(([key]) => slots[key] === match[key]);
+  return (
+    <div className="mt-2 flex flex-col gap-2 rounded-xl border border-accent/40 p-3">
+      <p className="m-0 text-sm font-bold">Change players · {label}</p>
+      {SLOTS.map(([key, slotLabel]) => (
+        <label key={key} className="flex flex-col gap-1 text-xs font-bold">
+          {slotLabel}
+          <select
+            aria-label={`${label}: ${slotLabel}`}
+            value={slots[key]}
+            onChange={(e) => setSlots((s) => ({ ...s, [key]: e.target.value }))}
+            className={`${inputClass} py-1 text-sm`}
+          >
+            <optgroup label="This pool">
+              {poolIds.map((id) => (
+                <option key={id} value={id}>
+                  {name(id)}
+                </option>
+              ))}
+            </optgroup>
+            {others.length > 0 && (
+              <optgroup label="Rest of the division">
+                {others.map((id) => (
+                  <option key={id} value={id}>
+                    {name(id)}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        </label>
+      ))}
+      {!distinct && <p className="m-0 text-xs text-warning">Pick four different players.</p>}
+      <div className="flex gap-2">
+        <Button variant="primary" size="sm" onPress={handleSave} isDisabled={busy || !distinct || unchanged}>
+          {busy ? "Saving…" : "Save players"}
+        </Button>
+        <Button variant="outline" size="sm" onPress={() => setOpen(false)} isDisabled={busy}>
+          Cancel
+        </Button>
+      </div>
+      {error && <p className="m-0 text-xs font-semibold text-red-400">{error}</p>}
+    </div>
+  );
+}
+
+function MatchRow({ match, label, profilesById, isNext, highlightId, canScore, onPress, isAdmin, onChanged, playerChoices }) {
   const final = match.status === "final";
   const live = match.status === "live";
   const aWon = final && match.scoreA > match.scoreB;
@@ -136,6 +231,9 @@ function MatchRow({ match, label, profilesById, isNext, highlightId, canScore, o
           {content}
           {isAdmin && final && <UndoScore match={match} onUndone={onChanged} />}
         </div>
+      )}
+      {isAdmin && !final && playerChoices && (
+        <ChangePlayers match={match} label={label} {...playerChoices} profilesById={profilesById} onChanged={onChanged} />
       )}
     </li>
   );
@@ -402,6 +500,12 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
                       onPress={() => handleScore(m.id)}
                       isAdmin={isAdmin}
                       onChanged={reload}
+                      playerChoices={
+                        isAdmin && {
+                          poolIds: pool.players.map((e) => e.profile_id),
+                          divisionIds: division.entrants.map((e) => e.profile_id),
+                        }
+                      }
                     />
                   ))}
                 </ul>

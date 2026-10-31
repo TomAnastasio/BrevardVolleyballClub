@@ -209,6 +209,16 @@ export async function addFinal({ tournamentId, divisionId, pool, sets, a1, a2, b
   );
 }
 
+// Admin: change who plays in a game that has no score yet (fixing the
+// schedule by hand; no balancing). A scored game's players are changed
+// with Edit Game instead, which updates the schedule too.
+export async function updateMatchPlayers(id, { a1, a2, b1, b2 }) {
+  const rows = unwrap(
+    await supabase.from("tournament_matches").update({ a1, a2, b1, b2 }).eq("id", id).is("game_id", null).select("id"),
+  );
+  if (!rows.length) throw new Error("This game already has a score. Change its players with Edit Game in Past Games.");
+}
+
 export async function deleteMatch(id) {
   const rows = unwrap(await supabase.from("tournament_matches").delete().eq("id", id).select("id"));
   if (!rows.length) throw new Error("This game already has a score; delete its game first.");
