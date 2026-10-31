@@ -356,7 +356,7 @@ it. The icon briefly turns into a ✓. New copyable text should use
 The **Tournaments** button on the home screen lists every published
 tournament. Each one has a public live page, which needs no sign-in. Its
 link is `brevardvolleyballclub.com/?t=<id>`, shown at the bottom of the
-page (tap it to copy). The page shows each division's pools, live standings and the fixed
+page (tap it to copy), with a QR code under it that opens the same page. The page shows each division's pools, live standings and the fixed
 game order, highlights who's up next, and shows a signed-in player their own
 next game.
 

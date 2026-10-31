@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Card } from "@heroui/react";
+import QRCode from "qrcode";
 import CopyableText from "../CopyableText.jsx";
 import LoadingMeteor from "../LoadingMeteor.jsx";
 import LoadError from "../LoadError.jsx";
@@ -10,6 +11,34 @@ import { friendlyError, undoMatchScore } from "../../lib/tournamentApi.js";
 import { formatEventDate, placeLabel, playerName, STATUS_LABELS, teamNames, TITLE_LABELS } from "./tournamentFormat.js";
 
 const POLL_MS = 15000;
+
+// Same QR generation as the admin Sign-Up QR Code screen, so people nearby can
+// scan the page open from someone else's phone.
+function ShareQrCode({ url }) {
+  const [qrDataUrl, setQrDataUrl] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    QRCode.toDataURL(url, { width: 640, margin: 2, errorCorrectionLevel: "M" })
+      .then((dataUrl) => {
+        if (!cancelled) setQrDataUrl(dataUrl);
+      })
+      .catch((e) => console.error("Failed to generate tournament QR code:", e));
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  if (!qrDataUrl) return null;
+  return (
+    <>
+      <div className="mx-auto mt-2 aspect-square w-[min(70vw,280px)] rounded-2xl bg-white p-3">
+        <img src={qrDataUrl} alt="QR code for this tournament page" className="h-full w-full [image-rendering:pixelated]" />
+      </div>
+      <p className="m-0 text-center text-xs text-muted">Or scan with a phone camera to open this page.</p>
+    </>
+  );
+}
 
 function UndoScore({ match, onUndone }) {
   const [confirming, setConfirming] = useState(false);
@@ -385,6 +414,7 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
       <Card className="gap-2 p-3">
         <p className="m-0 text-xs font-bold text-muted">Share this page</p>
         <CopyableText value={shareUrl} label="link to this page" className="w-full py-1 text-sm" />
+        <ShareQrCode url={shareUrl} />
       </Card>
     </div>
   );
