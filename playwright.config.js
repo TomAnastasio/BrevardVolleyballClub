@@ -1,4 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
+// Loads .env.local and stops the run unless it points at staging.
+import "./e2e/signInAsTestUser.js";
 
 // Runs against a staging Supabase project (see .env.local / signInAsTestUser.js)
 // rather than a real backend-free mode -- "New Game" requires sign-in, so

@@ -11,6 +11,20 @@ if (existsSync(envPath)) {
   }
 }
 
+// Safety stop: tests and seed scripts create accounts, games and profiles,
+// so refuse to run unless they're pointed at the staging project. (A stale
+// .env.local once pointed them at production.) playwright.config.js imports
+// this file, so the check runs before any test or the dev server starts.
+export const STAGING_REF = "cbgismbfbfvovxhvhtor";
+const configuredUrl = process.env.VITE_SUPABASE_URL ?? "";
+if (!configuredUrl.startsWith(`https://${STAGING_REF}.supabase.co`)) {
+  throw new Error(
+    `e2e/seed scripts only run against staging (${STAGING_REF}), but ` +
+      `VITE_SUPABASE_URL is "${configuredUrl || "(not set)"}". Fix .env.local ` +
+      `(see TODO.md, "staging test setup") before running tests.`,
+  );
+}
+
 // Display names the bots sign up with (set via signup metadata -- see
 // below) so each bot shows up in the player-search directory under its own
 // name and can be picked as one of the 4 players in a game, same as any

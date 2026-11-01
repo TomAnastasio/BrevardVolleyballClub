@@ -141,26 +141,29 @@ CI: the Tests workflow's e2e step has failed on every push since
 `.env.local`, not GitHub secrets. It doesn't block deploys. Fix: add them as
 secrets in a GitHub environment and pass them to that step.
 
-## Open: staging is paused (Supabase, 2026-10-31)
+## Idea: keep staging from pausing
 
-Supabase paused staging for inactivity; its migrations job fails until it's
-restored. Owner: follow "If Supabase pauses staging for inactivity" in
-`supabase/README.md` (deadline ~2027-01-29). Then, if wanted: a scheduled
-keep-alive workflow that reads staging every few days with the anon key, so
-it doesn't pause again (needs the staging URL/anon key as GitHub secrets,
-same as the CI item above).
+Supabase pauses staging after 7 idle days (restore steps: `supabase/README.md`,
+"If Supabase pauses staging for inactivity"). If wanted: a scheduled
+workflow that reads staging every few days with the anon key (needs the
+staging URL/anon key as GitHub secrets, same as the CI item above).
 
 ## Risk: staging test setup lives only in this container's `.env.local`
 
 The staging URL/anon key and both bots' logins (`E2E_ADMIN_EMAIL`/
 `PASSWORD`, `E2E_PLAYER_EMAIL`/`PASSWORD`) exist only in the gitignored
-`.env.local`. If a fresh container doesn't have it:
+`.env.local`. Tests and seed scripts refuse to run unless it points at
+staging. If a fresh container doesn't have it:
 1. Copy the staging project's URL + anon key from its dashboard
-   (Settings → API).
-2. Recreate `.env.local` with those plus new bot email/password pairs.
-3. Owner re-runs the one-time `profiles.is_admin = true` grant for the new
-   admin bot in the staging SQL Editor (see `ADMIN_NAME` in
-   `e2e/signInAsTestUser.js`).
+   (Settings → API keys).
+2. Recreate `.env.local` with those. For the bots, prefer giving the
+   existing `brevard.volleyball.e2e.{admin,player}.v2@gmail.com` accounts
+   new passwords (owner runs `update auth.users set encrypted_password =
+   extensions.crypt('<pw>', extensions.gen_salt('bf')) where email = '…'`
+   in staging's SQL Editor) over new bots, which would duplicate the names.
+3. Only for a brand-new admin bot: owner re-runs the one-time
+   `profiles.is_admin = true` grant in the staging SQL Editor (see
+   `ADMIN_NAME` in `e2e/signInAsTestUser.js`).
 4. `node e2e/seedStaging.js` (test profiles Bob/Carla/Dana), then
    `node e2e/seedStagingGames.js` (demo players and ranked games —
    `profileEloChange.spec.js` needs these), then
