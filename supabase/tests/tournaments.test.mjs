@@ -256,5 +256,82 @@ await fails(() => remove(admin, entrant.Hal), /isn't in this tournament/, "remov
   eq(await all("select id, a1, a2, b1, b2 from tournament_matches order by id"), schedBefore, "and no tournament game changes");
 }
 
+// ------------------------------------------------------------ round 2 as it really ran (20261104120000)
+{
+  const T = await tournament("Real Round Cup", "live");
+  await db.query("update tournaments set ranked = true where id = $1", [T]);
+  const D = await division(T);
+  const names = ["Gia1", "Gia2", "Gia3", "Gia4", "Sil1", "Sil2", "Sil3", "Sil4"];
+  const ids = [];
+  for (const n of names) ids.push(await manual(n));
+  const entrants = [];
+  for (const id of ids) entrants.push((await one("insert into tournament_entrants (tournament_id, division_id, profile_id) values ($1, $2, $3) returning id", [T, D, id])).id);
+  const newPool = async (label, court, players) => {
+    const { id } = await one("insert into tournament_pools (tournament_id, division_id, round, label, court) values ($1, $2, 2, $3, $4) returning id", [T, D, label, court]);
+    for (const e of players) await db.query("insert into tournament_pool_players (pool_id, entrant_id) values ($1, $2)", [id, e]);
+    return id;
+  };
+  const A = await newPool("Gold", "Court 2", entrants.slice(0, 4));
+  const B = await newPool("Silver", "Court 3", entrants.slice(4));
+  const { id: poolGame } = await one("insert into tournament_matches (tournament_id, division_id, pool_id, stage, round, sequence, a1, a2, b1, b2) values ($1, $2, $3, 'pool', 2, 1, $4, $5, $6, $7) returning id", [T, D, A, ids[0], ids[1], ids[2], ids[3]]);
+  await as(admin, "select submit_tournament_match_score($1, 21, 15)", [poolGame]);
+  const gameBefore = await one("select g.id, g.score_a, g.score_b, m.a1, m.pool_id from tournament_matches m join games g on g.id = m.game_id where m.id = $1", [poolGame]);
+
+  // Renaming and reordering a pool with scores leaves everything else alone.
+  await as(admin, "update tournament_pools set sort_order = 1 where id = $1", [A]);
+  await as(admin, "update tournament_pools set sort_order = 2 where id = $1", [B]);
+  await as(admin, "update tournament_pools set label = 'Gold Pool A' where id = $1", [A]);
+  await as(admin, "update tournament_pools set label = 'Gold Pool B' where id = $1", [B]);
+  eq((await one("select g.id, g.score_a, g.score_b, m.a1, m.pool_id from tournament_matches m join games g on g.id = m.game_id where m.id = $1", [poolGame])), gameBefore, "renaming a scored pool leaves its game alone");
+  eq((await one("select court from tournament_pools where id = $1", [A])).court, "Court 2", "and its court");
+
+  // Who may rename, and what stays protected.
+  await as(player, "update tournament_pools set label = 'Hacked' where id = $1", [A]);
+  eq((await one("select label from tournament_pools where id = $1", [A])).label, "Gold Pool A", "a non-admin's rename changes nothing");
+  await asAnon("update tournament_pools set final_name = 'Hacked' where id = $1", [A]).catch(() => {});
+  eq((await one("select final_name from tournament_pools where id = $1", [A])).final_name, null, "nor can a visitor name a final");
+  await fails(() => as(admin, "update tournament_pools set label = 'Gold Pool A' where id = $1", [B]), /duplicate key/, "two pools in a round can't share a name");
+  await fails(() => as(admin, "update tournament_pools set final_name = '  ' where id = $1", [A]), /check constraint/, "a final's name can't be blank");
+  await fails(() => as(admin, "delete from tournament_pools where id = $1", [A]), /already has a score/, "a pool with scores still can't be rebuilt");
+
+  // A final across two pools, set up while the crowns are saved.
+  await as(admin, "update tournament_entrants set title = 'queen', final_place = 1 where id = $1", [entrants[0]]);
+  await as(admin, "update tournament_entrants set title = 'princess', final_place = 2 where id = $1", [entrants[4]]);
+  await as(admin, "update tournaments set status = 'complete' where id = $1", [T]);
+  const crowns = "select id, title, final_place from tournament_entrants where tournament_id = $1 order by id";
+  const crownsBefore = await all(crowns, [T]);
+  await as(admin, "update tournament_pools set final_name = 'Gold final' where id = $1", [A]);
+  const [{ id: final }] = await as(admin, "insert into tournament_matches (tournament_id, division_id, pool_id, stage, round, sequence, a1, a2, b1, b2, win_score, win_by_two) values ($1, $2, $3, 'final', 2, 1, $4, $5, $6, $7, 21, true) returning id", [T, D, A, ids[0], ids[1], ids[4], ids[5]]);
+  await fails(() => as(admin, "select submit_tournament_match_score($1, 21, 18)", [final]), /only be entered while the tournament is running/, "a finished tournament takes no scores");
+
+  // Reopen scoring: scoring a ranked final rates all four, and nobody else.
+  await as(admin, "update tournaments set status = 'live' where id = $1", [T]);
+  eq(await all(crowns, [T]), crownsBefore, "reopening keeps the crowns");
+  const elo = async () => all("select id, elo_rating, elo_games_played from profiles where id = any($1) order by id", [ids]);
+  const others = await all("select id, elo_rating, elo_games_played from profiles where id <> all($1) order by id", [ids]);
+  const before = await elo();
+  const [{ submit_tournament_match_score: finalGame }] = await as(admin, "select submit_tournament_match_score($1, 21, 18)", [final]);
+  const after = await elo();
+  const changed = after.filter((r, i) => r.elo_rating !== before[i].elo_rating).map((r) => r.id).sort();
+  eq(changed, [ids[0], ids[1], ids[4], ids[5]].sort(), "a ranked final changes the Elo of its four players only");
+  eq(await all("select id, elo_rating, elo_games_played from profiles where id <> all($1) order by id", [ids]), others, "and no other player's");
+  eq(await all(crowns, [T]), crownsBefore, "scoring a final keeps the crowns");
+  const dated = await one("select played_date::text d, mode from games where id = $1", [finalGame]);
+  ok(dated.d > "2026-10-31" || dated.d === (await one("select (now() at time zone 'America/New_York')::date::text d")).d, "a final is dated when it's entered");
+  eq(dated.mode, "ranked", "and is a ranked game in a ranked tournament");
+
+  // Undoing it replays Elo, which puts everyone back.
+  await as(admin, "select admin_delete_game($1)", [finalGame]);
+  eq(await elo(), before, "undoing a final puts everyone's Elo back");
+  eq(await all(crowns, [T]), crownsBefore, "undoing a final keeps the crowns");
+  eq((await one("select game_id from tournament_matches where id = $1", [final])).game_id, null, "and it can be scored again");
+
+  // "Games count toward Elo" off when it's scored: no Elo change at all.
+  await as(admin, "update tournaments set ranked = false where id = $1", [T]);
+  const [{ submit_tournament_match_score: casual }] = await as(admin, "select submit_tournament_match_score($1, 21, 18)", [final]);
+  eq((await one("select mode from games where id = $1", [casual])).mode, "casual", "with Elo off, a final is a casual game");
+  eq(await elo(), before, "and changes nobody's Elo");
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

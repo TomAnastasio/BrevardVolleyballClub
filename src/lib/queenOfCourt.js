@@ -13,7 +13,8 @@
 //   planRound2); round 1 results don't carry over.
 // - Each round 2 pool's top 2 play a final (best 2-of-3 sets to 21, no cap)
 //   with a partner of their choice from the division. Only Gold's final
-//   decides the Queen.
+//   decides the Queen. An admin can instead pick finalists from any pool and
+//   skip finals that weren't played (see FinalsView).
 
 // Games per player in a pool of n: as many distinct partners as possible
 // (at most n-1), while every player plays the same number of games. Each
@@ -282,6 +283,59 @@ export const TIER_NAMES = ["Gold", "Silver", "Bronze", "Copper"];
 
 export function tierName(index) {
   return TIER_NAMES[index] || `Tier ${index + 1}`;
+}
+
+// Display order of a division's pools: by round, then any order an admin set
+// (sort_order), then Gold, Silver, Bronze, Copper, then alphabetically. A
+// label is only ever used for this fallback order: no rule reads a pool's
+// name, so renaming can't change who's eligible for what. The first pool's
+// final decides the title (titleFinalPool), which is why renaming pins
+// sort_order first (renamePool in tournamentApi.js).
+function tierOrder(label) {
+  const i = TIER_NAMES.indexOf(label);
+  return i === -1 ? TIER_NAMES.length : i;
+}
+
+export function comparePools(a, b) {
+  const order = (p) => p.sort_order ?? Infinity;
+  if (a.round !== b.round) return a.round - b.round;
+  if (order(a) !== order(b)) return order(a) < order(b) ? -1 : 1;
+  return tierOrder(a.label) - tierOrder(b.label) || a.label.localeCompare(b.label);
+}
+
+// "Gold" reads "Gold pool"; a label that already says pool ("Gold Pool A")
+// stands alone.
+export function poolTitle({ label, round }) {
+  if (round <= 1) return `Pool ${label}`;
+  return /\bpool\b/i.test(label) ? label : `${label} pool`;
+}
+
+export function defaultFinalTitle({ label, round }) {
+  return round > 1 ? `${label} final` : "Final";
+}
+
+// The pool whose final decides the Queen: the first of the division's final
+// pools, by position and never by name.
+export function titleFinalPool(finalPools) {
+  return finalPools[0] ?? null;
+}
+
+// Pool ids in the order they'd have after moving one up (-1) or down (+1).
+export function movedPoolIds(pools, index, delta) {
+  const ids = pools.map((p) => p.id);
+  const target = index + delta;
+  if (target < 0 || target >= ids.length) return ids;
+  [ids[index], ids[target]] = [ids[target], ids[index]];
+  return ids;
+}
+
+// Final pools a final's finalists (profile ids) came from that still have
+// games to play. With no finalist in any final pool yet, that's `pool`, the
+// pool the final is linked to. Only a warning: an admin can still set the
+// final up (finals are sometimes played before the paper sheet is entered).
+export function unfinishedFinalistPools(pool, finalistIds, finalPools) {
+  const sources = finalPools.filter((p) => p.players.some((e) => finalistIds.includes(e.profile_id)));
+  return (sources.length ? sources : [pool]).filter((p) => !p.complete);
 }
 
 // Round 2 for a division, from its ranked round-1 pools ([{ standings }]).

@@ -5,6 +5,7 @@ import {
   gamesPerPlayer,
   MAX_POOL_SIZE,
   MIN_POOL_SIZE,
+  movedPoolIds,
   planRound2,
   poolLabel,
   poolRules,
@@ -12,7 +13,7 @@ import {
   splitIntoPools,
   tierName,
 } from "../../../lib/queenOfCourt.js";
-import { friendlyError, savePools, updatePoolCourt } from "../../../lib/tournamentApi.js";
+import { friendlyError, renamePool, savePools, setPoolOrder, updatePoolCourt } from "../../../lib/tournamentApi.js";
 import { playerName } from "../tournamentFormat.js";
 import { inputClass } from "./TournamentDetailsForm.jsx";
 
@@ -29,16 +30,81 @@ function seedInfo(e) {
   return parts.join(" · ");
 }
 
-function SavedPools({ pools, nameOf, setError, reload }) {
+// `arrangeable`: round 2 pools can be renamed and reordered at any time, even
+// with scores, because neither touches the pool's games.
+function SavedPools({ pools, nameOf, setError, reload, arrangeable = false }) {
+  const [moving, setMoving] = useState(false);
+
+  async function handleRename(pool, input) {
+    const label = input.value.trim();
+    if (label === pool.label) return;
+    setError("");
+    if (!label) {
+      input.value = pool.label;
+      setError("A pool needs a name.");
+      return;
+    }
+    try {
+      await renamePool(pool.id, label, pools.map((p) => p.id));
+      await reload();
+    } catch (e) {
+      console.error("Failed to rename pool:", e);
+      input.value = pool.label;
+      setError(friendlyError(e, "Couldn't save the pool's name."));
+    }
+  }
+
+  async function handleMove(index, delta) {
+    setMoving(true);
+    setError("");
+    try {
+      await setPoolOrder(movedPoolIds(pools, index, delta));
+      await reload();
+    } catch (e) {
+      console.error("Failed to reorder pools:", e);
+      setError(friendlyError(e, "Couldn't save the pool order."));
+    } finally {
+      setMoving(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-2">
-      {pools.map((pool) => (
+      {arrangeable && (
+        <p className="m-0 text-xs text-muted">
+          Renaming or moving a pool doesn't change its games, scores, standings or court. The first pool's final decides
+          the Queen and the cash prize.
+        </p>
+      )}
+      {pools.map((pool, i) => (
         <Card key={pool.id} className="gap-2 p-3">
-          <p className="m-0 font-bold">
-            {pool.title} · {pool.players.length} players · {pool.matches.length} games
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="m-0 font-bold">
+              {pool.title} · {pool.players.length} players · {pool.matches.length} games
+            </p>
+            {arrangeable && pools.length > 1 && (
+              <div className="flex flex-none gap-1">
+                <Button size="sm" variant="outline" isIconOnly aria-label={`Move ${pool.title} up`} onPress={() => handleMove(i, -1)} isDisabled={moving || i === 0}>
+                  ↑
+                </Button>
+                <Button size="sm" variant="outline" isIconOnly aria-label={`Move ${pool.title} down`} onPress={() => handleMove(i, 1)} isDisabled={moving || i === pools.length - 1}>
+                  ↓
+                </Button>
+              </div>
+            )}
+          </div>
           {pool.matches[0] && <p className="m-0 text-xs text-muted">Games {rulesLabel(pool.matches[0].rules)}</p>}
           <p className="m-0 text-sm text-muted">{pool.players.map(nameOf).join(", ")}</p>
+          {arrangeable && (
+            <input
+              defaultValue={pool.label}
+              maxLength={40}
+              placeholder="Pool name, e.g. Gold Pool A"
+              aria-label={`Name for ${pool.title}`}
+              onBlur={(e) => handleRename(pool, e.target)}
+              className={`${inputClass} py-1 text-sm`}
+            />
+          )}
           <input
             defaultValue={pool.court || ""}
             placeholder="Court (optional), e.g. Court 1"
@@ -327,7 +393,7 @@ function RoundTwo({ model, division, reload, nameOf }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="m-0 text-sm font-bold uppercase tracking-wide text-muted">Round 2</p>
-      {current.length > 0 && !preview && <SavedPools pools={current} nameOf={nameOf} setError={setError} reload={reload} />}
+      {current.length > 0 && !preview && <SavedPools pools={current} nameOf={nameOf} setError={setError} reload={reload} arrangeable />}
       <Card className="gap-3 p-3">
         <p className="m-0 font-bold">{current.length ? "Rebuild round 2 pools" : "Build round 2 pools"}</p>
         <p className="m-0 text-sm text-muted">

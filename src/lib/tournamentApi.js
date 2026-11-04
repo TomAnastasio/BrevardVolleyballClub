@@ -34,6 +34,7 @@ export function friendlyError(e, fallback = "Something went wrong. Please try ag
   ];
   if (known.some((k) => msg.includes(k))) return msg.charAt(0).toUpperCase() + msg.slice(1) + ".";
   if (msg.includes("duplicate key") && msg.includes("tournament_entrants")) return "That player is already entered.";
+  if (msg.includes("duplicate key") && msg.includes("tournament_pools")) return "Another pool in this round already has that name.";
   return fallback;
 }
 
@@ -185,8 +186,29 @@ export async function updatePoolCourt(poolId, court) {
   unwrap(await supabase.from("tournament_pools").update({ court: court || null }).eq("id", poolId));
 }
 
-// A final between two finalists (a1, b1) and their partners: one match
-// per set, linked to the pool it's the final of, each with its set's rules.
+// Saves the display order of a round's pools. Games, scores and standings
+// hang off each pool's id, so this and renamePool can't affect them.
+export async function setPoolOrder(poolIds) {
+  for (let i = 0; i < poolIds.length; i++) {
+    unwrap(await supabase.from("tournament_pools").update({ sort_order: i + 1 }).eq("id", poolIds[i]));
+  }
+}
+
+// The order is saved first: until it is, the order comes from the labels
+// ("Silver" sorts second), so a new name would otherwise move the pool and
+// could quietly change which final decides the title.
+export async function renamePool(poolId, label, orderedPoolIds) {
+  await setPoolOrder(orderedPoolIds);
+  unwrap(await supabase.from("tournament_pools").update({ label }).eq("id", poolId));
+}
+
+export async function updatePoolFinalName(poolId, finalName) {
+  unwrap(await supabase.from("tournament_pools").update({ final_name: finalName || null }).eq("id", poolId));
+}
+
+// A final between two finalists (a1, b1) and their partners: one match per
+// set, linked to `pool` (normally the pool whose top 2 play it, though the
+// finalists can come from any pool), each with its set's rules.
 export async function addFinal({ tournamentId, divisionId, pool, sets, a1, a2, b1, b2 }) {
   unwrap(
     await supabase.from("tournament_matches").insert(

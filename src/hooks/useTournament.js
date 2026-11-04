@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
-import { computeStandings, finalSeries, rankStandings, TIER_NAMES, unevenSchedule, unresolvedTies } from "../lib/queenOfCourt.js";
+import {
+  comparePools,
+  computeStandings,
+  defaultFinalTitle,
+  finalSeries,
+  poolTitle,
+  rankStandings,
+  unevenSchedule,
+  unresolvedTies,
+} from "../lib/queenOfCourt.js";
 
 // A match counts as "live" on the public page if someone has been keeping
 // score on it recently.
@@ -34,12 +43,6 @@ function mapMatch(row, now, tournamentRules) {
   };
 }
 
-// Gold, Silver, Bronze, Copper in that order; A, B, C... alphabetically.
-function tierOrder(label) {
-  const i = TIER_NAMES.indexOf(label);
-  return i === -1 ? TIER_NAMES.length : i;
-}
-
 // Shapes the flat tables into what every tournament screen needs: divisions
 // -> pools (players, ordered games, ranked standings, the pool's final) and
 // finals. Standings are always derived from the scored games here, never
@@ -58,7 +61,7 @@ export function buildTournamentModel({ tournament, divisions, entrants, pools, p
         .sort((a, b) => (profilesById.get(a.profile_id)?.display_name || "").localeCompare(profilesById.get(b.profile_id)?.display_name || ""));
       const divisionPools = pools
         .filter((p) => p.division_id === division.id)
-        .sort((a, b) => a.round - b.round || tierOrder(a.label) - tierOrder(b.label) || a.label.localeCompare(b.label))
+        .sort(comparePools)
         .map((pool) => {
           const players = poolPlayers
             .filter((pp) => pp.pool_id === pool.id)
@@ -79,8 +82,8 @@ export function buildTournamentModel({ tournament, divisions, entrants, pools, p
           );
           return {
             ...pool,
-            title: pool.round > 1 ? `${pool.label} pool` : `Pool ${pool.label}`,
-            finalTitle: pool.round > 1 ? `${pool.label} final` : "Final",
+            title: poolTitle(pool),
+            finalTitle: pool.final_name || defaultFinalTitle(pool),
             players,
             matches: poolMatches,
             standings,
@@ -97,7 +100,9 @@ export function buildTournamentModel({ tournament, divisions, entrants, pools, p
         .filter((m) => m.divisionId === division.id && m.stage === "final")
         .sort((a, b) => a.sequence - b.sequence);
       // The pools whose top 2 play a final: round 2's pools, or a lone
-      // round 1 pool (a division too small for round 2). Gold is first.
+      // round 1 pool (a division too small for round 2). The title final's
+      // pool is first (titleFinalPool). A final's players can come from any
+      // pool; it's listed under the pool it's linked to.
       const lastRound = Math.max(0, ...divisionPools.map((p) => p.round));
       const lastPools = divisionPools.filter((p) => p.round === lastRound);
       const finalPools = lastRound > 1 || lastPools.length === 1 ? lastPools : [];

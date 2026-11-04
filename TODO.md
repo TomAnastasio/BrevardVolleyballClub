@@ -48,6 +48,11 @@ Known bugs, found on the demo tournaments 2026-10-23:
 - Tournament games are dated when the score is entered, not the
   tournament's date (`submit_tournament_match_score` uses now()), so late
   entries show the wrong day in Past Games.
+- Halloween theme only: the pixel font draws lowercase "fi" as a capital A,
+  so "final" and "first" read wrong (found 2026-11-04). Capital "Final" is
+  fine. `font-variant-ligatures: none` under
+  `html.theme-halloween` fixed it in a quick test; not done because theme changes need the owner to
+  see before/after screenshots first.
 - Standings tables cut names short ("Zoë Ramí…", "Anastasi…").
 - Two players with the same name (the two "Sam Lee"s) look identical
   everywhere in a tournament.

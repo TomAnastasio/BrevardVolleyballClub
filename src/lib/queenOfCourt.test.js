@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  comparePools,
+  defaultFinalTitle,
+  FINAL_FORMATS,
+  movedPoolIds,
+  poolTitle,
+  titleFinalPool,
+  unfinishedFinalistPools,
   buildPoolSchedule,
   compareSeeds,
   computeStandings,
@@ -317,5 +324,85 @@ describe("finalSeries", () => {
   });
   it("one set decides a single-set final", () => {
     expect(finalSeries([set(21, 25)]).winner).toBe("b");
+  });
+});
+
+describe("renaming and reordering round 2 pools", () => {
+  const pool = (label, sort_order = null, round = 2) => ({ label, sort_order, round });
+  const labels = (pools) => [...pools].sort(comparePools).map((p) => p.label);
+
+  it("keeps the tier order when nothing has been set", () => {
+    expect(labels([pool("Copper"), pool("Gold"), pool("Bronze"), pool("Silver")])).toEqual(["Gold", "Silver", "Bronze", "Copper"]);
+  });
+
+  it("puts an admin's order ahead of what the names would say", () => {
+    expect(labels([pool("Gold", 2), pool("Silver", 1)])).toEqual(["Silver", "Gold"]);
+  });
+
+  it("a half-finished rename can't change the title pool once the order is pinned", () => {
+    // The trap: without pinning, Silver sorts ahead of an unrecognized name.
+    expect(labels([pool("Gold Pool A"), pool("Silver")])).toEqual(["Silver", "Gold Pool A"]);
+    expect(labels([pool("Gold Pool A", 1), pool("Silver", 2)])).toEqual(["Gold Pool A", "Silver"]);
+  });
+
+  it("shows the real names in the real order", () => {
+    const real = [pool("Silver Pool B", 4), pool("Gold Pool B", 2), pool("Silver Pool A", 3), pool("Gold Pool A", 1)];
+    expect(labels(real)).toEqual(["Gold Pool A", "Gold Pool B", "Silver Pool A", "Silver Pool B"]);
+  });
+
+  it("never mixes rounds", () => {
+    expect(labels([pool("Gold", 1, 2), pool("A", null, 1)])).toEqual(["A", "Gold"]);
+  });
+
+  it("doesn't say pool twice", () => {
+    expect(poolTitle(pool("Gold"))).toBe("Gold pool");
+    expect(poolTitle(pool("Gold Pool A"))).toBe("Gold Pool A");
+    expect(poolTitle(pool("A", null, 1))).toBe("Pool A");
+  });
+
+  it("names a final after its pool until told otherwise", () => {
+    expect(defaultFinalTitle(pool("Gold"))).toBe("Gold final");
+    expect(defaultFinalTitle(pool("A", null, 1))).toBe("Final");
+  });
+
+  it("moves a pool, staying in bounds", () => {
+    const pools = [{ id: "a" }, { id: "b" }, { id: "c" }];
+    expect(movedPoolIds(pools, 1, -1)).toEqual(["b", "a", "c"]);
+    expect(movedPoolIds(pools, 1, 1)).toEqual(["a", "c", "b"]);
+    expect(movedPoolIds(pools, 0, -1)).toEqual(["a", "b", "c"]);
+    expect(movedPoolIds(pools, 2, 1)).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("finals across pools", () => {
+  const pool = (id, complete, ...players) => ({ id, complete, players: players.map((profile_id) => ({ profile_id })) });
+  const a = pool("a", true, "grace", "lily");
+  const b = pool("b", false, "carla", "haley");
+  const c = pool("c", false, "kyra", "josie");
+  const all = [a, b, c];
+  const ids = (pools) => pools.map((p) => p.id);
+
+  it("checks the finalists' own pools, not just the linked one", () => {
+    expect(ids(unfinishedFinalistPools(a, ["grace", "carla"], all))).toEqual(["b"]);
+    expect(ids(unfinishedFinalistPools(b, ["grace"], all))).toEqual([]);
+    expect(ids(unfinishedFinalistPools(a, ["carla", "kyra"], all))).toEqual(["b", "c"]);
+  });
+
+  it("falls back to the linked pool with no finalists chosen", () => {
+    expect(ids(unfinishedFinalistPools(b, [], all))).toEqual(["b"]);
+    expect(ids(unfinishedFinalistPools(a, [], all))).toEqual([]);
+  });
+
+  it("gives the title to the first pool by position, whatever it's called", () => {
+    expect(titleFinalPool([{ label: "Anything" }, { label: "Gold" }]).label).toBe("Anything");
+    expect(titleFinalPool([])).toBe(null);
+  });
+
+  it("one set to 21 decides a final: the real scores", () => {
+    const series = finalSeries([{ scoreA: 21, scoreB: 18 }]);
+    expect(series.winner).toBe("a");
+    expect(finalSeries([{ scoreA: 11, scoreB: 21 }]).winner).toBe("b");
+    expect(isGameOver(21, 18, FINAL_FORMATS.one_set.sets[0])).toBe(true);
+    expect(isGameOver(21, 11, FINAL_FORMATS.one_set.sets[0])).toBe(true);
   });
 });

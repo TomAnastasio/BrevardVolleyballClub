@@ -7,6 +7,7 @@ import LoadError from "../LoadError.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useTournament } from "../../hooks/useTournament.js";
 import { buildTournamentUrl, setPendingTournament } from "../../lib/tournamentLink.js";
+import { titleFinalPool } from "../../lib/queenOfCourt.js";
 import { friendlyError, undoMatchScore, updateMatchPlayers } from "../../lib/tournamentApi.js";
 import { formatEventDate, placeLabel, playerName, STATUS_LABELS, teamNames, TITLE_LABELS } from "./tournamentFormat.js";
 import { inputClass } from "./admin/TournamentDetailsForm.jsx";
@@ -415,7 +416,7 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
             </Card>
           )}
 
-          {finalPools.map((pool, i) => {
+          {finalPools.map((pool) => {
             const series = pool.final;
             const first = series.sets[0].match;
             return (
@@ -429,7 +430,9 @@ export default function TournamentView({ tournamentId, notice, onDismissNotice, 
                     </span>
                   )}
                 </h3>
-                {i === 0 && finalPools.length > 1 && <p className="m-0 text-xs text-muted">For the crown 👑</p>}
+                {pool.id === titleFinalPool(division.finalPools)?.id && finalPools.length > 1 && (
+                  <p className="m-0 text-xs text-muted">For the crown 👑</p>
+                )}
                 {series.winner && (
                   <p className="m-0 text-sm font-bold text-success">
                     🏆 {teamNames(profilesById, series.winner === "a" ? [first.a1, first.a2] : [first.b1, first.b2])}

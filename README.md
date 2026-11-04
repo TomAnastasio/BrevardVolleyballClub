@@ -439,12 +439,29 @@ Queen of Paradise (2026-10-31):
    top to bottom (share of games won, then share of points won, so pools
    of 4 and 5 compare fairly). Ties at a cut line are flagged so you can move the
    mini-game winner. Round 1 results don't carry over. A division with one
-   pool skips round 2.
+   pool skips round 2. An admin can rename a round 2 pool or move it up or
+   down at any time, even with scores (Pools & schedule); its games, scores,
+   standings and court stay as they are, and pools with scores still can't
+   be rebuilt. No rule reads a pool's name. The first pool's final is the
+   one that decides the title.
 7. **Finals.** Each round 2 pool's top 2 play a final, each with a partner
    of their choice from their division. Best 2 of 3 sets (21, 21, 15, or
    all to 21), or one set to 21 if both teams agree; win by 2, no cap. A
-   third set that isn't needed disappears on its own. Only the Gold final
-   decides the Queen and the cash prize.
+   third set that isn't needed disappears on its own. Only the first pool's
+   final (normally Gold) decides the Queen and the cash prize. If a final
+   ran differently on the day, tick **Finalists from any pool** on its card
+   to pick anyone in the division and give it a name. The final is listed
+   under the pool whose card you used. The "still has games to play" note is
+   a warning about the finalists' own pools and doesn't block anything. Once
+   a division has a final, other pools collapse to **Set up a final**, and
+   the public page only ever shows finals that exist. Setting up or scoring
+   a final never changes the crowns; only **Crown the winners** does.
+   To add a final after the tournament is over, set it up, tap **Reopen
+   scoring** (crowns stay; any signed-in member can score any unscored game
+   until it's finished again), type the score in, then **Crown winners &
+   finish**, which starts from the saved crowns. In a ranked tournament a
+   late final is rated like any new game (see TODO.md for its date). Undo
+   its score to remove it and replay Elo.
 8. **Crown the winners.** Queen and Princess default to the Gold final's
    winner and runner-up. The 👑 and 👸 show on player profiles, and every
    entrant's profile lists their tournaments.
