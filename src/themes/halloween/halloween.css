@@ -65,6 +65,13 @@ html.dark.theme-halloween {
   --danger-foreground: #ffffff;
 }
 
+/* Pixelify's "fi" ligature is broken: it draws a capital A ("final" reads
+   "Anal"), so letters are never joined. Set here so every screen inherits it,
+   including pop-ups that open outside the app shell. */
+html.theme-halloween {
+  font-variant-ligatures: none;
+}
+
 html.theme-halloween body {
   background: linear-gradient(180deg, var(--hw-night-0) 0%, var(--hw-night-1) 45%, var(--hw-night-2) 100%) fixed;
 }
